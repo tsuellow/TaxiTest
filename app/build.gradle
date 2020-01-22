@@ -1,0 +1,72 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 28
+    defaultConfig {
+        applicationId "com.example.android.taxitest"
+        minSdkVersion 21
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+
+    implementation 'org.mapsforge:vtm:0.11.1'
+    implementation 'org.mapsforge:vtm-themes:0.10.0'
+    implementation 'org.slf4j:slf4j-api:1.7.25'
+
+    implementation 'org.mapsforge:vtm-android:0.11.1'
+    implementation 'org.mapsforge:vtm-android:0.11.1:natives-armeabi-v7a'
+    implementation 'org.mapsforge:vtm-android:0.11.1:natives-arm64-v8a'
+    implementation 'org.mapsforge:vtm-android:0.11.1:natives-x86'
+    implementation 'org.mapsforge:vtm-android:0.11.1:natives-x86_64'
+    implementation 'com.caverock:androidsvg:1.4'
+
+    //volley
+    implementation 'com.android.volley:volley:1.1.1'
+    //google play api location
+    implementation 'com.google.android.gms:play-services-location:16.0.0'
+
+    //gif library
+    implementation 'com.github.bumptech.glide:glide:4.9.0'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.9.0'
+
+    //vector libs
+    implementation 'org.mapsforge:vtm-jts:0.11.1'
+    implementation 'org.locationtech.jts:jts-core:1.15.0'
+    implementation 'org.mapsforge:vtm-mvt:0.11.1'
+    implementation 'com.google.protobuf:protobuf-java:3.5.1'
+    implementation 'com.wdtinc:mapbox-vector-tile:3.0.0'
+
+    //implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+
+//    implementation 'com.fasterxml.jackson.core:jackson-core:2.8.4'
+//    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.8.4'
+//    implementation 'com.fasterxml.jackson.core:jackson-databind:2.8.4'
+    implementation 'de.grundid.opendatalab:geojson-jackson:1.8.1'
+
+    //websocket
+    implementation 'com.github.nkzawa:socket.io-client:0.6.0'
+
+    //room dep
+    def room_version = "2.2.0-rc01"
+
+    implementation "androidx.room:room-runtime:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version"
+
+    //csv decoding
+    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.8.8"
+
+    //drawable modification
+    implementation 'com.sdsmdg.harjot:vectormaster:1.1.3'
+}
