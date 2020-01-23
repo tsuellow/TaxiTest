@@ -134,6 +134,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                     return item.barrioBitmap;
                 }
             }
+            Log.d("referenceList",""+bitmapReferenceList.size());
         }
         int color = barrio.getStyle().fillColor;
         VectorMasterDrawable drawable = modifyDrawable(color, isClicked);

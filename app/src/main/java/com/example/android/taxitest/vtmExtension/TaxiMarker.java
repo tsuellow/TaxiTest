@@ -26,7 +26,7 @@ public class TaxiMarker implements MarkerInterface, Comparable<TaxiMarker> {
         //set marker automatically  computeSymbol
     }
 
-    public void setRotatedSymbol(MarkerSymbol marker) {
+    public synchronized void setRotatedSymbol(MarkerSymbol marker) {
         markerSymbol = marker;
         markerSymbol.setRotation(taxiObject.getRotation());
     }

@@ -544,9 +544,9 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 //                Toast.makeText(mContext,mVectorLayer.getContainingBarrio(new GeoPoint(13.09,-86.36)).getBarrioName(),Toast.LENGTH_LONG).show();
 //                return true;
 //            }
-            if (g instanceof Gesture.Tap) {
+            if (g instanceof Gesture.LongPress) {
                 GeoPoint p = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
-                Toast.makeText(mContext, "Map long press\n" + p, Toast.LENGTH_SHORT).show();
+                Toast.makeText(mContext,mVectorLayer.getContainingBarrio(p).getBarrioId(),Toast.LENGTH_LONG).show();
                 return true;
             }
 //            if (g instanceof Gesture.TripleTap) {

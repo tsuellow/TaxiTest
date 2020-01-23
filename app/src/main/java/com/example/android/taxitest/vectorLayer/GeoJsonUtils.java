@@ -66,7 +66,7 @@ public class GeoJsonUtils {
             //set style
             Style style=sb.fillColor(color).strokeColor(Color.BLACK).build();
             //add barrio
-            barriosLayer.add(new BarrioPolygonDrawable(GeoJsonUtils.convertToGeo(coords), style, title,id));
+            barriosLayer.addBarrio(new BarrioPolygonDrawable(GeoJsonUtils.convertToGeo(coords), style, title,id));
 
     }
 
