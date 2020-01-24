@@ -224,7 +224,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             mapView.map().layers().add(mapScaleBarLayer);
             mTilt = mapView.map().viewport().getMinTilt();
             mScale = 1 << 17;
-            mMarkerLayer = new ItemizedLayer<TaxiMarker>(mapView.map(), new ArrayList<TaxiMarker>(), symbol, null);
+            //mMarkerLayer = new ItemizedLayer<TaxiMarker>(mapView.map(), new ArrayList<TaxiMarker>(), symbol, null);
 
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ) {
                 fusedLocationProviderClient.getLastLocation()
@@ -250,10 +250,10 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                         return;
                     }
                     //smoothen transition to new spot
-                    Location fakeLocation = locationResult.getLastLocation();
-                    fakeLocation.setLatitude(fakeLocation.getLatitude()-0.0);
-                    fakeLocation.setLongitude(fakeLocation.getLongitude()-0.0);
-                    endLocation=fakeLocation;
+                    Location adjustedLocation = locationResult.getLastLocation();
+                    adjustedLocation.setLatitude(adjustedLocation.getLatitude()-0.0);
+                    adjustedLocation.setLongitude(adjustedLocation.getLongitude()-0.0);
+                    endLocation=adjustedLocation;
                     mCompass.setCurrLocation(endLocation);
                     if (mCurrLocation != null && mLocation != null && !mClicked) {
                         MapPosition mapPosition=mapView.map().getMapPosition();
@@ -800,7 +800,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         } else {
             mMarkerLayer.addItem(taxiMarker);
         }
-        //mMarkerLayer.populate();//???
+        mMarkerLayer.populate();//???
     }
 
     @Override
