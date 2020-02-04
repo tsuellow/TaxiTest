@@ -2,22 +2,14 @@ package com.example.android.taxitest;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.AnimatedVectorDrawable;
 import android.graphics.drawable.Drawable;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.location.Location;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
 import android.os.Vibrator;
-import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
@@ -35,6 +27,8 @@ import com.example.android.taxitest.vectorLayer.BarriosLayer;
 import com.example.android.taxitest.vectorLayer.GeoJsonUtils;
 import com.example.android.taxitest.vtmExtension.AndroidGraphicsCustom;
 import com.example.android.taxitest.vtmExtension.OtherTaxiLayer;
+import com.example.android.taxitest.vtmExtension.OwnMarker;
+import com.example.android.taxitest.vtmExtension.OwnMarkerLayer;
 import com.example.android.taxitest.vtmExtension.TaxiMarker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -71,6 +65,7 @@ import org.oscim.scalebar.MapScaleBar;
 import org.oscim.scalebar.MapScaleBarLayer;
 import org.oscim.theme.VtmThemes;
 import org.oscim.tiling.source.mapfile.MapFileTileSource;
+import org.oscim.utils.ThreadUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -80,7 +75,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -88,22 +82,21 @@ import java.util.TimerTask;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
-import static com.example.android.taxitest.utils.ZoomUtils.getDrawableIndex;
 import static com.example.android.taxitest.utils.ZoomUtils.getDrawableSize;
+import static org.oscim.utils.FastMath.clamp;
 
 public class MainActivity extends Activity implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener,SensorEventListener{
+        GoogleApiClient.OnConnectionFailedListener{
 
     private MapView mapView;
 
     private MapScaleBar mapScaleBar;
     private Context mContext;
-    private Location mLocation;
+    private Location mMarkerLoc;
     private Compass mCompass;
     private ImageView compassImage;
     private ImageView backToCenterImage;
 
-    private AlertDialog dialogCalibrate;
     Vibrator mVibrator;
 
 
@@ -112,23 +105,18 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
     MarkerSymbol symbol;
     MarkerSymbol otherSymbol;
-    private SensorManager mSensorManager;
-    private Sensor mSensorAccelerometer;
-    private Sensor mSensorMagnetometer;
 
-    MarkerSymbol mFocusMarker;
+    TaxiObject mOwnTaxiObject;
+
     ItemizedLayer<TaxiMarker> mMarkerLayer;
+    OwnMarkerLayer mOwnMarkerLayer;
     OtherTaxiLayer mOtherTaxisLayer;
 
-    private LocationManager locationManager;
-    private final MapPosition mapPosition = new MapPosition();
-    MarkerSymbol[] mClickAnimationSymbols = new MarkerSymbol[19];
-    Drawable[] mClickAnimationDrawables = new Drawable[19];
     private MarkerSymbol[] mScaleSymbols = new MarkerSymbol[100];
     private Bitmap[] mOtherScaleSymbols = new Bitmap[100];
 
     private Location endLocation=new Location("");
-    private Location mCurrLocation=new Location("");;
+    private Location mCurrMapLoc =new Location("");;
 
 
     //experiment
@@ -148,7 +136,6 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     Drawable clickedIcon;
     VectorMasterDrawable otherIcon;
 
-    //private ArrayList<TaxiMarker> mOtherTaxiList;
 
     private InputStream geoJsonIs;
 
@@ -186,6 +173,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         compassImage = (ImageView) findViewById(R.id.compass);
         backToCenterImage = (ImageView) findViewById(R.id.back_to_center);
 
+        mOwnTaxiObject=new TaxiObject(Constants.myId,0.0,0.0,new Date().getTime(),0.0f,Constants.userType,0.0,0.0,1);
+
 
 
 
@@ -197,13 +186,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         String mapPath = file.getAbsolutePath();
         //tileSource.setMapFile(mapPath);
 
-        if (!file.exists()) {
-            Log.d("stordir","not exists");
-        } else if (!file.isFile()) {
-            Log.d("stordir","is not file");
-        } else if (!file.canRead()) {
-            Log.d("stordir","cant read");
-        }
+
         if (tileSource.setMapFile(mapPath)) {
             Toast.makeText(this,"success",Toast.LENGTH_LONG).show();
             // Vector layer
@@ -225,7 +208,6 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             mTilt = mapView.map().viewport().getMinTilt();
             mScale = 1 << 17;
             //mMarkerLayer = new ItemizedLayer<TaxiMarker>(mapView.map(), new ArrayList<TaxiMarker>(), symbol, null);
-
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ) {
                 fusedLocationProviderClient.getLastLocation()
                         .addOnSuccessListener(this, new OnSuccessListener<Location>() {
@@ -233,11 +215,12 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                             public void onSuccess(Location location) {
                                 // Got last known location. In some rare situations this can be null.
                                 if (location != null) {
-                                    mLocation = location;
-                                    mLocation.setLatitude(mLocation.getLatitude()-0.0);
-                                    mLocation.setLongitude(mLocation.getLongitude()-0.0);
-                                    setOwnMarker(mLocation);
-                                    mapView.map().setMapPosition(mLocation.getLatitude(), mLocation.getLongitude(), mScale);
+                                    mMarkerLoc = location;
+                                    mMarkerLoc.setLatitude(mMarkerLoc.getLatitude()-0.0);
+                                    mMarkerLoc.setLongitude(mMarkerLoc.getLongitude()-0.0);
+                                    //setOwnMarker(mMarkerLoc);
+                                    mOwnMarkerLayer.moveMarker(new GeoPoint(mMarkerLoc.getLatitude(),mMarkerLoc.getLongitude()));
+                                    mapView.map().setMapPosition(mMarkerLoc.getLatitude(), mMarkerLoc.getLongitude(), mScale);
                                 }
                             }
                         });
@@ -255,21 +238,22 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                     adjustedLocation.setLongitude(adjustedLocation.getLongitude()-0.0);
                     endLocation=adjustedLocation;
                     mCompass.setCurrLocation(endLocation);
-                    if (mCurrLocation != null && mLocation != null && !mClicked) {
-                        MapPosition mapPosition=mapView.map().getMapPosition();
-                        mapPosition.setPosition(new GeoPoint(endLocation.getLatitude(),endLocation.getLongitude()));
+                    if (mCurrMapLoc != null && mMarkerLoc != null && !mClicked) {
+//                        MapPosition mapPosition=mapView.map().getMapPosition();
+//                        mapPosition.setPosition(new GeoPoint(endLocation.getLatitude(),endLocation.getLongitude()));
                         //use regular smoothen function
-                        if (mCurrLocation != null && mLocation != null && !mClicked) {
-                            smoothenMapMovement(mCurrLocation, mLocation, endLocation);
+                        if (mCurrMapLoc != null && mMarkerLoc != null && !mClicked) {
+                            //smoothenMapMovement(mCurrMapLoc, mMarkerLoc, endLocation);
+                            startMoveAnim(500);
 
                         }
                         //mapView.map().animator().animateTo(mapPosition);
-                        mLocation = endLocation;
+                        //mMarkerLoc = endLocation;
 
                     }
                     //emit current position
-                    TaxiObject ownTaxiObject=new TaxiObject(Constants.myId,endLocation.getLatitude(),endLocation.getLongitude(),endLocation.getTime(),mCompass.getRotation(),"taxi",0.0,0.0,1);
-                    mWebSocketConnection.attemptSend(ownTaxiObject.taxiObjectToCsv());
+                    mOwnTaxiObject=new TaxiObject(Constants.myId,endLocation.getLatitude(),endLocation.getLongitude(),endLocation.getTime(),mCompass.getRotation(),"taxi",0.0,0.0,1);
+                    mWebSocketConnection.attemptSend(mOwnTaxiObject.taxiObjectToCsv());
                 }
 
                 ;
@@ -360,7 +344,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         GeoJsonUtils.addBarrios(mVectorLayer,fc);
         mapView.map().layers().add(mVectorLayer);
 
-        mMarkerLayer = new ItemizedLayer<TaxiMarker>(mapView.map(), new ArrayList<TaxiMarker>(), symbol, null);
+        //mMarkerLayer = new ItemizedLayer<TaxiMarker>(mapView.map(), new ArrayList<TaxiMarker>(), symbol, null);
+        mOwnMarkerLayer= new OwnMarkerLayer(mContext,mVectorLayer,mapView.map(),new ArrayList<OwnMarker>(),otherIcon,Constants.lastLocation, new GeoPoint(0.0,0.0),mCompass);
         mOtherTaxisLayer=new OtherTaxiLayer(mContext,mVectorLayer,mapView.map(),new ArrayList<TaxiMarker>(),otherIcon);
         //mOtherTaxisLayer.setOnItemGestureListener(listener);
 
@@ -387,7 +372,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
 
 
-        mapView.map().layers().add(mMarkerLayer);
+        //mapView.map().layers().add(mMarkerLayer);
+        mapView.map().layers().add(mOwnMarkerLayer);
         mapView.map().layers().add(mOtherTaxisLayer);
 
 
@@ -449,6 +435,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         });
 
         mCurrSize=getDrawableSize(mapView.map().getMapPosition().getZoom());
+
     }
 
 
@@ -458,14 +445,6 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         //set context
         mContext = getApplicationContext();
-        //get sensor manager
-        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        //get accelerometer and magnetometer for compass and orientation
-        assert mSensorManager != null;
-        mSensorAccelerometer = mSensorManager.getDefaultSensor(
-                Sensor.TYPE_ACCELEROMETER);
-        mSensorMagnetometer = mSensorManager.getDefaultSensor(
-                Sensor.TYPE_MAGNETIC_FIELD);
     }
 
     //check if map file is in external storage and else load it there from resources
@@ -498,30 +477,12 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     protected void onStart() {
         super.onStart();
 
-
-        // Listeners for the sensors are registered in this callback and
-        // can be unregistered in onStop().
-        //
-        // Check to ensure sensors are available before registering listeners.
-        // Both listeners are registered with a "normal" amount of delay
-        // (SENSOR_DELAY_NORMAL).
-        if (mSensorAccelerometer != null) {
-            mSensorManager.registerListener(this, mSensorAccelerometer,
-                    SensorManager.SENSOR_DELAY_NORMAL);
-        }
-        if (mSensorMagnetometer != null) {
-            mSensorManager.registerListener(this, mSensorMagnetometer,
-                    SensorManager.SENSOR_DELAY_NORMAL);
-        }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
 
-        // Unregister all sensor listeners in this callback so they don't
-        // continue to use resources when the app is stopped.
-        mSensorManager.unregisterListener(this);
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
@@ -544,9 +505,12 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 //                Toast.makeText(mContext,mVectorLayer.getContainingBarrio(new GeoPoint(13.09,-86.36)).getBarrioName(),Toast.LENGTH_LONG).show();
 //                return true;
 //            }
-            if (g instanceof Gesture.LongPress) {
+            if (g instanceof Gesture.Tap) {
                 GeoPoint p = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
-                Toast.makeText(mContext,mVectorLayer.getContainingBarrio(p).getBarrioId(),Toast.LENGTH_LONG).show();
+                endLocation.setLatitude(p.getLatitude());
+                endLocation.setLongitude(p.getLongitude());
+                startMoveAnim(500);
+                //mapView.map().animator().animateTo(new GeoPoint(endLocation.getLatitude(),endLocation.getLongitude()));
                 return true;
             }
 //            if (g instanceof Gesture.TripleTap) {
@@ -560,122 +524,24 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         @Override
         public void onMapEvent(Event e, MapPosition mapPosition) {
             if (e == Map.POSITION_EVENT || e == Map.SCALE_EVENT || e == Map.ANIM_END|| e==Map.ROTATE_EVENT) {
-
-                //Toast.makeText(mContext,"currPos: "+mapPosition.getLatitude(),Toast.LENGTH_LONG).show();
-                mCurrLocation.setLatitude(mapView.map().getMapPosition().getLatitude());
-                mCurrLocation.setLongitude(mapView.map().getMapPosition().getLongitude());
-                // Toast.makeText(mContext,"currPos: "+mapPosition.getLatitude()+" "+mCurrLocation.getLatitude(),Toast.LENGTH_LONG).show();
-
-
-
+                mCurrMapLoc.setLatitude(mapView.map().getMapPosition().getLatitude());
+                mCurrMapLoc.setLongitude(mapView.map().getMapPosition().getLongitude());
             }
             if (e==Map.MOVE_EVENT || e == Map.SCALE_EVENT || e==Map.ROTATE_EVENT){
                 backToCenterImage.setVisibility(ImageView.VISIBLE);
                 bullseyeAnim();
-                //mCompass.setMode(Compass.Mode.OFF);
                 wasMoved=true;
                 mCompass.controlView(false);
                 rescheduleTimer();
             }
             if(e == Map.SCALE_EVENT || e == Map.ANIM_END|| e==Map.ROTATE_EVENT) {
-                double scale = mapPosition.getZoom();
-                Log.d("scale_test", "scale:" + scale);
-                if (mScale!=mapPosition.getScale()){
-                    //own anim
-                    mScale=mapPosition.getScale();
-                    int currSize=getDrawableIndex(scale);
-                    scaleIcon(currSize);
-                    //scaleAnimation(scale);
-
-                    //others anim
-                    //scaleOtherIcons(currSize);
-                    //resetOriginalIcon(currSize);
-                }
+                mScale=mapPosition.getScale();
             }
             if (e==Map.TILT_EVENT){
                 mTilt=mapPosition.getTilt();
             }
         }
 
-    }
-
-    @Override
-    public void onSensorChanged(SensorEvent sensorEvent) {
-        Log.d("rotat",""+mCompass.getRotation());
-            if (mMarkerLayer.getItemList().size()!=0) {
-
-
-                TaxiMarker taxiMarker=mMarkerLayer.getItemList().get(0);
-                taxiMarker.setRotation(mCompass.getRotation());
-
-                mMarkerLayer.getItemList().set(0,taxiMarker);
-                mMarkerLayer.update();
-
-                mapView.map().updateMap(true);
-            }
-
-
-
-
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int i) {
-
-    }
-
-    public void scaleIcon(int scale){
-        symbol=mScaleSymbols[scale];
-        TaxiMarker taxiMarker = mMarkerLayer.getItemList().get(0);
-        taxiMarker.setRotatedSymbol(symbol);
-        mMarkerLayer.getItemList().set(0,taxiMarker);
-        mapView.map().updateMap(false);
-    }
-
-    public void scaleOtherIcons(int scale){
-
-        Bitmap otherSymbol = mOtherScaleSymbols[scale];
-        for (TaxiMarker otherTaxiMarker : mOtherTaxisLayer.getItemList()) {
-            otherTaxiMarker.setRotatedSymbol(new MarkerSymbol(otherSymbol, MarkerSymbol.HotspotPlace.CENTER, false));
-        }
-        mapView.map().updateMap(false);
-
-    }
-
-    double mZoom;
-    public void scaleAnimation(final double zoom){
-        if (zoom!=mZoom) {
-            mZoom=zoom;
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (mZoom == zoom) {
-                        PathModel pathModel=otherIcon.getPathModelByName("arrow");
-                        for (TaxiMarker item:mOtherTaxisLayer.getItemList()) {
-
-                            if (clickedItems.contains((Integer)item.taxiObject.getTaxiId())){
-                                //clickedItems.remove((Integer)item.getTaxiId());
-                                pathModel.setStrokeWidth(2);
-                                item.setRotatedSymbol(new MarkerSymbol(AndroidGraphicsCustom.drawableToBitmap(otherIcon,101+getDrawableSize(zoom)), MarkerSymbol.HotspotPlace.CENTER,false));
-                                //Toast.makeText(mContext, "is contained", Toast.LENGTH_LONG).show();
-                            }else{
-                                //clickedItems.add(item.getTaxiId());
-                                pathModel.setStrokeWidth(0);
-                                item.setRotatedSymbol(new MarkerSymbol(AndroidGraphicsCustom.drawableToBitmap(otherIcon,101+getDrawableSize(zoom)), MarkerSymbol.HotspotPlace.CENTER,false));
-                                //Toast.makeText(mContext, "is not contained", Toast.LENGTH_LONG).show();
-                            }
-                        }
-
-                        for (int i = 0; i < mClickAnimationSymbols.length; i++) {
-                            mClickAnimationSymbols[i] = new MarkerSymbol(AndroidGraphicsCustom.drawableToBitmap(mClickAnimationDrawables[i], 101 + getDrawableSize(zoom)), MarkerSymbol.HotspotPlace.CENTER, false);
-                        }
-                        mOtherTaxisLayer.update();
-                        mapView.map().updateMap(true);
-
-                    }
-                }
-            }, 100);
-        }
     }
 
     public void rescheduleTimer(){
@@ -694,8 +560,6 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 @Override
                 public void run() {
                     backToCenter();
-                    //mCompass.setEnabled(true);
-
                 }
             });
 
@@ -705,7 +569,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     private void backToCenter(){
         wasMoved=false;
         mCompass.setMapRotation(-mapView.map().getMapPosition().getBearing());
-        smoothenMapMovement(mCurrLocation,mLocation,endLocation);
+        //smoothenMapMovement(mCurrMapLoc, mMarkerLoc,endLocation);
+        startMoveAnim(500);
         backToCenterImage.setVisibility(ImageView.INVISIBLE);
         Toast.makeText(this,""+endLocation.getLatitude(),Toast.LENGTH_LONG).show();
         //mCompass.setMode(Compass.Mode.C2D);
@@ -727,81 +592,86 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         }
     }
 
-    private void smoothenMapMovement(Location initialMap, Location initialTaxi, final Location end){
-        double latDiffMap=end.getLatitude()-initialMap.getLatitude();
-        double lonDiffMap=end.getLongitude()-initialMap.getLongitude();
-        //float rotDiffMap=-mCompass.getRotation()-mapView.map().getMapPosition().getBearing();
-        //mCompass.setMapRotation(mapView.map().getMapPosition().getBearing());
 
-        double latDiff=end.getLatitude()-initialTaxi.getLatitude();
-        double lonDiff=end.getLongitude()-initialTaxi.getLongitude();
-        final int frames=19;
-        for (int a = 0; a<frames ;a++) {
-            final double latMap = initialMap.getLatitude() + latDiffMap * (a + 1) / frames;
-            final double lonMap = initialMap.getLongitude() + lonDiffMap * (a + 1) / frames;
-            final int i=a;
+    public static final int ANIM_NONE = 0;
+    public static final int ANIM_MOVE = 1 << 0;
 
-            final double lat = initialTaxi.getLatitude() + latDiff * (a + 1) / frames;
-            final double lon = initialTaxi.getLongitude() + lonDiff * (a + 1) / frames;
-            final Location loc=new Location(initialTaxi);
-            loc.setLatitude(lat);
-            loc.setLongitude(lon);
+    int mState = ANIM_NONE;
+    long mAnimEnd = -1;
+    double mRemainingDuration = 0;
 
-            mapView.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (end==endLocation) {
+    public void startMoveAnim(float duration){
+        mRemainingDuration=duration;
+        mState=ANIM_MOVE;
+        mAnimEnd=System.currentTimeMillis() + (long) duration;
+        updateMoveAnim();
+    }
 
-                        if (!wasMoved) {
-                            //move map
-                            mapView.map().viewport().setMapPosition(new MapPosition(latMap, lonMap, mScale));
-                            mapView.map().viewport().setTilt(mTilt);
-                            mapView.map().viewport().setRotation(-mCompass.getMapRotation());
-                            //reset anim initial values
-                            mCurrLocation.setLatitude(latMap);
-                            mCurrLocation.setLongitude(lonMap);
-                            if(i==frames-1){
-                                mCompass.controlView(true);
-                                mCompass.setMode(Compass.Mode.C2D);
-                            }
-                        }
+    public void updateMoveAnim(){
+        ThreadUtils.assertMainThread();
+        if (mState == ANIM_NONE)
+            return;
 
-                        //move taxi
-                        setOwnMarker(loc);
-                        Log.d("marker_error", "potential issue location changed"+end.getTime()+" acc:"+end.getAccuracy());
-                        mapView.map().updateMap(true);
+        long millisLeft = mAnimEnd - System.currentTimeMillis();
 
-                        //reset anim initial values
-                        mLocation=loc;
+        double adv = clamp(1.0f - millisLeft / mRemainingDuration, 1E-6f, 1);
 
-                    }
+        mRemainingDuration=(float) millisLeft;
 
+        if ((mState & ANIM_MOVE) != 0) {
+            //do the moving
+            //of marker
+            double latDiffMark=endLocation.getLatitude()-mMarkerLoc.getLatitude();
+            double lonDiffMark=endLocation.getLongitude()-mMarkerLoc.getLongitude();
+            double lat = mMarkerLoc.getLatitude() + latDiffMark*adv;
+            double lon = mMarkerLoc.getLongitude() + lonDiffMark*adv;
+            mMarkerLoc.setLatitude(lat);
+            mMarkerLoc.setLongitude(lon);
+            mOwnMarkerLayer.moveMarker(new GeoPoint(lat,lon));
+
+            //of map
+            if (!wasMoved) {
+                //move map
+                double latDiffMap = endLocation.getLatitude() - mCurrMapLoc.getLatitude();
+                double lonDiffMap = endLocation.getLongitude() - mCurrMapLoc.getLongitude();
+                double latMap = mCurrMapLoc.getLatitude() + latDiffMap * adv;
+                double lonMap = mCurrMapLoc.getLongitude() + lonDiffMap * adv;
+                mapView.map().viewport().setMapPosition(new MapPosition(latMap, lonMap, mScale));
+                mapView.map().viewport().setTilt(mTilt);
+                mapView.map().viewport().setRotation(-mCompass.getMapRotation());
+                //reset anim initial values
+                mCurrMapLoc.setLatitude(latMap);
+                mCurrMapLoc.setLongitude(lonMap);
+                if(millisLeft<=0){
+                    mCompass.controlView(true);
+                    mCompass.setMode(Compass.Mode.C2D);
                 }
-            }, 25 * a);
+            }
+            mapView.map().updateMap(true);
         }
+
+        if (millisLeft <= 0) {
+            //log.debug("animate END");
+            cancel();
+        }
+
+        mapView.postDelayed(updateTask, 25);
+
     }
 
-    void setOwnMarker(Location location) {
-        TaxiMarker taxiMarker;
-        if (mMarkerLayer.getItemList().size() == 1) {
-            //maker already exists
-            taxiMarker = mMarkerLayer.getItemList().get(0);
-        } else {
-              mMarkerLayer.removeAllItems();
-              TaxiObject taxiObject=new TaxiObject(Constants.myId,location.getLatitude(),location.getLongitude(),location.getTime(),mCompass.getRotation(),"taxi",0.0,0.0,1);
-              taxiMarker = new TaxiMarker(taxiObject);
+    Runnable updateTask=new Runnable() {
+        @Override
+        public void run() {
+            if (mState == ANIM_MOVE){
+                updateMoveAnim();
+            }
+        }
+    };
 
-        }
-        taxiMarker.setLatitude(location.getLatitude());
-        taxiMarker.setLongitude(location.getLongitude());
-        taxiMarker.setRotatedSymbol(symbol);
-        if (mMarkerLayer.getItemList().size() > 0) {
-            mMarkerLayer.getItemList().set(0, taxiMarker);
-        } else {
-            mMarkerLayer.addItem(taxiMarker);
-        }
-        mMarkerLayer.populate();//???
+    public void cancel() {
+        mState = ANIM_NONE;
     }
+
 
     @Override
     protected void onResume() {
@@ -819,12 +689,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         mapView.onPause();
         super.onPause();
         fusedLocationProviderClient.removeLocationUpdates(locationCallback);
-
-
     }
-
-
-
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {

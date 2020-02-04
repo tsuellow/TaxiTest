@@ -1,15 +1,14 @@
 package com.example.android.taxitest.vtmExtension;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.os.Handler;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.location.Location;
 import android.util.Log;
-import android.widget.ImageView;
-import android.widget.Toast;
 
-import androidx.core.graphics.ColorUtils;
-
+import com.example.android.taxitest.Compass;
 import com.example.android.taxitest.data.TaxiObject;
 import com.example.android.taxitest.utils.PaintUtils;
 import com.example.android.taxitest.utils.ZoomUtils;
@@ -25,6 +24,7 @@ import org.oscim.event.Event;
 import org.oscim.layers.marker.ItemizedLayer;
 import org.oscim.layers.marker.MarkerSymbol;
 import org.oscim.map.Map;
+import org.oscim.utils.ThreadUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,16 +32,18 @@ import java.util.Iterator;
 import java.util.List;
 
 import static com.example.android.taxitest.utils.ZoomUtils.getDrawableIndex;
-import static com.example.android.taxitest.utils.ZoomUtils.getDrawableSize;
+import static org.oscim.utils.FastMath.clamp;
 
-public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.UpdateListener
-{
+public class OwnMarkerLayer extends ItemizedLayer<OwnMarker> implements Map.UpdateListener {
 
+    private OwnMarker ownMarker;
+    private Compass mCompass;
     private VectorMasterDrawable drawable;
     private BarriosLayer barriosLayer;
     private Context context;
+    private int destId;
 
-    public List<DrawableBitmapCorrespondence> bitmapReferenceList= new ArrayList<>();
+    public List<OwnMarkerLayer.DrawableBitmapCorrespondence> bitmapReferenceList= new ArrayList<>();
 
     //helper vars
     PathModel pathModelArrow;
@@ -51,7 +53,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
 
 
 
-    public OtherTaxiLayer(Context context, BarriosLayer barriosLayer, Map map, List<TaxiMarker> list, VectorMasterDrawable defaultDrawable) {
+    public OwnMarkerLayer(Context context, BarriosLayer barriosLayer, Map map, List<OwnMarker> list, VectorMasterDrawable defaultDrawable, GeoPoint location, GeoPoint dest, Compass compass) {
         super(map,
                 list,
                 new MarkerSymbol(AndroidGraphicsCustom.drawableToBitmap(defaultDrawable, ZoomUtils.getDrawableSize(map.getMapPosition().getZoom())), MarkerSymbol.HotspotPlace.CENTER, false),
@@ -59,33 +61,35 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
         drawable = defaultDrawable;
         this.context = context;
         this.barriosLayer = barriosLayer;
-
         setOnItemGestureListener(customListener);
-
         pathModelArrow = drawable.getPathModelByName("arrow");
         pathModelCircle = drawable.getPathModelByName("circle");
         mapScale=map.getMapPosition().getScale();
+        mCompass=compass;
+        ownMarker=new OwnMarker(location,dest);
+
+        addTaxi(ownMarker);
         prepareScaledBitmapArray();
+
+        mCompass.setCompassUpdateListener(new Compass.CompassUpdateListener() {
+            @Override
+            public void onCompassChanged(float rotation) {
+                mItemList.get(0).setRotation(rotation);
+                populate();
+                mMap.updateMap(true);
+            }
+        });
     }
 
-    private OnItemGestureListener<TaxiMarker> customListener=new OnItemGestureListener<TaxiMarker>() {
+    private ItemizedLayer.OnItemGestureListener<OwnMarker> customListener=new ItemizedLayer.OnItemGestureListener<OwnMarker>() {
         @Override
-        public boolean onItemSingleTapUp(int index, TaxiMarker item) {
-            if (item.getIsClicked()){
-                item.setIsClicked(false);
-            }else{
-                item.setIsClicked(true);
-            }
-            item.setRotatedSymbol(new MarkerSymbol(fetchBitmap(item.taxiObject,item.getIsClicked()), MarkerSymbol.HotspotPlace.CENTER,false));
-            update();
-            mMap.updateMap(true);
+        public boolean onItemSingleTapUp(int index, OwnMarker item) {
 
-            Toast.makeText(context, item.taxiObject.getTaxiId() + " id", Toast.LENGTH_LONG).show();
             return false;
         }
 
         @Override
-        public boolean onItemLongPress(int index, TaxiMarker item) {
+        public boolean onItemLongPress(int index, OwnMarker item) {
             return false;
         }
     };
@@ -107,27 +111,29 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
     }
 
     //adds a new taxi to the layer
-    public void addTaxi(TaxiMarker item) {
-        MarkerSymbol symbol = new MarkerSymbol(fetchBitmap(item.taxiObject, item.getIsClicked()), MarkerSymbol.HotspotPlace.CENTER, false);
-        item.setRotatedSymbol(symbol);
+    private void addTaxi(OwnMarker item) {
+        removeAllItems();
+        MarkerSymbol symbol = new MarkerSymbol(fetchBitmap(item.destGeoPoint, item.getIsClicked()), MarkerSymbol.HotspotPlace.CENTER, false);
+        item.setRotatedMarker(symbol,mCompass.getRotation());
         mItemList.add(item);
         populate();
     }
 
-    public void addNewTaxi(TaxiObject taxiObject){
-        TaxiMarker otherTaxiMarker=new TaxiMarker(taxiObject);
-        otherTaxiMarker.setPurpose(TaxiMarker.Purpose.APPEAR);
-        otherTaxiMarker.setPurposeTaxiObject(taxiObject);
-        //otherTaxiMarker.setRotatedSymbol(new MarkerSymbol(AndroidGraphicsCustom.drawableToBitmap(drawable,ZoomUtils.getDrawableSize(mMap.getMapPosition().getZoom())), MarkerSymbol.HotspotPlace.CENTER,false));
-        addTaxi(otherTaxiMarker);
+    public void moveMarker(GeoPoint point){
+        mItemList.get(0).setGeoPoint(point);
+        if(!checkDest(mItemList.get(0).destGeoPoint)){
+            mItemList.get(0).setRotatedMarker(new MarkerSymbol(fetchBitmap(mItemList.get(0).destGeoPoint,false), MarkerSymbol.HotspotPlace.CENTER,false),mCompass.getRotation());
+        }
+        populate();
     }
 
+
     //checks if bitmap for geopoint already exists else it calculates a new one
-    public Bitmap fetchBitmap(TaxiObject taxiObject, boolean isClicked) {
-        GeoPoint point=new GeoPoint(taxiObject.getDestinationLatitude(),taxiObject.getDestinationLongitude());
-        BarrioPolygonDrawable barrio = barriosLayer.getContainingBarrio(point);
+    public Bitmap fetchBitmap(GeoPoint geoPoint, boolean isClicked) {
+        BarrioPolygonDrawable barrio = barriosLayer.getContainingBarrio(geoPoint);
+        this.destId=barrio.getBarrioId();
         if (!isClicked) {
-            for (DrawableBitmapCorrespondence item : bitmapReferenceList) {
+            for (OwnMarkerLayer.DrawableBitmapCorrespondence item : bitmapReferenceList) {
                 if (barrio.getBarrioId() == item.barrioId) {
                     return item.barrioBitmap;
                 }
@@ -138,9 +144,17 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
         VectorMasterDrawable drawable = modifyDrawable(color, isClicked);
         Bitmap bitmap = AndroidGraphicsCustom.drawableToBitmap(drawable, ZoomUtils.getDrawableSize(mMap.getMapPosition().getZoom()));
         if (!isClicked) {
-            bitmapReferenceList.add(new DrawableBitmapCorrespondence(barrio.getBarrioId(), color, drawable, bitmap));
+            bitmapReferenceList.add(new OwnMarkerLayer.DrawableBitmapCorrespondence(barrio.getBarrioId(), color, drawable, bitmap));
         }
         return bitmap;
+    }
+
+    private boolean checkDest(GeoPoint geoPoint){
+        if (barriosLayer.getContainingBarrio(geoPoint).getBarrioId()==destId){
+            return true;
+        }else{
+            return false;
+        }
     }
 
     // modifies drawable according to destination colors
@@ -160,7 +174,6 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
     }
 
 
-
     //helper class to store existing bitmaps for taxis
     private class DrawableBitmapCorrespondence {
         int barrioId;
@@ -176,38 +189,12 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
         }
     }
 
-    public void setOffAnimation(final int frames) {
-        Collections.sort(mItemList);
-        for (int i = 0; i < frames; i++) {
-            final int a = i;
-            mMap.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    for (TaxiMarker marker : mItemList) {
-                        marker.executeFrame(a, frames);
-                    }
-                    populate();
-                    update();
-                    mMap.updateMap(false);
-                }
-            }, i * 500 / frames);
-            mMap.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    Iterator<TaxiMarker> i = mItemList.iterator();
-                    while (i.hasNext()) {
-                        TaxiMarker m = i.next();
-                        if (m.getPurpose() == TaxiMarker.Purpose.DISAPPEAR) {
-                            i.remove();
-                        }
-                    }
-                    populate();
-                    update();
-                    mMap.updateMap(false);
-                }
-            }, 500);
-        }
+    //animation logic stays in main
+    public void move(GeoPoint geoPoint) {
+        mItemList.get(0).setGeoPoint(geoPoint);
     }
+
+
 
 
     @Override
@@ -220,62 +207,25 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                 //own anim
                 mapScale=mapPosition.getScale();
                 int currSize=getDrawableIndex(scale);
-
                 //others anim
-                scaleOtherIcons(currSize);
-                zoomAdjust(scale);
+                scaleIcon(currSize);
             }
         }
     }
 
-    public void scaleOtherIcons(int scale){
-
+    public void scaleIcon(int scale){
         Bitmap otherSymbol = scaledGrayedSymbols[scale];
-        for (TaxiMarker otherTaxiMarker : mItemList ) {
-            otherTaxiMarker.setRotatedSymbol(new MarkerSymbol(otherSymbol, MarkerSymbol.HotspotPlace.CENTER, false));
-        }
+        mItemList.get(0).setRotatedMarker(new MarkerSymbol(otherSymbol, MarkerSymbol.HotspotPlace.CENTER, false),mCompass.getRotation());
         mMap.updateMap(false);
 
     }
 
 
     private void prepareScaledBitmapArray(){
-        pathModelArrow.setFillColor(Color.GRAY);
-        pathModelArrow.setFillAlpha(0.5f);
-        pathModelArrow.setStrokeAlpha(0.0f);
-        pathModelCircle.setStrokeAlpha(0.0f);
         for (int i = 0; i < 100; i++) {
             scaledGrayedSymbols[i] = AndroidGraphicsCustom.drawableToBitmap(drawable, 101 + i);
         }
     }
 
-    private double mZoom;
-    private void zoomAdjust(final double zoom){
-        if (zoom!=mZoom) {
-            mZoom=zoom;
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (mZoom == zoom) {
-
-                        //shrink all cached bitmaps
-                        for(DrawableBitmapCorrespondence item:bitmapReferenceList){
-                            item.barrioBitmap=AndroidGraphicsCustom.drawableToBitmap(item.barrioDrawable, ZoomUtils.getDrawableSize(zoom));
-                        }
-
-                        for (TaxiMarker item:mItemList) {
-
-                            item.setRotatedSymbol(new MarkerSymbol(fetchBitmap(item.taxiObject,item.getIsClicked()), MarkerSymbol.HotspotPlace.CENTER,false));
-                        }
-
-
-                        update();
-                        mMap.updateMap(true);
-
-                    }
-                }
-            }, 100);
-        }
-    }
 
 }

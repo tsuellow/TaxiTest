@@ -266,6 +266,7 @@ public class Compass extends Layer implements SensorEventListener, Map.UpdateLis
             mCurMapRotation=rotationMap;
         }
         mCurRotation = rotation;
+        mCompassListener.onCompassChanged(mCurRotation);
     }
 
     public float adjustScreenRotation(float rotation){
@@ -281,6 +282,19 @@ public class Compass extends Layer implements SensorEventListener, Map.UpdateLis
                 return rotation+270;
         }
     }
+
+    //callback for people needing compass data
+    public interface CompassUpdateListener{
+        void onCompassChanged(float rotation);
+    }
+
+    public CompassUpdateListener mCompassListener;
+
+    public void setCompassUpdateListener(CompassUpdateListener compassUpdateListener){
+        mCompassListener=compassUpdateListener;
+    }
+
+
 
     // from http://stackoverflow.com/questions/16317599/android-compass-that-
     // can-compensate-for-tilt-and-pitch/16386066#16386066

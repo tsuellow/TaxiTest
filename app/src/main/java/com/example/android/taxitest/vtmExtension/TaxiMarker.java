@@ -14,6 +14,7 @@ public class TaxiMarker implements MarkerInterface, Comparable<TaxiMarker> {
 
     public TaxiObject taxiObject;
     public GeoPoint geoPoint;
+    public GeoPoint destGeoPoint;
     protected MarkerSymbol markerSymbol;
 
     private Purpose purpose=Purpose.NULL;
@@ -23,6 +24,14 @@ public class TaxiMarker implements MarkerInterface, Comparable<TaxiMarker> {
     public TaxiMarker(TaxiObject taxiObject){
         this.taxiObject=taxiObject;
         geoPoint=new GeoPoint(taxiObject.getLatitude(),taxiObject.getLongitude());
+        destGeoPoint=new GeoPoint(taxiObject.getDestinationLatitude(),taxiObject.getDestinationLongitude());
+        //set marker automatically  computeSymbol
+    }
+
+    public void setTaxiObject(TaxiObject taxiObject){
+        this.taxiObject=taxiObject;
+        geoPoint=new GeoPoint(taxiObject.getLatitude(),taxiObject.getLongitude());
+        destGeoPoint=new GeoPoint(taxiObject.getDestinationLatitude(),taxiObject.getDestinationLongitude());
         //set marker automatically  computeSymbol
     }
 
@@ -68,6 +77,12 @@ public class TaxiMarker implements MarkerInterface, Comparable<TaxiMarker> {
     public void setRotation(float rotation){
         this.taxiObject.setRotation(rotation);
         markerSymbol.setRotation(rotation);
+    }
+
+    public void setGeoPoint(GeoPoint geoPoint){
+        this.geoPoint=geoPoint;
+        this.taxiObject.setLatitude(geoPoint.getLatitude());
+        this.taxiObject.setLongitude(geoPoint.getLongitude());
     }
 
 
