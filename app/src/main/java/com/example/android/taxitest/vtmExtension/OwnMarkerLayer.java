@@ -2,14 +2,8 @@ package com.example.android.taxitest.vtmExtension;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.location.Location;
-import android.util.Log;
 
 import com.example.android.taxitest.Compass;
-import com.example.android.taxitest.data.TaxiObject;
 import com.example.android.taxitest.utils.PaintUtils;
 import com.example.android.taxitest.utils.ZoomUtils;
 import com.example.android.taxitest.vectorLayer.BarrioPolygonDrawable;
@@ -24,15 +18,10 @@ import org.oscim.event.Event;
 import org.oscim.layers.marker.ItemizedLayer;
 import org.oscim.layers.marker.MarkerSymbol;
 import org.oscim.map.Map;
-import org.oscim.utils.ThreadUtils;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import static com.example.android.taxitest.utils.ZoomUtils.getDrawableIndex;
-import static org.oscim.utils.FastMath.clamp;
+
 
 public class OwnMarkerLayer extends ItemizedLayer<OwnMarker> implements Map.UpdateListener {
 
@@ -43,7 +32,6 @@ public class OwnMarkerLayer extends ItemizedLayer<OwnMarker> implements Map.Upda
     private Context context;
     private int destId;
 
-    public List<OwnMarkerLayer.DrawableBitmapCorrespondence> bitmapReferenceList= new ArrayList<>();
 
     //helper vars
     PathModel pathModelArrow;
@@ -69,7 +57,10 @@ public class OwnMarkerLayer extends ItemizedLayer<OwnMarker> implements Map.Upda
         ownMarker=new OwnMarker(location,dest);
 
         addTaxi(ownMarker);
-        prepareScaledBitmapArray();
+        //correction for slow map
+        mItemList.get(0).setRotatedMarker(new MarkerSymbol(fetchBitmap(dest,false,17.0), MarkerSymbol.HotspotPlace.CENTER,false),mCompass.getRotation());
+        //prepare for zooming
+        prepareScaledBitmapArray(fetchDrawable(dest,false));
 
         mCompass.setCompassUpdateListener(new Compass.CompassUpdateListener() {
             @Override
@@ -123,36 +114,43 @@ public class OwnMarkerLayer extends ItemizedLayer<OwnMarker> implements Map.Upda
         mItemList.get(0).setGeoPoint(point);
         if(!checkDest(mItemList.get(0).destGeoPoint)){
             mItemList.get(0).setRotatedMarker(new MarkerSymbol(fetchBitmap(mItemList.get(0).destGeoPoint,false), MarkerSymbol.HotspotPlace.CENTER,false),mCompass.getRotation());
+            prepareScaledBitmapArray(fetchDrawable(mItemList.get(0).destGeoPoint,false));
         }
         populate();
+    }
+
+    public void setDest(GeoPoint dest){
+        mItemList.get(0).destGeoPoint=dest;
+        moveMarker(mItemList.get(0).geoPoint);
     }
 
 
     //checks if bitmap for geopoint already exists else it calculates a new one
     public Bitmap fetchBitmap(GeoPoint geoPoint, boolean isClicked) {
+        VectorMasterDrawable drawable = fetchDrawable(geoPoint,isClicked);
+        Bitmap bitmap = AndroidGraphicsCustom.drawableToBitmap(drawable, ZoomUtils.getDrawableSize(mMap.getMapPosition().getZoom()));
+        return bitmap;
+    }
+
+    public Bitmap fetchBitmap(GeoPoint geoPoint, boolean isClicked, double zoom) {
+        VectorMasterDrawable drawable = fetchDrawable(geoPoint,isClicked);
+        Bitmap bitmap = AndroidGraphicsCustom.drawableToBitmap(drawable, ZoomUtils.getDrawableSize(zoom));
+        return bitmap;
+    }
+
+    public VectorMasterDrawable fetchDrawable(GeoPoint geoPoint, boolean isClicked){
         BarrioPolygonDrawable barrio = barriosLayer.getContainingBarrio(geoPoint);
         this.destId=barrio.getBarrioId();
-        if (!isClicked) {
-            for (OwnMarkerLayer.DrawableBitmapCorrespondence item : bitmapReferenceList) {
-                if (barrio.getBarrioId() == item.barrioId) {
-                    return item.barrioBitmap;
-                }
-            }
-            Log.d("referenceList",""+bitmapReferenceList.size());
-        }
         int color = barrio.getStyle().fillColor;
         VectorMasterDrawable drawable = modifyDrawable(color, isClicked);
-        Bitmap bitmap = AndroidGraphicsCustom.drawableToBitmap(drawable, ZoomUtils.getDrawableSize(mMap.getMapPosition().getZoom()));
-        if (!isClicked) {
-            bitmapReferenceList.add(new OwnMarkerLayer.DrawableBitmapCorrespondence(barrio.getBarrioId(), color, drawable, bitmap));
-        }
-        return bitmap;
+        return drawable;
     }
 
     private boolean checkDest(GeoPoint geoPoint){
         if (barriosLayer.getContainingBarrio(geoPoint).getBarrioId()==destId){
             return true;
         }else{
+            destId=barriosLayer.getContainingBarrio(geoPoint).getBarrioId();
             return false;
         }
     }
@@ -172,28 +170,6 @@ public class OwnMarkerLayer extends ItemizedLayer<OwnMarker> implements Map.Upda
         }
         return result;
     }
-
-
-    //helper class to store existing bitmaps for taxis
-    private class DrawableBitmapCorrespondence {
-        int barrioId;
-        int barrioColor;
-        Drawable barrioDrawable;
-        Bitmap barrioBitmap;
-
-        public DrawableBitmapCorrespondence(int barrioId, int barrioColor, Drawable barrioDrawable, Bitmap barrioBitmap) {
-            this.barrioId = barrioId;
-            this.barrioColor = barrioColor;
-            this.barrioDrawable = barrioDrawable;
-            this.barrioBitmap = barrioBitmap;
-        }
-    }
-
-    //animation logic stays in main
-    public void move(GeoPoint geoPoint) {
-        mItemList.get(0).setGeoPoint(geoPoint);
-    }
-
 
 
 
@@ -221,9 +197,9 @@ public class OwnMarkerLayer extends ItemizedLayer<OwnMarker> implements Map.Upda
     }
 
 
-    private void prepareScaledBitmapArray(){
+    private void prepareScaledBitmapArray(VectorMasterDrawable drawable){
         for (int i = 0; i < 100; i++) {
-            scaledGrayedSymbols[i] = AndroidGraphicsCustom.drawableToBitmap(drawable, 101 + i);
+            scaledGrayedSymbols[i] =  AndroidGraphicsCustom.drawableToBitmap(drawable, 101+i);
         }
     }
 

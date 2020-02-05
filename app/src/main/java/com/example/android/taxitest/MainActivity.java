@@ -25,7 +25,6 @@ import com.example.android.taxitest.data.SqlLittleDB;
 import com.example.android.taxitest.data.TaxiObject;
 import com.example.android.taxitest.vectorLayer.BarriosLayer;
 import com.example.android.taxitest.vectorLayer.GeoJsonUtils;
-import com.example.android.taxitest.vtmExtension.AndroidGraphicsCustom;
 import com.example.android.taxitest.vtmExtension.OtherTaxiLayer;
 import com.example.android.taxitest.vtmExtension.OwnMarker;
 import com.example.android.taxitest.vtmExtension.OwnMarkerLayer;
@@ -39,13 +38,10 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.sdsmdg.harjot.vectormaster.VectorMasterDrawable;
-import com.sdsmdg.harjot.vectormaster.models.PathModel;
 
 import org.geojson.FeatureCollection;
 import org.oscim.android.MapView;
 import org.oscim.backend.CanvasAdapter;
-import org.oscim.backend.canvas.Bitmap;
-import org.oscim.backend.canvas.Color;
 import org.oscim.core.GeoPoint;
 import org.oscim.core.MapPosition;
 import org.oscim.event.Event;
@@ -53,8 +49,6 @@ import org.oscim.event.Gesture;
 import org.oscim.event.GestureListener;
 import org.oscim.event.MotionEvent;
 import org.oscim.layers.Layer;
-import org.oscim.layers.marker.ItemizedLayer;
-import org.oscim.layers.marker.MarkerSymbol;
 import org.oscim.layers.tile.buildings.BuildingLayer;
 import org.oscim.layers.tile.vector.VectorTileLayer;
 import org.oscim.layers.tile.vector.labeling.LabelLayer;
@@ -82,308 +76,75 @@ import java.util.TimerTask;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
-import static com.example.android.taxitest.utils.ZoomUtils.getDrawableSize;
 import static org.oscim.utils.FastMath.clamp;
 
 public class MainActivity extends Activity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener{
 
-    private MapView mapView;
+    //layout components
+    MapView mapView;
+    ImageView compassImage;
+    ImageView backToCenterImage;
 
-    private MapScaleBar mapScaleBar;
-    private Context mContext;
-    private Location mMarkerLoc;
-    private Compass mCompass;
-    private ImageView compassImage;
-    private ImageView backToCenterImage;
+    //websocket connection
+    WebSocketConnection mWebSocketConnection;
 
-    Vibrator mVibrator;
+    //database
+    SqlLittleDB mDb;
 
-
-    private float mTilt;
-    private double mScale;
-
-    MarkerSymbol symbol;
-    MarkerSymbol otherSymbol;
-
-    TaxiObject mOwnTaxiObject;
-
-    ItemizedLayer<TaxiMarker> mMarkerLayer;
+    //map layer variables
+    BuildingLayer mBuildingLayer;
+    LabelLayer mLabelLayer;
+    MapScaleBar mapScaleBar;
+    MapScaleBarLayer mMapScaleBarLayer;
+    Compass mCompass;
+    MapEventsReceiver mMapEventsReceiver;
+    BarriosLayer mBarriosLayer;
     OwnMarkerLayer mOwnMarkerLayer;
     OtherTaxiLayer mOtherTaxisLayer;
 
-    private MarkerSymbol[] mScaleSymbols = new MarkerSymbol[100];
-    private Bitmap[] mOtherScaleSymbols = new Bitmap[100];
+    //google fused location provider variables
+    FusedLocationProviderClient fusedLocationProviderClient;
+    LocationRequest locationRequest;
+    LocationCallback locationCallback;
 
-    private Location endLocation=new Location("");
-    private Location mCurrMapLoc =new Location("");;
-
-
-    //experiment
-    private FusedLocationProviderClient fusedLocationProviderClient;
-    private LocationRequest locationRequest;
-    private LocationCallback locationCallback;
-
-    //consider deleting
-    private boolean mClicked=false;
-
-
-    WebSocketConnection mWebSocketConnection;
-    SqlLittleDB mDb;
-
-
-    List<Integer> clickedItems=new ArrayList<Integer>();
-    Drawable clickedIcon;
+    //other helper and component variables
+    Context mContext;
+    Vibrator mVibrator;
     VectorMasterDrawable otherIcon;
-
-
-    private InputStream geoJsonIs;
-
-    BarriosLayer mVectorLayer;
-
+    float mTilt;
+    double mScale;
+    TaxiObject mOwnTaxiObject;
+    InputStream geoJsonIs;
     AnimatedVectorDrawableCompat advCompat;
     AnimatedVectorDrawable adv;
-
     boolean wasMoved=false;
-    int mCurrSize=99;
-
-
+    //helper locations
+    Location mMarkerLoc;
+    Location endLocation=new Location("");
+    Location mCurrMapLoc =new Location("");
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //basic settings
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        //set content view xml and multiple components
         setContentView(R.layout.activity_tilemap);
-        ActivityCompat.requestPermissions(MainActivity.this, new String[]{READ_EXTERNAL_STORAGE,ACCESS_FINE_LOCATION, WRITE_EXTERNAL_STORAGE},111);
-
-        //initialize multiple sensors and permissions
-        initializeServices();
-
-        mDb= SqlLittleDB.getInstance(getApplicationContext());
-
-        // we build google api client
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-        locationRequest = LocationRequest.create();
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequest.setInterval(3000);
-        locationRequest.setFastestInterval(500);
-
-        // Map view
-        mapView = (MapView) findViewById(R.id.mapView);
         compassImage = (ImageView) findViewById(R.id.compass);
         backToCenterImage = (ImageView) findViewById(R.id.back_to_center);
+        mapView = (MapView) findViewById(R.id.mapView);
 
-        mOwnTaxiObject=new TaxiObject(Constants.myId,0.0,0.0,new Date().getTime(),0.0f,Constants.userType,0.0,0.0,1);
+        // check permissions CONSIDER MOVING
+        ActivityCompat.requestPermissions(MainActivity.this, new String[]{READ_EXTERNAL_STORAGE,ACCESS_FINE_LOCATION, WRITE_EXTERNAL_STORAGE},111);
 
-
-
-
-        // Tile source
-
-        MapFileTileSource tileSource = new MapFileTileSource();
-        copyFileToExternalStorage(R.raw.nicaragua);//put in async task
-        File file=new File(Environment.getExternalStorageDirectory(), Constants.MAP_FILE);
-        String mapPath = file.getAbsolutePath();
-        //tileSource.setMapFile(mapPath);
-
-
-        if (tileSource.setMapFile(mapPath)) {
-            Toast.makeText(this,"success",Toast.LENGTH_LONG).show();
-            // Vector layer
-            VectorTileLayer tileLayer = mapView.map().setBaseMap(tileSource);
-            // Building layer
-            mapView.map().layers().add(new BuildingLayer(mapView.map(), tileLayer));
-            // Label layer
-            mapView.map().layers().add(new LabelLayer(mapView.map(), tileLayer));
-            // Render theme
-            mapView.map().setTheme(VtmThemes.DEFAULT);
-            //add set pivot
-            mapView.map().viewport().setMapViewCenter(0.0f, 0.75f);
-            // Scale bar
-            mapScaleBar = new DefaultMapScaleBar(mapView.map());
-            MapScaleBarLayer mapScaleBarLayer = new MapScaleBarLayer(mapView.map(), mapScaleBar);
-            mapScaleBarLayer.getRenderer().setPosition(GLViewport.Position.BOTTOM_LEFT);
-            mapScaleBarLayer.getRenderer().setOffset(5 * CanvasAdapter.getScale(), 0);
-            mapView.map().layers().add(mapScaleBarLayer);
-            mTilt = mapView.map().viewport().getMinTilt();
-            mScale = 1 << 17;
-            //mMarkerLayer = new ItemizedLayer<TaxiMarker>(mapView.map(), new ArrayList<TaxiMarker>(), symbol, null);
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ) {
-                fusedLocationProviderClient.getLastLocation()
-                        .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                            @Override
-                            public void onSuccess(Location location) {
-                                // Got last known location. In some rare situations this can be null.
-                                if (location != null) {
-                                    mMarkerLoc = location;
-                                    mMarkerLoc.setLatitude(mMarkerLoc.getLatitude()-0.0);
-                                    mMarkerLoc.setLongitude(mMarkerLoc.getLongitude()-0.0);
-                                    //setOwnMarker(mMarkerLoc);
-                                    mOwnMarkerLayer.moveMarker(new GeoPoint(mMarkerLoc.getLatitude(),mMarkerLoc.getLongitude()));
-                                    mapView.map().setMapPosition(mMarkerLoc.getLatitude(), mMarkerLoc.getLongitude(), mScale);
-                                }
-                            }
-                        });
-            }
-
-            locationCallback = new LocationCallback() {
-                @Override
-                public void onLocationResult(LocationResult locationResult) {
-                    if (locationResult == null) {
-                        return;
-                    }
-                    //smoothen transition to new spot
-                    Location adjustedLocation = locationResult.getLastLocation();
-                    adjustedLocation.setLatitude(adjustedLocation.getLatitude()-0.0);
-                    adjustedLocation.setLongitude(adjustedLocation.getLongitude()-0.0);
-                    endLocation=adjustedLocation;
-                    mCompass.setCurrLocation(endLocation);
-                    if (mCurrMapLoc != null && mMarkerLoc != null && !mClicked) {
-//                        MapPosition mapPosition=mapView.map().getMapPosition();
-//                        mapPosition.setPosition(new GeoPoint(endLocation.getLatitude(),endLocation.getLongitude()));
-                        //use regular smoothen function
-                        if (mCurrMapLoc != null && mMarkerLoc != null && !mClicked) {
-                            //smoothenMapMovement(mCurrMapLoc, mMarkerLoc, endLocation);
-                            startMoveAnim(500);
-
-                        }
-                        //mapView.map().animator().animateTo(mapPosition);
-                        //mMarkerLoc = endLocation;
-
-                    }
-                    //emit current position
-                    mOwnTaxiObject=new TaxiObject(Constants.myId,endLocation.getLatitude(),endLocation.getLongitude(),endLocation.getTime(),mCompass.getRotation(),"taxi",0.0,0.0,1);
-                    mWebSocketConnection.attemptSend(mOwnTaxiObject.taxiObjectToCsv());
-                }
-
-                ;
-            };
-
-
-        }
-        //add compass to map
-        mCompass = new Compass(this, mapView.map(), compassImage);
-        mCompass.setEnabled(true);
-        mCompass.setMode(Compass.Mode.C2D);
-        mapView.map().layers().add(mCompass);
-
-
-        mapView.map().layers().add(new MapEventsReceiver(mapView));
-        Drawable icon = getResources().getDrawable(R.drawable.frame00);
-        otherIcon=new VectorMasterDrawable(this,R.drawable.frame00);
-        //otherIcon.setTint(Color.BLUE);
-        Drawable grayedIcon= icon.getConstantState().newDrawable().mutate();
-        grayedIcon.setTint(Color.GRAY);
-        grayedIcon.setAlpha(75);
-        Bitmap bitmapPoi = AndroidGraphicsCustom.drawableToBitmap(icon, 200);
-        final Bitmap otherBitmap=AndroidGraphicsCustom.drawableToBitmap(otherIcon, 200);
-
-//        for (int i = 0; i <= 18; i++) {
-//            String name = (i < 10) ? "frame0" : "frame";
-//            Drawable drawable = getResources().getDrawable(this.getResources().getIdentifier(name + i, "drawable", this.getPackageName()));
-//            mClickAnimationDrawables[i] = drawable;
-//            mClickAnimationSymbols[i] = new MarkerSymbol(AndroidGraphicsCustom.drawableToBitmap(drawable, 200), MarkerSymbol.HotspotPlace.CENTER, false);
-//        }
-
-        //prepare bitmaps
-        for (int i = 0; i < 100; i++) {
-            mScaleSymbols[i] = new MarkerSymbol(AndroidGraphicsCustom.drawableToBitmap(icon, 101 + i), MarkerSymbol.HotspotPlace.CENTER, false);
-        }
-
-        //prepare others bitmaps
-        for (int i = 0; i < 100; i++) {
-            mOtherScaleSymbols[i] = AndroidGraphicsCustom.drawableToBitmap(grayedIcon, 101 + i);
-        }
-
-        //TextureItem t=new TextureItem(bitmapPoi);
-        //TextureRegion tr=new TextureRegion(t,new TextureAtlas.Rect(0,0,10,10));
-
-        Drawable baseIcon=getResources().getDrawable(R.drawable.frame00);
-        clickedIcon= baseIcon.getConstantState().newDrawable().mutate();
-        clickedIcon.setTint(Color.BLACK);
-        ItemizedLayer.OnItemGestureListener<TaxiMarker> listener= new ItemizedLayer.OnItemGestureListener<TaxiMarker>() {
-            @Override
-            public boolean onItemSingleTapUp(int index, TaxiMarker item) {
-                double zoom=mapView.map().getMapPosition().getZoom();
-                int currSize=getDrawableSize(zoom);
-                PathModel pathModel=otherIcon.getPathModelByName("arrow");
-
-                if (clickedItems.contains((Integer)item.taxiObject.getTaxiId())){
-                    clickedItems.remove((Integer)item.taxiObject.getTaxiId());
-                    pathModel.setStrokeWidth(0);
-                    item.setRotatedSymbol(new MarkerSymbol(AndroidGraphicsCustom.drawableToBitmap(otherIcon,101+currSize), MarkerSymbol.HotspotPlace.CENTER,false));
-                    //Toast.makeText(mContext, "is contained", Toast.LENGTH_LONG).show();
-                }else{
-                    clickedItems.add(item.taxiObject.getTaxiId());
-                    pathModel.setStrokeWidth(2);
-                    item.setRotatedSymbol(new MarkerSymbol(AndroidGraphicsCustom.drawableToBitmap(otherIcon,101+currSize), MarkerSymbol.HotspotPlace.CENTER,false));
-                    //Toast.makeText(mContext, "is not contained", Toast.LENGTH_LONG).show();
-                }
-                mOtherTaxisLayer.update();
-                mapView.map().updateMap(true);
-
-                Toast.makeText(mContext, item.taxiObject.getTaxiId() + " id", Toast.LENGTH_LONG).show();
-                return false;
-            }
-
-            @Override
-            public boolean onItemLongPress(int index, TaxiMarker item) {
-                return false;
-            }
-        };
-
-        symbol = new MarkerSymbol(bitmapPoi, MarkerSymbol.HotspotPlace.CENTER, false);
-
-
-        otherSymbol = new MarkerSymbol(otherBitmap, MarkerSymbol.HotspotPlace.CENTER, false);
-
-        //project geojson
-        geoJsonIs=getResources().openRawResource(R.raw.barrios);
-        mVectorLayer=new BarriosLayer(mapView.map(),mContext);
-        FeatureCollection fc= GeoJsonUtils.loadFeatureCollection(geoJsonIs);
-        GeoJsonUtils.addBarrios(mVectorLayer,fc);
-        mapView.map().layers().add(mVectorLayer);
-
-        //mMarkerLayer = new ItemizedLayer<TaxiMarker>(mapView.map(), new ArrayList<TaxiMarker>(), symbol, null);
-        mOwnMarkerLayer= new OwnMarkerLayer(mContext,mVectorLayer,mapView.map(),new ArrayList<OwnMarker>(),otherIcon,Constants.lastLocation, new GeoPoint(0.0,0.0),mCompass);
-        mOtherTaxisLayer=new OtherTaxiLayer(mContext,mVectorLayer,mapView.map(),new ArrayList<TaxiMarker>(),otherIcon);
-        //mOtherTaxisLayer.setOnItemGestureListener(listener);
-
-
-
-
-        backToCenterImage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                backToCenter();
-            }
-        });
-        backToCenterImage.setVisibility(ImageView.INVISIBLE);
-
-        Drawable d = backToCenterImage.getDrawable();
-        if (d instanceof AnimatedVectorDrawableCompat) {
-            advCompat = (AnimatedVectorDrawableCompat) d;
-        } else if (d instanceof AnimatedVectorDrawable) {
-            adv = (AnimatedVectorDrawable) d;
-        }
-
-
-
-
-
-
-        //mapView.map().layers().add(mMarkerLayer);
-        mapView.map().layers().add(mOwnMarkerLayer);
-        mapView.map().layers().add(mOtherTaxisLayer);
-
-
-        //prepareCompassRecalibrateDialog();
-
-        mWebSocketConnection=new WebSocketConnection("https://id-ex-theos-taxi-test1.herokuapp.com/",this, mContext);
-        mWebSocketConnection.initializeSocketListener();
-        mWebSocketConnection.startAccumulationTimer();
-        mWebSocketConnection.connectSocket();
-
+        //initialize vibrator
+        mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        //set context
+        mContext = getApplicationContext();
+        //instantiate and prepare DB
+        mDb= SqlLittleDB.getInstance(getApplicationContext());
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
@@ -392,6 +153,129 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             }
         });
 
+        //initialize map
+        MapFileTileSource tileSource = new MapFileTileSource();
+        copyFileToExternalStorage(R.raw.nicaragua);//put in async task
+        File file=new File(Environment.getExternalStorageDirectory(), Constants.MAP_FILE);
+        String mapPath = file.getAbsolutePath();
+        if (!tileSource.setMapFile(mapPath)) {
+        Toast.makeText(mContext,"could not read map",Toast.LENGTH_LONG).show();
+        }
+        // Vector layer
+        VectorTileLayer tileLayer = mapView.map().setBaseMap(tileSource);
+        // Render theme
+        mapView.map().setTheme(VtmThemes.DEFAULT);
+        //add set pivot
+        mapView.map().viewport().setMapViewCenter(0.0f, 0.75f);
+
+        // SET LAYERS
+        // Building layer
+        mBuildingLayer=new BuildingLayer(mapView.map(), tileLayer);
+        // Label layer
+        mLabelLayer=new LabelLayer(mapView.map(), tileLayer);
+        // Scale bar
+        mapScaleBar = new DefaultMapScaleBar(mapView.map());
+        mMapScaleBarLayer = new MapScaleBarLayer(mapView.map(), mapScaleBar);
+        mMapScaleBarLayer.getRenderer().setPosition(GLViewport.Position.BOTTOM_LEFT);
+        mMapScaleBarLayer.getRenderer().setOffset(5 * CanvasAdapter.getScale(), 0);
+        // Compass
+        mCompass = new Compass(this, mapView.map(), compassImage);
+        mCompass.setEnabled(true);
+        mCompass.setMode(Compass.Mode.C2D);
+        // MapEventsReceiver
+        mMapEventsReceiver=new MapEventsReceiver(mapView);
+        // BarriosLayer
+        geoJsonIs=getResources().openRawResource(R.raw.barrios);
+        mBarriosLayer =new BarriosLayer(mapView.map(),mContext);
+        FeatureCollection fc= GeoJsonUtils.loadFeatureCollection(geoJsonIs);
+        if (fc != null) {
+            GeoJsonUtils.addBarrios(mBarriosLayer,fc);
+        }
+        // OwnMarkerLayer
+        otherIcon=new VectorMasterDrawable(this,R.drawable.frame00);
+        mOwnMarkerLayer= new OwnMarkerLayer(mContext, mBarriosLayer,mapView.map(),new ArrayList<OwnMarker>(),otherIcon,Constants.lastLocation, new GeoPoint(13.0923151,-86.3609919),mCompass);
+        // OtherMarkerLayer
+        mOtherTaxisLayer=new OtherTaxiLayer(mContext, mBarriosLayer,mapView.map(),new ArrayList<TaxiMarker>(),otherIcon);
+        // ADD ALL LAYERS TO MAP
+        addMapLayers();
+
+        //set important variables
+        mTilt = mapView.map().viewport().getMinTilt();
+        mScale = 1 << 17;
+        mOwnTaxiObject=new TaxiObject(Constants.myId,0.0,0.0,new Date().getTime(),0.0f,Constants.userType,0.0,0.0,1);
+
+        //google api client for location services
+        //settings
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(3000);
+        locationRequest.setFastestInterval(500);
+
+        //last known location
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ) {
+            fusedLocationProviderClient.getLastLocation()
+                    .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                        @Override
+                        public void onSuccess(Location location) {
+                            // Got last known location. In some rare situations this can be null.
+                            if (location != null) {
+                                mMarkerLoc = location;
+                                //use tis to shift location (dev only)
+                                mMarkerLoc.setLatitude(mMarkerLoc.getLatitude()-0.0);
+                                mMarkerLoc.setLongitude(mMarkerLoc.getLongitude()-0.0);
+                                mOwnMarkerLayer.moveMarker(new GeoPoint(mMarkerLoc.getLatitude(),mMarkerLoc.getLongitude()));
+                                mapView.map().setMapPosition(mMarkerLoc.getLatitude(), mMarkerLoc.getLongitude(), mScale);
+                            }
+                        }
+                    });
+        }
+
+        //callback every 3000ms
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult == null) {
+                    return;
+                }
+                //smoothen transition to new spot
+                Location adjustedLocation = locationResult.getLastLocation();
+                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-0.0);
+                adjustedLocation.setLongitude(adjustedLocation.getLongitude()-0.0);
+                endLocation=adjustedLocation;
+                mCompass.setCurrLocation(endLocation);
+                if (mCurrMapLoc != null && mMarkerLoc != null ) {
+                    startMoveAnim(500);
+                }
+                //emit current position
+                mOwnTaxiObject=new TaxiObject(Constants.myId,endLocation.getLatitude(),endLocation.getLongitude(),endLocation.getTime(),mCompass.getRotation(),"taxi",0.0,0.0,1);
+                mWebSocketConnection.attemptSend(mOwnTaxiObject.taxiObjectToCsv());
+            }
+
+            ;
+        };
+
+        //back-to-center animation button setup
+        backToCenterImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                backToCenter();
+            }
+        });
+        backToCenterImage.setVisibility(ImageView.INVISIBLE);
+        Drawable d = backToCenterImage.getDrawable();
+        if (d instanceof AnimatedVectorDrawableCompat) {
+            advCompat = (AnimatedVectorDrawableCompat) d;
+        } else if (d instanceof AnimatedVectorDrawable) {
+            adv = (AnimatedVectorDrawable) d;
+        }
+
+        //websocket connection setup CONSIDER MOVING TO OTHER MARKER LAYER
+        mWebSocketConnection=new WebSocketConnection("https://id-ex-theos-taxi-test1.herokuapp.com/", mContext);
+        mWebSocketConnection.initializeSocketListener();
+        mWebSocketConnection.startAccumulationTimer();
+        mWebSocketConnection.connectSocket();
+        //listener for websocket data accumulation result every 3 seconds
         mWebSocketConnection.setAnimationDataListener(new WebSocketConnection.AnimationDataListener() {
             @Override
             public void onAnimationParametersReceived(List<TaxiObject> baseTaxis, List<TaxiObject> newTaxis) {
@@ -402,7 +286,6 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                         TaxiObject taxiObject = baseTaxis.get(i);
                         if (taxiObject.getIsActive() == 0) {
                             mOtherTaxisLayer.getItemList().get(i).setPurpose(TaxiMarker.Purpose.DISAPPEAR);
-                            //mOtherTaxisLayer.removeItem(i);
                         } else {
                             mOtherTaxisLayer.getItemList().get(i).setPurpose(TaxiMarker.Purpose.MOVE);
                         }
@@ -426,28 +309,27 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 }
                 //sort the new array to ensure future correspondence
                 if (mOtherTaxisLayer.getItemList().size()>0){
-                    //sort itemlist
                     Collections.sort(mOtherTaxisLayer.getItemList());
                 }
                 //set off animation process
                 mOtherTaxisLayer.setOffAnimation(18);
             }
         });
-
-        mCurrSize=getDrawableSize(mapView.map().getMapPosition().getZoom());
-
     }
 
-
-
-    private void initializeServices(){
-        //initialize vibrator
-        mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-        //set context
-        mContext = getApplicationContext();
+    //METHOD TO ADD MAP LAYERS
+    private void addMapLayers(){
+        mapView.map().layers().add(mBarriosLayer);
+        mapView.map().layers().add(mBuildingLayer);
+        mapView.map().layers().add(mLabelLayer);
+        mapView.map().layers().add(mMapScaleBarLayer);
+        mapView.map().layers().add(mCompass);
+        mapView.map().layers().add(mMapEventsReceiver);
+        mapView.map().layers().add(mOwnMarkerLayer);
+        mapView.map().layers().add(mOtherTaxisLayer);
     }
 
-    //check if map file is in external storage and else load it there from resources
+    //CHECK IF  NICARAGUAN MAP-FILE IS IN EXTERNAL STORAGE AND ELSE LOAD IT THERE FROM RESOURCES
     private void copyFileToExternalStorage(int resourceId){
         File sdFile = new File(Environment.getExternalStorageDirectory(), Constants.MAP_FILE);
         if (!sdFile.exists()) {
@@ -473,25 +355,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        AppExecutors.getInstance().diskIO().execute(new Runnable() {
-            @Override
-            public void run() {
-                mDb.taxiDao().clearTaxiBase();
-                mDb.taxiDao().clearTaxiOld();
-            }
-        });
-    }
-
+    //MAP EVENTS RECEIVER
     class MapEventsReceiver extends Layer implements GestureListener, Map.UpdateListener {
 
         MapEventsReceiver(MapView mapView) {
@@ -502,11 +366,12 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         public boolean onGesture(Gesture g, MotionEvent e) {
 
 //            if (g instanceof Gesture.Tap) {
-//                Toast.makeText(mContext,mVectorLayer.getContainingBarrio(new GeoPoint(13.09,-86.36)).getBarrioName(),Toast.LENGTH_LONG).show();
+//                Toast.makeText(mContext,mBarriosLayer.getContainingBarrio(new GeoPoint(13.09,-86.36)).getBarrioName(),Toast.LENGTH_LONG).show();
 //                return true;
 //            }
             if (g instanceof Gesture.Tap) {
                 GeoPoint p = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
+                mOwnMarkerLayer.setDest(p);
                 endLocation.setLatitude(p.getLatitude());
                 endLocation.setLongitude(p.getLongitude());
                 startMoveAnim(500);
@@ -541,9 +406,9 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 mTilt=mapPosition.getTilt();
             }
         }
-
     }
 
+    //BACK-TO-CENTER FUNCTIONALITY FRAMEWORK
     public void rescheduleTimer(){
         mTimer.cancel();
         mTimer=new Timer("movementTimer",true);
@@ -569,30 +434,23 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     private void backToCenter(){
         wasMoved=false;
         mCompass.setMapRotation(-mapView.map().getMapPosition().getBearing());
-        //smoothenMapMovement(mCurrMapLoc, mMarkerLoc,endLocation);
         startMoveAnim(500);
         backToCenterImage.setVisibility(ImageView.INVISIBLE);
-        Toast.makeText(this,""+endLocation.getLatitude(),Toast.LENGTH_LONG).show();
-        //mCompass.setMode(Compass.Mode.C2D);
         mTimer.cancel();
     }
-
-
 
     private void bullseyeAnim(){
         Drawable d = backToCenterImage.getDrawable();
         if (d instanceof AnimatedVectorDrawableCompat){
-            //AnimatedVectorDrawableCompat advCompat = (AnimatedVectorDrawableCompat) d;
             advCompat.stop();
             advCompat.start();
         } else if (d instanceof AnimatedVectorDrawable){
-            //AnimatedVectorDrawable adv = (AnimatedVectorDrawable) d;
             adv.stop();
             adv.start();
         }
     }
 
-
+    //ANIMATION FRAMEWORK FOR MAP AND OWN MARKER
     public static final int ANIM_NONE = 0;
     public static final int ANIM_MOVE = 1 << 0;
 
@@ -672,6 +530,25 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         mState = ANIM_NONE;
     }
 
+    //LIFECYCLE METHODS TO BE OVERRIDDEN
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                mDb.taxiDao().clearTaxiBase();
+                mDb.taxiDao().clearTaxiOld();
+            }
+        });
+    }
 
     @Override
     protected void onResume() {
@@ -691,6 +568,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         fusedLocationProviderClient.removeLocationUpdates(locationCallback);
     }
 
+    //GOOGLE API FUSED LOCATION CONNECTION METHODS TO BE OVERRIDDEN
     @Override
     public void onConnected(@Nullable Bundle bundle) {
 

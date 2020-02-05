@@ -25,7 +25,6 @@ public class WebSocketConnection {
 
     private Socket mSocket;
     private Context mContext;
-    private Activity mActivity;
     public List<TaxiObject> mNewPositionsList=new ArrayList<TaxiObject>();
 
 
@@ -34,8 +33,7 @@ public class WebSocketConnection {
 
     Emitter.Listener onLocationUpdate;
 
-    public WebSocketConnection(String url, Activity activity, Context context){
-        mActivity=activity;
+    public WebSocketConnection(String url, Context context){
         try {
             mSocket = IO.socket(url);
         } catch (URISyntaxException e) {
