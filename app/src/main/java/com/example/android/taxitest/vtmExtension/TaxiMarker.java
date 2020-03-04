@@ -16,6 +16,8 @@ public class TaxiMarker implements MarkerInterface, Comparable<TaxiMarker> {
     public GeoPoint geoPoint;
     public GeoPoint destGeoPoint;
     protected MarkerSymbol markerSymbol;
+    public int color;
+
 
     private Purpose purpose=Purpose.NULL;
     private TaxiObject purposeTaxiObject;
@@ -122,7 +124,6 @@ public class TaxiMarker implements MarkerInterface, Comparable<TaxiMarker> {
 
             this.setLatitude(this.taxiObject.getLatitude()+latShift);
             this.setLongitude(this.taxiObject.getLongitude()+lonShift);
-
             this.setRotation(this.taxiObject.getRotation()+rotShift);
 
         }else if (purpose==Purpose.APPEAR){

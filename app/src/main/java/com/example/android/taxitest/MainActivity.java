@@ -4,12 +4,15 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.graphics.drawable.AnimatedVectorDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Vibrator;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
@@ -18,12 +21,19 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat;
 
+import com.example.android.taxitest.CommunicationsRecyclerView.CommunicationsAdapter;
+import com.example.android.taxitest.CommunicationsRecyclerView.SmoothLinearLayoutManager;
 import com.example.android.taxitest.connection.WebSocketConnection;
 import com.example.android.taxitest.data.SqlLittleDB;
 import com.example.android.taxitest.data.TaxiObject;
 import com.example.android.taxitest.vectorLayer.BarriosLayer;
+import com.example.android.taxitest.vectorLayer.ConnectionLineLayer;
+import com.example.android.taxitest.vectorLayer.ConnectionLineLayer2;
 import com.example.android.taxitest.vectorLayer.GeoJsonUtils;
 import com.example.android.taxitest.vtmExtension.OtherTaxiLayer;
 import com.example.android.taxitest.vtmExtension.OwnMarker;
@@ -41,6 +51,7 @@ import com.sdsmdg.harjot.vectormaster.VectorMasterDrawable;
 
 import org.geojson.FeatureCollection;
 import org.oscim.android.MapView;
+import org.oscim.android.theme.AssetsRenderTheme;
 import org.oscim.backend.CanvasAdapter;
 import org.oscim.core.GeoPoint;
 import org.oscim.core.MapPosition;
@@ -57,7 +68,6 @@ import org.oscim.renderer.GLViewport;
 import org.oscim.scalebar.DefaultMapScaleBar;
 import org.oscim.scalebar.MapScaleBar;
 import org.oscim.scalebar.MapScaleBarLayer;
-import org.oscim.theme.VtmThemes;
 import org.oscim.tiling.source.mapfile.MapFileTileSource;
 import org.oscim.utils.ThreadUtils;
 
@@ -67,15 +77,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
+import static android.Manifest.permission.RECORD_AUDIO;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
+import static com.example.android.taxitest.utils.MiscellaneousUtils.trimCache;
 import static org.oscim.utils.FastMath.clamp;
 
 public class MainActivity extends Activity implements GoogleApiClient.ConnectionCallbacks,
@@ -85,6 +95,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     MapView mapView;
     ImageView compassImage;
     ImageView backToCenterImage;
+    ImageView barriosImage;
+    ImageView nightModeImage;
 
     //websocket connection
     WebSocketConnection mWebSocketConnection;
@@ -102,11 +114,17 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     BarriosLayer mBarriosLayer;
     OwnMarkerLayer mOwnMarkerLayer;
     OtherTaxiLayer mOtherTaxisLayer;
+    ConnectionLineLayer2 mConnectionLineLayer;
 
     //google fused location provider variables
     FusedLocationProviderClient fusedLocationProviderClient;
     LocationRequest locationRequest;
     LocationCallback locationCallback;
+
+    //recycler view and co
+    RecyclerView rvCommunications;
+    CommunicationsAdapter rvCommsAdapter;
+
 
     //other helper and component variables
     Context mContext;
@@ -119,30 +137,39 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     AnimatedVectorDrawableCompat advCompat;
     AnimatedVectorDrawable adv;
     boolean wasMoved=false;
+    boolean barriosVisible=true;
+    boolean nightModeOn=false;
     //helper locations
-    Location mMarkerLoc;
+    public static Location mMarkerLoc;
     Location endLocation=new Location("");
     Location mCurrMapLoc =new Location("");
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        setTheme(R.style.AppTheme);
         super.onCreate(savedInstanceState);
         //basic settings
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        //set content view xml and multiple components
+        //set content view assets and multiple components
         setContentView(R.layout.activity_tilemap);
         compassImage = (ImageView) findViewById(R.id.compass);
         backToCenterImage = (ImageView) findViewById(R.id.back_to_center);
+        barriosImage=(ImageView) findViewById(R.id.barrios);
+        nightModeImage= (ImageView) findViewById(R.id.moon);
+        nightModeImage.setImageAlpha(100);
         mapView = (MapView) findViewById(R.id.mapView);
+        rvCommunications = (RecyclerView) findViewById(R.id.rv_comms);
+
+        //set context
+        mContext = getApplicationContext();
 
         // check permissions CONSIDER MOVING
-        ActivityCompat.requestPermissions(MainActivity.this, new String[]{READ_EXTERNAL_STORAGE,ACCESS_FINE_LOCATION, WRITE_EXTERNAL_STORAGE},111);
+        ActivityCompat.requestPermissions(MainActivity.this, new String[]{READ_EXTERNAL_STORAGE,ACCESS_FINE_LOCATION, WRITE_EXTERNAL_STORAGE, RECORD_AUDIO},111);
 
         //initialize vibrator
         mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-        //set context
-        mContext = getApplicationContext();
+
         //instantiate and prepare DB
         mDb= SqlLittleDB.getInstance(getApplicationContext());
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
@@ -152,6 +179,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 mDb.taxiDao().clearTaxiOld();
             }
         });
+
+        initRecyclerView();
 
         //initialize map
         MapFileTileSource tileSource = new MapFileTileSource();
@@ -164,7 +193,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         // Vector layer
         VectorTileLayer tileLayer = mapView.map().setBaseMap(tileSource);
         // Render theme
-        mapView.map().setTheme(VtmThemes.DEFAULT);
+        mapView.map().setTheme(new AssetsRenderTheme(getAssets(),"", "vtm/day_mode.xml"));
         //add set pivot
         mapView.map().viewport().setMapViewCenter(0.0f, 0.75f);
 
@@ -192,10 +221,13 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             GeoJsonUtils.addBarrios(mBarriosLayer,fc);
         }
         // OwnMarkerLayer
-        otherIcon=new VectorMasterDrawable(this,R.drawable.frame00);
+        otherIcon=new VectorMasterDrawable(this,R.drawable.taxi_marker);
         mOwnMarkerLayer= new OwnMarkerLayer(mContext, mBarriosLayer,mapView.map(),new ArrayList<OwnMarker>(),otherIcon,Constants.lastLocation, new GeoPoint(13.0923151,-86.3609919),mCompass);
+        //ConnectionLineLayer
+        mConnectionLineLayer=new ConnectionLineLayer2(mapView.map());
         // OtherMarkerLayer
-        mOtherTaxisLayer=new OtherTaxiLayer(mContext, mBarriosLayer,mapView.map(),new ArrayList<TaxiMarker>(),otherIcon);
+        mWebSocketConnection=new WebSocketConnection("https://id-ex-theos-taxi-test1.herokuapp.com/", mContext);
+        mOtherTaxisLayer=new OtherTaxiLayer(mContext, mBarriosLayer,mapView.map(),new ArrayList<TaxiMarker>(),otherIcon,mWebSocketConnection,mConnectionLineLayer, rvCommsAdapter);
         // ADD ALL LAYERS TO MAP
         addMapLayers();
 
@@ -215,20 +247,20 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         //last known location
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ) {
             fusedLocationProviderClient.getLastLocation()
-                    .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                        @Override
-                        public void onSuccess(Location location) {
-                            // Got last known location. In some rare situations this can be null.
-                            if (location != null) {
-                                mMarkerLoc = location;
-                                //use tis to shift location (dev only)
-                                mMarkerLoc.setLatitude(mMarkerLoc.getLatitude()-0.0);
-                                mMarkerLoc.setLongitude(mMarkerLoc.getLongitude()-0.0);
-                                mOwnMarkerLayer.moveMarker(new GeoPoint(mMarkerLoc.getLatitude(),mMarkerLoc.getLongitude()));
-                                mapView.map().setMapPosition(mMarkerLoc.getLatitude(), mMarkerLoc.getLongitude(), mScale);
-                            }
+                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        // Got last known location. In some rare situations this can be null.
+                        if (location != null) {
+                            mMarkerLoc = location;
+                            //use tis to shift location (dev only)
+                            mMarkerLoc.setLatitude(mMarkerLoc.getLatitude()-0.0);
+                            mMarkerLoc.setLongitude(mMarkerLoc.getLongitude()-0.0);
+                            mOwnMarkerLayer.moveMarker(new GeoPoint(mMarkerLoc.getLatitude(),mMarkerLoc.getLongitude()));
+                            mapView.map().setMapPosition(mMarkerLoc.getLatitude(), mMarkerLoc.getLongitude(), mScale);
                         }
-                    });
+                    }
+                });
         }
 
         //callback every 3000ms
@@ -249,11 +281,47 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 }
                 //emit current position
                 mOwnTaxiObject=new TaxiObject(Constants.myId,endLocation.getLatitude(),endLocation.getLongitude(),endLocation.getTime(),mCompass.getRotation(),"taxi",0.0,0.0,1);
+                //this should be different websocket
                 mWebSocketConnection.attemptSend(mOwnTaxiObject.taxiObjectToCsv());
             }
 
             ;
         };
+
+        //night mode button
+        nightModeImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (!nightModeOn){
+                    nightModeOn=true;
+                    mapView.map().setTheme(new AssetsRenderTheme(getAssets(),"", "vtm/night_mode.xml"));
+                    setIconColors(Color.parseColor("#cccccc"));
+                    nightModeImage.setImageAlpha(255);
+                }else{
+                    nightModeOn=false;
+                    mapView.map().setTheme(new AssetsRenderTheme(getAssets(),"", "vtm/day_mode.xml"));
+                    setIconColors(Color.parseColor("#292929"));
+                    nightModeImage.setImageAlpha(100);
+                }
+
+            }
+        });
+
+        //barrios button
+        barriosImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (barriosVisible){
+                    barriosVisible=false;
+                    mapView.map().layers().remove(2);
+                    barriosImage.setImageAlpha(100);
+                }else{
+                    barriosVisible=true;
+                    mapView.map().layers().add(2,mBarriosLayer);
+                    barriosImage.setImageAlpha(255);
+                }
+            }
+        });
 
         //back-to-center animation button setup
         backToCenterImage.setOnClickListener(new View.OnClickListener() {
@@ -263,70 +331,35 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             }
         });
         backToCenterImage.setVisibility(ImageView.INVISIBLE);
+        prepareBackToCenterAnim();
+    }
+
+    private void setIconColors(int color){
+        barriosImage.setColorFilter(color);
+        compassImage.setColorFilter(color);
+        nightModeImage.setColorFilter(color);
+    }
+
+    private void prepareBackToCenterAnim(){
         Drawable d = backToCenterImage.getDrawable();
         if (d instanceof AnimatedVectorDrawableCompat) {
             advCompat = (AnimatedVectorDrawableCompat) d;
         } else if (d instanceof AnimatedVectorDrawable) {
             adv = (AnimatedVectorDrawable) d;
         }
-
-        //websocket connection setup CONSIDER MOVING TO OTHER MARKER LAYER
-        mWebSocketConnection=new WebSocketConnection("https://id-ex-theos-taxi-test1.herokuapp.com/", mContext);
-        mWebSocketConnection.initializeSocketListener();
-        mWebSocketConnection.startAccumulationTimer();
-        mWebSocketConnection.connectSocket();
-        //listener for websocket data accumulation result every 3 seconds
-        mWebSocketConnection.setAnimationDataListener(new WebSocketConnection.AnimationDataListener() {
-            @Override
-            public void onAnimationParametersReceived(List<TaxiObject> baseTaxis, List<TaxiObject> newTaxis) {
-                //give existing taxis a purpose
-                boolean allOk=true;
-                if (baseTaxis.size()>0) {
-                    for (int i = 0; i < baseTaxis.size(); i++) {
-                        TaxiObject taxiObject = baseTaxis.get(i);
-                        if (taxiObject.getIsActive() == 0) {
-                            mOtherTaxisLayer.getItemList().get(i).setPurpose(TaxiMarker.Purpose.DISAPPEAR);
-                        } else {
-                            mOtherTaxisLayer.getItemList().get(i).setPurpose(TaxiMarker.Purpose.MOVE);
-                        }
-                        mOtherTaxisLayer.getItemList().get(i).setPurposeTaxiObject(taxiObject);
-                        if(mOtherTaxisLayer.getItemList().get(i).taxiObject.getTaxiId()!=mOtherTaxisLayer.getItemList().get(i).getPurposeTaxiObject().getTaxiId()){
-                            allOk=false;
-                        }
-                    }
-                }
-                //reset taxis in case of correspondence error
-                if(!allOk){
-                    //remove all taxis and add them anew
-                    mOtherTaxisLayer.removeAllItems();
-                    for (TaxiObject tO:baseTaxis){
-                        mOtherTaxisLayer.addNewTaxi(tO);
-                    }
-                }
-                //add new taxis
-                for (TaxiObject tO:newTaxis){
-                    mOtherTaxisLayer.addNewTaxi(tO);
-                }
-                //sort the new array to ensure future correspondence
-                if (mOtherTaxisLayer.getItemList().size()>0){
-                    Collections.sort(mOtherTaxisLayer.getItemList());
-                }
-                //set off animation process
-                mOtherTaxisLayer.setOffAnimation(18);
-            }
-        });
     }
 
     //METHOD TO ADD MAP LAYERS
     private void addMapLayers(){
-        mapView.map().layers().add(mBarriosLayer);
+        mapView.map().layers().add(2,mBarriosLayer);
         mapView.map().layers().add(mBuildingLayer);
         mapView.map().layers().add(mLabelLayer);
-        mapView.map().layers().add(mMapScaleBarLayer);
-        mapView.map().layers().add(mCompass);
         mapView.map().layers().add(mMapEventsReceiver);
+        mapView.map().layers().add(mConnectionLineLayer);
         mapView.map().layers().add(mOwnMarkerLayer);
         mapView.map().layers().add(mOtherTaxisLayer);
+        mapView.map().layers().add(mMapScaleBarLayer);
+        mapView.map().layers().add(mCompass);
     }
 
     //CHECK IF  NICARAGUAN MAP-FILE IS IN EXTERNAL STORAGE AND ELSE LOAD IT THERE FROM RESOURCES
@@ -372,9 +405,9 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             if (g instanceof Gesture.Tap) {
                 GeoPoint p = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
                 mOwnMarkerLayer.setDest(p);
-                endLocation.setLatitude(p.getLatitude());
-                endLocation.setLongitude(p.getLongitude());
-                startMoveAnim(500);
+//                endLocation.setLatitude(p.getLatitude());
+//                endLocation.setLongitude(p.getLongitude());
+//                startMoveAnim(500);
                 //mapView.map().animator().animateTo(new GeoPoint(endLocation.getLatitude(),endLocation.getLongitude()));
                 return true;
             }
@@ -485,7 +518,9 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             double lon = mMarkerLoc.getLongitude() + lonDiffMark*adv;
             mMarkerLoc.setLatitude(lat);
             mMarkerLoc.setLongitude(lon);
-            mOwnMarkerLayer.moveMarker(new GeoPoint(lat,lon));
+            GeoPoint point=new GeoPoint(lat,lon);
+            mOwnMarkerLayer.moveMarker(point);
+            mConnectionLineLayer.updateLines();
 
             //of map
             if (!wasMoved) {
@@ -541,6 +576,20 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     protected void onStop() {
         super.onStop();
 
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d("cache deletion","success");
+        try {
+            trimCache(mContext);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d("cache deletion","failed");
+        }
+
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
@@ -565,6 +614,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     protected void onPause() {
         mapView.onPause();
         super.onPause();
+        //do we really need this?
         fusedLocationProviderClient.removeLocationUpdates(locationCallback);
     }
 
@@ -583,4 +633,49 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
     }
+
+    private void initRecyclerView(){
+        SmoothLinearLayoutManager linearLayoutManager=new SmoothLinearLayoutManager(mContext);
+        //LinearLayoutManager linearLayoutManager=new LinearLayoutManager(mContext);
+        rvCommsAdapter =new CommunicationsAdapter(mContext);
+        rvCommunications.setAdapter(rvCommsAdapter);
+        rvCommunications.setLayoutManager(linearLayoutManager);
+        new ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(rvCommunications);
+
+
+
+
+    }
+
+    ItemTouchHelper.SimpleCallback itemTouchHelperCallback= new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
+        @Override
+        public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+            return false;
+        }
+
+        @Override
+        public void clearView(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
+            super.clearView(recyclerView, viewHolder);
+            ((CommunicationsAdapter.ViewHolder) viewHolder).arrows.setTextColor(getResources().getColor(R.color.colorDeselected));
+            ((CommunicationsAdapter.ViewHolder) viewHolder).cancel.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorDeselected)));
+        }
+
+        @Override
+        public void onSelectedChanged(@Nullable RecyclerView.ViewHolder viewHolder, int actionState) {
+            super.onSelectedChanged(viewHolder, actionState);
+            if (actionState==ItemTouchHelper.ACTION_STATE_SWIPE) {
+                ((CommunicationsAdapter.ViewHolder) viewHolder).arrows.setTextColor(getResources().getColor(R.color.colorSelected));
+                ((CommunicationsAdapter.ViewHolder) viewHolder).cancel.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(mContext,R.color.colorRed)));
+            }
+        }
+
+
+
+        @Override
+        public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+            mOtherTaxisLayer.doUnClick(rvCommsAdapter.getItemList().get(viewHolder.getAdapterPosition()).taxiMarker);
+
+            //rvCommsAdapter.cancelComm(viewHolder.getAdapterPosition());
+        }
+    };
 }

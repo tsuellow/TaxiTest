@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 
 import com.example.android.taxitest.Compass;
+import com.example.android.taxitest.connection.WebSocketConnection;
 import com.example.android.taxitest.utils.PaintUtils;
 import com.example.android.taxitest.utils.ZoomUtils;
 import com.example.android.taxitest.vectorLayer.BarrioPolygonDrawable;

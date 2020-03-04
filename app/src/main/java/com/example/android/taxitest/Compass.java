@@ -223,10 +223,9 @@ public class Compass extends Layer implements SensorEventListener, Map.UpdateLis
             if (mCurrLocation.getSpeed()>=2.7 && (mCurrLocation.getBearing()-rotation)<45){
                 rotation=mCurrLocation.getBearing();
                 Log.d("speedBearing","speed:"+mCurrLocation.getSpeed()+" bearing:"+mCurrLocation.getBearing()+" , "+rotation);
-                mArrowView.setColorFilter(Color.RED);
             }else{
+                //ad statement invalidating this if user is not taxi
                 rotation=rotation+mCorrectionFactor;
-                mArrowView.setColorFilter(Color.BLACK);
             }
         }
 

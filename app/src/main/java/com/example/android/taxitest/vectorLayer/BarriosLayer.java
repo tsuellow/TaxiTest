@@ -74,7 +74,7 @@ public class BarriosLayer extends VectorLayer {
 //                return true;
 //            }
             if (g instanceof Gesture.LongPress) {
-                int p = getContainingBarrio(mMap.viewport().fromScreenPoint(e.getX(), e.getY())).getBarrioId();
+                String p = getContainingBarrio(mMap.viewport().fromScreenPoint(e.getX(), e.getY())).getBarrioName();
                 Toast.makeText(mContext, "ID \n" + p, Toast.LENGTH_SHORT).show();
                 return true;
             }

@@ -79,8 +79,6 @@ public class GeoJsonUtils {
     }
 
 
-
-
     public static List<GeoPoint> convertToGeo(List<LngLatAlt> lnglatList){
         List<GeoPoint> result=new ArrayList<GeoPoint>();
         for (int i=0;i<lnglatList.size();i++){
@@ -91,26 +89,5 @@ public class GeoJsonUtils {
     }
 
 
-
-
-//    public BarrioPolygonDrawable[] createBarriosArray(JSONObject geoJson){
-//        BarrioPolygonDrawable[] result;
-//        try {
-//            JSONArray features = geoJson.getJSONArray("features");
-//            for (int i=0; i<features.length(); i++){
-//                BarrioPolygonDrawable barrio;
-//                List<GeoPoint> coords=new ArrayList<GeoPoint>();
-//                JSONObject feature=features.getJSONObject(i);
-//                JSONArray jsonCoords=feature.getJSONObject("geometry").getJSONArray("coordinates");
-//                JSONArray jsonCoords1=(JSONArray)jsonCoords.get(0);
-//                JSONArray jsonCoords2=(JSONArray)jsonCoords1.get(0);
-//
-//
-//            }
-//
-//        }catch(Exception e){
-//            e.printStackTrace();
-//        }
-//    }
 
 }

@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:card_view="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:theme="@style/Theme.MaterialComponents.Light"
+    android:clipToPadding="false"
+    android:clipChildren="false"
+    >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:id="@+id/rl_container"
+        android:layout_margin="4dp"
+        android:background="@drawable/rounded_background"
+        android:clipToPadding="false"
+        android:clipChildren="false"
+        >
+        <androidx.cardview.widget.CardView
+            xmlns:card_view="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/cv_border_color"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginStart="3dp"
+            android:layout_marginTop="3dp"
+            android:elevation="0dp"
+            card_view:cardCornerRadius="32dp"
+            card_view:cardBackgroundColor="#000">
+
+            <androidx.cardview.widget.CardView
+                xmlns:card_view="http://schemas.android.com/apk/res-auto"
+                android:id="@+id/roundCardView"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_marginStart="2dp"
+                android:layout_marginTop="2dp"
+                android:elevation="0dp"
+                card_view:cardCornerRadius="30dp"
+                card_view:cardBackgroundColor="#000">
+
+                <ImageView
+                    android:id="@+id/iv_photo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_launcher_background" />
+
+            </androidx.cardview.widget.CardView>
+
+        </androidx.cardview.widget.CardView>
+
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginStart="6dp"
+            android:layout_toEndOf="@+id/cv_border_color"
+            android:layout_weight="1"
+            android:id="@+id/ll_one"
+            android:orientation="vertical"
+            android:padding="4dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/tv_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Juan"
+                    android:textColor="#000"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tv_plate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="[T0000]"
+                    android:textColor="#000"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+
+
+            <TextView
+                android:id="@+id/tv_destination"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="El Rosario"
+                android:textSize="10sp"
+                android:textColor="#000" />
+
+        </LinearLayout>
+
+
+        <com.example.android.taxitest.RecordButtonUtils.RecordButton
+            android:id="@+id/record_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="5dp"
+            android:background="@drawable/record_button_background"
+            android:scaleType="centerInside"
+            app:mic_icon="@drawable/microphone"/>
+
+
+        <com.mikhaellopez.circularprogressbar.CircularProgressBar
+            android:id="@+id/play_progress_bar"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginEnd="12dp"
+            android:layout_toStartOf="@+id/record_button"
+            android:layout_centerVertical="true"
+            app:cpb_background_progressbar_color="@color/colorDeselected"
+            app:cpb_background_progressbar_width="0dp"
+            app:cpb_progress_direction="to_right"
+            app:cpb_progressbar_color="#4CAF50"
+            app:cpb_progressbar_width="3dp"
+            app:cpb_round_border="true"
+            android:visibility="invisible"/>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/bt_confirm"
+            android:layout_toStartOf="@+id/record_button"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="12dp"
+            android:backgroundTint="#8BC34A"
+            android:src="@drawable/confirm"
+            app:tint="#fff"
+            app:borderWidth="0dp"
+            app:elevation="2dp"
+            app:fabCustomSize="40dp"/>
+
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_toEndOf="@+id/cv_border_color"
+            android:layout_marginTop="46dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="-12dp">
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:id="@+id/bt_cancel"
+                android:layout_marginTop="1dp"
+                app:backgroundTint="@color/colorDeselected"
+                android:src="@drawable/close"
+                app:maxImageSize="10dp"
+                android:scaleType="center"
+                app:tint="#fff"
+                app:borderWidth="0dp"
+                app:elevation="0dp"
+                app:fabCustomSize="14dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:id="@+id/tv_arrows"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginStart="-15dp"
+                android:textColor="@color/colorDeselected"
+                android:textSize="10sp"
+                android:text="\u276f \u276f \u276f \u276f \u276f" />
+
+        </LinearLayout>
+
+
+
+
+    </RelativeLayout>
+
+</LinearLayout>

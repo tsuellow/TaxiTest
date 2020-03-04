@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/mainView"
+    android:theme="@style/AppTheme.Launcher"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:windowActionBarOverlay="true">
@@ -10,26 +11,52 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent" />
 
-    <ImageView
-        android:id="@+id/compass"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_margin="8dp"
-        android:layout_alignParentLeft="true"
-        android:layout_marginLeft="24dp"
-        android:src="@drawable/compass" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:orientation="vertical">
 
-    <ImageView
-        android:id="@+id/back_to_center"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_alignParentLeft="true"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="24dp"
-        android:layout_marginTop="56dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:src="@drawable/back_to_center_anim"
-        android:visibility="visible"/>
+        <include layout="@layout/communucation_container" />
+
+        <ImageView
+            android:id="@+id/compass"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginStart="6dp"
+            android:layout_gravity="start"
+            android:src="@drawable/compass" />
+
+        <ImageView
+            android:id="@+id/barrios"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginStart="6dp"
+            android:layout_gravity="start"
+            android:src="@drawable/barrios_icon" />
+
+        <ImageView
+            android:id="@+id/moon"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginStart="9dp"
+            android:layout_gravity="start"
+            android:src="@drawable/moon" />
+
+        <ImageView
+            android:id="@+id/back_to_center"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginStart="6dp"
+            android:layout_gravity="start"
+            android:src="@drawable/back_to_center_anim"
+            android:visibility="visible"/>
+    </LinearLayout>
+
+
 
 </RelativeLayout>
