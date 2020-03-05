@@ -1,6 +1,8 @@
 package com.example.android.taxitest.vectorLayer;
 
+import android.animation.ValueAnimator;
 import android.graphics.Color;
+import android.view.animation.AccelerateInterpolator;
 
 import com.example.android.taxitest.MainActivity;
 import com.example.android.taxitest.vtmExtension.TaxiMarker;
@@ -8,23 +10,22 @@ import com.example.android.taxitest.vtmExtension.TaxiMarker;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.oscim.core.Box;
-import org.oscim.core.GeoPoint;
 import org.oscim.layers.vector.VectorLayer;
 import org.oscim.layers.vector.geometries.Drawable;
-import org.oscim.layers.vector.geometries.Style;
 import org.oscim.map.Map;
 import org.oscim.utils.SpatialIndex;
 import org.oscim.utils.ThreadUtils;
-
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
-import static com.example.android.taxitest.utils.MiscellaneousUtils.locToGeo;
+import javax.xml.validation.Validator;
 
+/**
+ * Predefined class for collecting all lines into a vectorlayer
+ */
 public class ConnectionLineLayer2 extends VectorLayer {
 
     protected final HashMap<Integer,Drawable> mappedDrawables = new HashMap<>(128);
+
 
     public ConnectionLineLayer2(Map map, SpatialIndex<Drawable> index) {
         super(map, index);
@@ -34,18 +35,31 @@ public class ConnectionLineLayer2 extends VectorLayer {
         super(map);
     }
 
-    static Style.Builder sb = Style.builder()
-            .strokeColor(Color.RED)
-            .strokeWidth(2);
-    //static Style mStyle = sb.build();
-
     public void addLine(TaxiMarker taxiMarker){
+
         ConnectionLineDrawable2 drawable=new ConnectionLineDrawable2(taxiMarker);
         add(drawable);
         mappedDrawables.put(taxiMarker.taxiObject.getTaxiId(),drawable);
         update();
         ThreadUtils.assertMainThread();
         mMap.render();
+    }
+
+    public void playCommAnim(int key){
+        final ConnectionLineDrawable2 communicator = (ConnectionLineDrawable2)mappedDrawables.get(key);
+        int color=communicator.taxiMarker.color;
+        final ValueAnimator animation;
+        animation=ValueAnimator.ofArgb(Color.WHITE,color);
+        animation.setDuration(500);
+        animation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                communicator.setStyle((int)valueAnimator.getAnimatedValue());
+                update();
+                mMap.updateMap(true);
+            }
+        });
+        animation.start();
     }
 
     public synchronized void remove(Integer key) {
@@ -65,7 +79,7 @@ public class ConnectionLineLayer2 extends VectorLayer {
             ((ConnectionLineDrawable2) drawable).setGeometry();
         }
         update();
-        mMap.render();
+        mMap.updateMap(true);
     }
 
     private static Box bbox(Geometry geometry) {

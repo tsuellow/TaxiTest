@@ -67,14 +67,16 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
         this.barriosLayer = barriosLayer;
         this.mWebSocketConnection=webSocketConnection;
         initializeWebSocket();
+        mConnectionLines =connectionLineLayer;
         mCommunicationsAdapter=commsAdapter;
+        mCommunicationsAdapter.setConnectionLines(mConnectionLines);
 
         setOnItemGestureListener(customListener);
 
         pathModelArrow = drawable.getPathModelByName("arrow");
         pathModelCircle = drawable.getPathModelByName("circle");
         mapScale=map.getMapPosition().getScale();
-        mConnectionLines =connectionLineLayer;
+
         prepareScaledBitmapArray();
     }
 
@@ -138,7 +140,6 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
 
     public void doClick(TaxiMarker item){
         item.setIsClicked(true);
-        //mConnectionLines.addLine(item.taxiObject.getTaxiId(),item.color,item.geoPoint);
         mConnectionLines.addLine(item);
         mCommunicationsAdapter.addItem(new CommsObject(item));
         item.setRotatedSymbol(new MarkerSymbol(fetchBitmap(item), MarkerSymbol.HotspotPlace.CENTER,false));

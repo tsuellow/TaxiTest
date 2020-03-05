@@ -25,6 +25,7 @@ import androidx.transition.Visibility;
 import com.example.android.taxitest.R;
 import com.example.android.taxitest.RecordButtonUtils.RecordButton;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
+import com.example.android.taxitest.vectorLayer.ConnectionLineLayer2;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 
@@ -41,15 +42,18 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
 
     private List<CommsObject> mComms;
     private Context mContext;
-    private MediaRecorder recorder = null;
     private MediaPlayer player = null;
+    ConnectionLineLayer2 connectionLines;
 
 
-    public CommunicationsAdapter(Context context){
+    public CommunicationsAdapter(Context context, ConnectionLineLayer2 connectionLineLayer){
         mContext=context;
         mComms=new ArrayList<CommsObject>();
+        connectionLines=connectionLineLayer;
+    }
 
-
+    public void setConnectionLines(ConnectionLineLayer2 connectionLines){
+        this.connectionLines=connectionLines;
     }
 
     public void addItem(CommsObject commsObject){
@@ -182,7 +186,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
             public void onClick(View view) {
                 Toast.makeText(mContext,"confirm or play media",Toast.LENGTH_LONG).show();
                 startPlaying(mComms.get(getCommIndex(taxiId)).getTopOfList(),holder.progressBar);
-
+                connectionLines.playCommAnim(taxiId);
             }
         });
 

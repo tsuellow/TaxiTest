@@ -637,7 +637,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     private void initRecyclerView(){
         SmoothLinearLayoutManager linearLayoutManager=new SmoothLinearLayoutManager(mContext);
         //LinearLayoutManager linearLayoutManager=new LinearLayoutManager(mContext);
-        rvCommsAdapter =new CommunicationsAdapter(mContext);
+        rvCommsAdapter =new CommunicationsAdapter(mContext, mConnectionLineLayer);
         rvCommunications.setAdapter(rvCommsAdapter);
         rvCommunications.setLayoutManager(linearLayoutManager);
         new ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(rvCommunications);
