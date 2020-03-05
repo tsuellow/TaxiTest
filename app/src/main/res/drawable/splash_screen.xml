@@ -3,9 +3,10 @@
     android:paddingBottom="20dp" android:paddingRight="20dp" android:paddingLeft="20dp" android:paddingTop="20dp">
 
     <!-- The background color, preferably the same as your normal theme -->
-    <item>
-        <shape>
-            <size android:height="120dp" android:width="120dp"/>
+    <item
+        android:gravity="fill">
+        <shape android:shape="rectangle">
+            <size android:height="280dp" android:width="280dp"/>
             <solid android:color="@android:color/white"/>
         </shape>
     </item>
@@ -13,7 +14,9 @@
     <!-- Your product logo - 144dp color version of your app icon -->
     <item
         android:drawable="@drawable/logo_vect"
-        android:gravity="center">
-
+        android:gravity="center_vertical|center_horizontal">
+        <shape android:shape="rectangle">
+            <size android:height="280dp" android:width="280dp"/>
+        </shape>
     </item>
 </layer-list>
