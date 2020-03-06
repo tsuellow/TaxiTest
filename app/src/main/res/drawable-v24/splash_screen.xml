@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:opacity="opaque">
+    android:opacity="opaque" android:paddingTop="10dp" android:paddingBottom="10dp" android:paddingStart="10dp" android:paddingEnd="10dp">
 
     <!-- The background color, preferably the same as your normal theme -->
     <item>
