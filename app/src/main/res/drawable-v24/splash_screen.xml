@@ -13,6 +13,8 @@
 
     <!-- Your product logo - 144dp color version of your app icon -->
     <item
+        android:left="0dp"
+        android:right="0dp"
         android:drawable="@drawable/logo_vect"
         android:gravity="center">
 

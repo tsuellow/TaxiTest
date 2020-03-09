@@ -145,11 +145,11 @@ public class RecordButton extends AppCompatImageView implements View.OnTouchList
         recorder = new MediaRecorder();
         recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         recorder.setOutputFormat(MediaRecorder.OutputFormat.AMR_WB);
-        recorder.setOutputFile(fileName);
         recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_WB);
         recorder.setAudioSamplingRate(8000);
         recorder.setAudioChannels(1);
         recorder.setAudioEncodingBitRate(12000);
+        recorder.setOutputFile(fileName);
         try {
             recorder.prepare();
         } catch (IOException e) {
