@@ -89,15 +89,20 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
         return mComms.size()-1;
     }
 
-
+    boolean isPlaying=false;
     private void startPlaying(File file, final CircularProgressBar circularProgressBar) {
-
+        if (isPlaying){
+            player.stop();
+            circularProgressBar.setProgress(0.0f);
+            circularProgressBar.setVisibility(View.INVISIBLE);
+        }
         Toast.makeText(mContext,""+file.length()/1024.0+" kb",Toast.LENGTH_LONG).show();
         player = new MediaPlayer();
         player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
                 stopPlaying();
+                isPlaying=false;
                 circularProgressBar.setProgress(0.0f);
                 circularProgressBar.setVisibility(View.INVISIBLE);
             }
@@ -106,10 +111,12 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
             player.setDataSource(file.getAbsolutePath());
             player.prepare();
             circularProgressBar.setVisibility(View.VISIBLE);
-            circularProgressBar.setProgressWithAnimation(100.0f,(long) player.getDuration(),new LinearInterpolator());
             player.start();
+            circularProgressBar.setProgressWithAnimation(100.0f,(long) player.getDuration(),new LinearInterpolator());
+            isPlaying=true;
         } catch (IOException e) {
             Log.e(LOG_TAG, "prepare() failed");
+            isPlaying=false;
         }
 
     }

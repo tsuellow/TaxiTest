@@ -7,6 +7,7 @@ import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.media.SoundPool;
+import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -23,6 +24,7 @@ import com.example.android.taxitest.R;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
+
 
 public class RecordButton extends AppCompatImageView implements View.OnTouchListener{
 
@@ -140,12 +142,12 @@ public class RecordButton extends AppCompatImageView implements View.OnTouchList
         if (isRecording){
             stopRecording();
         }
-        String fileName=getContext().getExternalCacheDir().getAbsolutePath()+"/"+commId+"_"+new Date().getTime()+".amr";
+        String fileName=getContext().getExternalCacheDir().getAbsolutePath()+"/"+commId+"_"+new Date().getTime()+".aac";
         file=new File(fileName);
         recorder = new MediaRecorder();
         recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        recorder.setOutputFormat(MediaRecorder.OutputFormat.AMR_WB);
-        recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_WB);
+        recorder.setOutputFormat(MediaRecorder.OutputFormat.AAC_ADTS);
+        recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
         recorder.setAudioSamplingRate(8000);
         recorder.setAudioChannels(1);
         recorder.setAudioEncodingBitRate(12000);
@@ -163,16 +165,23 @@ public class RecordButton extends AppCompatImageView implements View.OnTouchList
 
     private void stopRecording() {
         if (isRecording) {
-            try {
-                recorder.stop();
-                recordingFinishedListener.onRecordingFinished(file);
-            }catch (RuntimeException e){
-                e.printStackTrace();
-                Toast.makeText(getContext(),"recording failed",Toast.LENGTH_LONG).show();
-            }
-            recorder.release();
-            setIsRecording(false);
-            recorder = null;
+            Handler handler=new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        recorder.stop();
+                        recordingFinishedListener.onRecordingFinished(file);
+                    }catch (RuntimeException e){
+                        e.printStackTrace();
+                        Toast.makeText(getContext(),"recording failed",Toast.LENGTH_LONG).show();
+                    }
+                    recorder.release();
+                    setIsRecording(false);
+                    recorder = null;
+                }
+            },500);
+
         }
     }
 

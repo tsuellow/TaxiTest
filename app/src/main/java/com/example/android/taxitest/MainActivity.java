@@ -184,7 +184,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
         //initialize map
         MapFileTileSource tileSource = new MapFileTileSource();
-        copyFileToExternalStorage(R.raw.nicaragua);//put in async task
+        copyFileToExternalStorage(R.raw.result);//put in async task
         File file=new File(Environment.getExternalStorageDirectory(), Constants.MAP_FILE);
         String mapPath = file.getAbsolutePath();
         if (!tileSource.setMapFile(mapPath)) {
@@ -243,6 +243,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         locationRequest.setInterval(3000);
         locationRequest.setFastestInterval(500);
+
 
         //last known location
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ) {
@@ -330,7 +331,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 backToCenter();
             }
         });
-        backToCenterImage.setVisibility(ImageView.INVISIBLE);
+
         prepareBackToCenterAnim();
     }
 
@@ -342,11 +343,19 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
     private void prepareBackToCenterAnim(){
         Drawable d = backToCenterImage.getDrawable();
+        //make back to center logo visible before a location is set
+        backToCenterImage.setVisibility(ImageView.VISIBLE);
         if (d instanceof AnimatedVectorDrawableCompat) {
             advCompat = (AnimatedVectorDrawableCompat) d;
         } else if (d instanceof AnimatedVectorDrawable) {
             adv = (AnimatedVectorDrawable) d;
         }
+        backToCenterImage.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                backToCenterImage.setVisibility(ImageView.INVISIBLE);
+            }
+        },1000);
     }
 
     //METHOD TO ADD MAP LAYERS

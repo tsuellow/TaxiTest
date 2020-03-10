@@ -295,7 +295,10 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                     TaxiMarker m = i.next();
                     if (m.getPurpose() == TaxiMarker.Purpose.DISAPPEAR) {
                         //mConnectionLines.removeLine(m.taxiObject.getTaxiId());
-                        mConnectionLines.remove(m.taxiObject.getTaxiId());
+                        //mConnectionLines.remove(m.taxiObject.getTaxiId());
+                        if(m.isClicked){
+                            doUnClick(m);
+                        }
                         i.remove();
                     }
                 }
