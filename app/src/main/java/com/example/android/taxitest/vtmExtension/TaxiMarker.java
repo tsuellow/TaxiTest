@@ -5,6 +5,7 @@ import com.example.android.taxitest.data.TaxiObject;
 import org.oscim.core.GeoPoint;
 import org.oscim.layers.marker.MarkerInterface;
 import org.oscim.layers.marker.MarkerSymbol;
+import org.oscim.utils.FastMath;
 
 public class TaxiMarker implements MarkerInterface, Comparable<TaxiMarker> {
 
@@ -120,7 +121,9 @@ public class TaxiMarker implements MarkerInterface, Comparable<TaxiMarker> {
 
             double latShift=(this.purposeTaxiObject.getLatitude()-this.taxiObject.getLatitude())*(double)shift;
             double lonShift=(this.purposeTaxiObject.getLongitude()-this.taxiObject.getLongitude())*(double)shift;
-            float rotShift=(this.purposeTaxiObject.getRotation()-this.taxiObject.getRotation())*shift;
+            float rotChange=this.purposeTaxiObject.getRotation()-this.taxiObject.getRotation();
+            rotChange=(float) FastMath.clampDegree(rotChange);
+            float rotShift=rotChange*shift;
 
             this.setLatitude(this.taxiObject.getLatitude()+latShift);
             this.setLongitude(this.taxiObject.getLongitude()+lonShift);

@@ -17,6 +17,7 @@
 package com.example.android.taxitest;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -37,6 +38,8 @@ import org.oscim.map.Map;
 import org.oscim.renderer.LocationRenderer;
 import org.oscim.utils.FastMath;
 
+import java.util.List;
+
 @SuppressWarnings("deprecation")
 public class Compass extends Layer implements SensorEventListener, Map.UpdateListener,
         LocationRenderer.Callback {
@@ -48,6 +51,8 @@ public class Compass extends Layer implements SensorEventListener, Map.UpdateLis
     }
 
     private final SensorManager mSensorManager;
+    private boolean hasMagneticSensor=false;
+    private boolean hasOrientationSensor=false;
     private final ImageView mArrowView;
 
 
@@ -67,6 +72,31 @@ public class Compass extends Layer implements SensorEventListener, Map.UpdateLis
     private Mode mMode = Mode.OFF;
     private int mListeners;
 
+    public Compass(Context context, Map map, ImageView imageView) {
+        super(map);
+
+        mContext=context;
+
+        mSensorManager = (SensorManager) context
+                .getSystemService(Context.SENSOR_SERVICE);
+
+        List<Sensor> s = mSensorManager.getSensorList(Sensor.TYPE_ALL);
+        for (Sensor sensor : s){
+            if (sensor.getType()==Sensor.TYPE_ORIENTATION){
+                hasOrientationSensor=true;
+            }
+        }
+        PackageManager manager = mContext.getPackageManager();
+        hasMagneticSensor=manager.hasSystemFeature(PackageManager.FEATURE_SENSOR_COMPASS);
+
+        Log.d("hasSensors","ori:"+hasOrientationSensor+" mag:"+hasMagneticSensor);
+
+        mArrowView = imageView;
+
+        setEnabled(false);
+    }
+
+    //defines how to handle rotation from manual input
     @Override
     public void onMapEvent(Event e, MapPosition mapPosition) {
         if (!mControlOrientation) {
@@ -77,29 +107,63 @@ public class Compass extends Layer implements SensorEventListener, Map.UpdateLis
 
     }
 
+    //hands location to the compass in order to leverage location bearing
     public void setCurrLocation(Location location){
         mCurrLocation=location;
+        //find the error in the sensor feedback by comparing it to bearing
         mCorrectionFactor=location.getSpeed()>2.7 ? location.getBearing()-mCurSensorRotation:mCorrectionFactor;
         Log.d("correction factor",mCorrectionFactor+"");
     }
 
+    //if no sensors are available use bearing as alternative compass
+    public void setCompassFromBearing(double adv){
+
+        float rotation=0.0f;
+        float rotationMap=0.0f;
+
+        float bearing;
+
+        if (mCurrLocation.getSpeed()>1.75){
+            bearing=mCurrLocation.getBearing();
+        }else{
+            bearing=mCurRotation;
+        }
+
+        if (mCurrLocation!=null){
+            float change = bearing-mCurRotation;
+            change = (float) FastMath.clampDegree(change);
+            float changeMap = bearing-mCurMapRotation;
+            changeMap = (float) FastMath.clampDegree(changeMap);
+            //mCurSensorRotation=mCurrLocation.getBearing();
+            rotation=(float) (change*adv+mCurRotation);
+            rotationMap =(float) (changeMap*adv+mCurMapRotation);
+        }
+
+        if (mMode != Mode.OFF) {
+            boolean redraw = false;
+            if (Math.abs(rotationMap-mCurMapRotation) > 0.01) {
+                adjustArrow(mCurMapRotation, rotationMap);
+                mMap.viewport().setRotation(-rotationMap);
+                redraw = true;
+            }
+            if (redraw){
+                mMap.updateMap(true);
+            }
+            mCurMapRotation=rotationMap;
+        }
+        mCurRotation = rotation;
+        mCompassListener.onCompassChanged(mCurRotation);
+        Log.d("compass","is using bearing"+mCurRotation);
+    }
 
 
-    public Compass(Context context, Map map, ImageView imageView) {
-        super(map);
 
-        mContext=context;
-
-        mSensorManager = (SensorManager) context
-                .getSystemService(Context.SENSOR_SERVICE);
-
-        // List<Sensor> s = mSensorManager.getSensorList(Sensor.TYPE_ALL);
-        // for (Sensor sensor : s)
-        // log.debug(sensor.toString());
-
-        mArrowView = imageView;
-
-        setEnabled(false);
+    public boolean hasNeededSensors(){
+        if (hasMagneticSensor&&hasOrientationSensor){
+            return true;
+        }else{
+            return false;
+        }
     }
 
     @Override
@@ -201,14 +265,17 @@ public class Compass extends Layer implements SensorEventListener, Map.UpdateLis
         an.setDuration(100);
         an.setRepeatCount(0);
         an.setFillAfter(true);
-        Log.d("compas", "prev:"+prev+"cur:"+cur);
+        Log.d("compass", "prev:"+prev+"cur:"+cur);
 
         mArrowView.startAnimation(an);
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-
+        //check that magnetometer and orientation sensors are available
+        if (!hasNeededSensors())
+            return;
+        //check that sensor signal is of type orientation
         if (event.sensor.getType() != Sensor.TYPE_ORIENTATION)
             return;
         System.arraycopy(event.values, 0, mRotationV, 0, event.values.length);
@@ -263,13 +330,15 @@ public class Compass extends Layer implements SensorEventListener, Map.UpdateLis
 //                redraw |= mMap.viewport().setTilt(-mCurTilt * 1.5f);
 
             if (redraw){
-                mMap.updateMap(true);}
+                mMap.updateMap(true);
+            }
             mCurMapRotation=rotationMap;
         }
         mCurRotation = rotation;
         mCompassListener.onCompassChanged(mCurRotation);
     }
 
+    //consider deleting as screen is restricted to vertical mode
     public float adjustScreenRotation(float rotation){
         final int screenRotation = ((WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation();
         switch (screenRotation) {

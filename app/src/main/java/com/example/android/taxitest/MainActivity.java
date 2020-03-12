@@ -188,7 +188,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         File file=new File(Environment.getExternalStorageDirectory(), Constants.MAP_FILE);
         String mapPath = file.getAbsolutePath();
         if (!tileSource.setMapFile(mapPath)) {
-        Toast.makeText(mContext,"could not read map",Toast.LENGTH_LONG).show();
+            //Toast.makeText(mContext,"could not read map",Toast.LENGTH_LONG).show();
+            Log.d("First Launch","could not read map");
         }
         // Vector layer
         VectorTileLayer tileLayer = mapView.map().setBaseMap(tileSource);
@@ -530,6 +531,11 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             GeoPoint point=new GeoPoint(lat,lon);
             mOwnMarkerLayer.moveMarker(point);
             mConnectionLineLayer.updateLines();
+
+            //if there are no orientation sensors also for compass
+            if (!mCompass.hasNeededSensors()){
+                mCompass.setCompassFromBearing(adv);
+            }
 
             //of map
             if (!wasMoved) {
