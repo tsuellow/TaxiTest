@@ -161,18 +161,18 @@ public class WebSocketConnection {
 
             double slope=(dest.getLatitude()-geo.getLatitude())/(dest.getLongitude()-geo.getLongitude()+tinyCorrection);
             double theta=Math.toDegrees(Math.atan(slope));
-            Log.d("theta",""+theta);
+            Log.d("filterS theta",""+theta);
 
 
             mLeft=Math.tan(Math.toRadians(theta+phi/2));
             mRight=Math.tan(Math.toRadians(theta-phi/2));
-            Log.d("slopeR",""+mRight);
-            Log.d("slopeL",""+mLeft);
+            Log.d("filterS slopeR",""+mRight);
+            Log.d("filterS slopeL",""+mLeft);
 
             bLeft=geo.getLatitude()-mLeft*geo.getLongitude();
             bRight=geo.getLatitude()-mRight*geo.getLongitude();
 
-            if (theta<90-phi/2 && theta>270+phi/2){
+            if (theta<90-phi/2 || theta>270+phi/2){
                 signLeft= TaxiDao.BELOW;
                 signRight=TaxiDao.ABOVE;
             }else if (theta>90-phi/2 && theta<90+phi/2){

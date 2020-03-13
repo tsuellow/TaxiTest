@@ -34,8 +34,8 @@ public abstract class TaxiDao {
      * @param leftSign: set to 1 to discard points below the line to the left and keep those above and to -1 to discard those above;
      *
      * */
-    @Query("update taxiBase set isActive=2 where :leftSign*destinationLatitude<:leftSign*(:bLeft+:mLeft*destinationLongitude) " +
-            "and :rightSign*destinationLatitude<:rightSign*(:bRight+:mRight*destinationLongitude) " +
+    @Query("update taxiBase set isActive=2 where (:leftSign*destinationLatitude<:leftSign*(:bLeft+:mLeft*destinationLongitude) " +
+            "or :rightSign*destinationLatitude<:rightSign*(:bRight+:mRight*destinationLongitude)) " +
             "and taxiId not in (:clickedItems) and isActive!=0")
     public abstract void applyDirectionalFilter(double bLeft, double mLeft, double bRight, double mRight, int leftSign, int rightSign, List<Integer> clickedItems);
 
