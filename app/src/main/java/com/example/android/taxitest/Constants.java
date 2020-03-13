@@ -8,4 +8,5 @@ public class Constants {
     public static final String MAP_FILE = "result.map";
     public static String userType="taxi";
     public static GeoPoint lastLocation=new GeoPoint(0.0,0.0);
+    public static double filterDegrees=45;
 }

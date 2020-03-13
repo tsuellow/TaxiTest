@@ -123,7 +123,7 @@ public class Compass extends Layer implements SensorEventListener, Map.UpdateLis
 
         float bearing;
 
-        if (mCurrLocation.getSpeed()>1.75){
+        if (mCurrLocation.getSpeed()>2){
             bearing=mCurrLocation.getBearing();
         }else{
             bearing=mCurRotation;

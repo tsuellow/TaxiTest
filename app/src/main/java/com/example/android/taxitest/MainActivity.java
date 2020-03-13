@@ -97,6 +97,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     ImageView backToCenterImage;
     ImageView barriosImage;
     ImageView nightModeImage;
+    ImageView filterImage;
 
     //websocket connection
     WebSocketConnection mWebSocketConnection;
@@ -125,7 +126,6 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     RecyclerView rvCommunications;
     CommunicationsAdapter rvCommsAdapter;
 
-
     //other helper and component variables
     Context mContext;
     Vibrator mVibrator;
@@ -139,10 +139,12 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     boolean wasMoved=false;
     boolean barriosVisible=true;
     boolean nightModeOn=false;
+    boolean filterOn= false;
     //helper locations
     public static Location mMarkerLoc;
     Location endLocation=new Location("");
     Location mCurrMapLoc =new Location("");
+    public static GeoPoint destGeo;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -158,6 +160,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         barriosImage=(ImageView) findViewById(R.id.barrios);
         nightModeImage= (ImageView) findViewById(R.id.moon);
         nightModeImage.setImageAlpha(100);
+        filterImage=(ImageView) findViewById(R.id.filter);
+        filterImage.setImageAlpha(100);
         mapView = (MapView) findViewById(R.id.mapView);
         rvCommunications = (RecyclerView) findViewById(R.id.rv_comms);
 
@@ -227,7 +231,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         //ConnectionLineLayer
         mConnectionLineLayer=new ConnectionLineLayer2(mapView.map());
         // OtherMarkerLayer
-        mWebSocketConnection=new WebSocketConnection("https://id-ex-theos-taxi-test1.herokuapp.com/", mContext);
+        mWebSocketConnection=new WebSocketConnection("https://id-ex-theos-taxi-test1.herokuapp.com/", mContext,rvCommsAdapter);
         mOtherTaxisLayer=new OtherTaxiLayer(mContext, mBarriosLayer,mapView.map(),new ArrayList<TaxiMarker>(),otherIcon,mWebSocketConnection,mConnectionLineLayer, rvCommsAdapter);
         // ADD ALL LAYERS TO MAP
         addMapLayers();
@@ -235,7 +239,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         //set important variables
         mTilt = mapView.map().viewport().getMinTilt();
         mScale = 1 << 17;
-        mOwnTaxiObject=new TaxiObject(Constants.myId,0.0,0.0,new Date().getTime(),0.0f,Constants.userType,0.0,0.0,1);
+        destGeo=new GeoPoint(0.0,0.0);
+        mOwnTaxiObject=new TaxiObject(Constants.myId,0.0,0.0,new Date().getTime(),0.0f,Constants.userType,destGeo.getLatitude(),destGeo.getLongitude(),1);
 
         //google api client for location services
         //settings
@@ -282,13 +287,29 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                     startMoveAnim(500);
                 }
                 //emit current position
-                mOwnTaxiObject=new TaxiObject(Constants.myId,endLocation.getLatitude(),endLocation.getLongitude(),endLocation.getTime(),mCompass.getRotation(),"taxi",0.0,0.0,1);
+                mOwnTaxiObject=new TaxiObject(Constants.myId,endLocation.getLatitude(),endLocation.getLongitude(),endLocation.getTime(),mCompass.getRotation(),"taxi",destGeo.getLatitude(),destGeo.getLongitude(),1);
                 //this should be different websocket
                 mWebSocketConnection.attemptSend(mOwnTaxiObject.taxiObjectToCsv());
             }
 
             ;
         };
+
+        //filter button
+        filterImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (!filterOn){
+                    filterOn=true;
+                    mWebSocketConnection.setFilter(true);
+                    filterImage.setImageAlpha(255);
+                }else{
+                    filterOn=false;
+                    mWebSocketConnection.setFilter(false);
+                    filterImage.setImageAlpha(100);
+                }
+            }
+        });
 
         //night mode button
         nightModeImage.setOnClickListener(new View.OnClickListener() {

@@ -93,7 +93,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                 if (baseTaxis.size()>0) {
                     for (int i = 0; i < baseTaxis.size(); i++) {
                         TaxiObject taxiObject = baseTaxis.get(i);
-                        if (taxiObject.getIsActive() == 0) {
+                        if (taxiObject.getIsActive() != 1) {
                             mItemList.get(i).setPurpose(TaxiMarker.Purpose.DISAPPEAR);
                         } else {
                             mItemList.get(i).setPurpose(TaxiMarker.Purpose.MOVE);

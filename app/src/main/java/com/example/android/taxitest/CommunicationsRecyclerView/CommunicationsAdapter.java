@@ -66,6 +66,14 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
         return mComms;
     }
 
+    public List<Integer> getCommIds(){
+        List<Integer> result=new ArrayList<>();
+        for (CommsObject comm:mComms){
+            result.add(comm.taxiMarker.taxiObject.getTaxiId());
+        }
+        return result;
+    }
+
     public synchronized void cancelById(int taxiId){
         Iterator<CommsObject> i = mComms.iterator();
         while (i.hasNext()) {

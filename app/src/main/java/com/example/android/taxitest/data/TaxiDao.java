@@ -15,13 +15,29 @@ public abstract class TaxiDao {
     @Query("select count(*) from taxiBase")
     public abstract int getCurrentTaxis();
 
-    //populate base table
+    //populate base table     ------filter out undesirables
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract void insertNewData(List<TaxiObject> newData);
 
     //delete myself
     @Query("delete from taxiBase where taxiId=:myId")
     abstract void deleteMySelf(int myId);
+
+    public static final int ABOVE=1;
+    public static final int BELOW=-1;
+    //apply directional filters
+    /**
+     * This method filters out taxis headed to destinations that do not lie on our directional path
+     * @param bRight: intersection of line to the right;
+     * @param mRight: slope of line to the right;
+     * @param rightSign: set to 1 to discard points below the line to the right and keep those above and to -1 to discard those above;
+     * @param leftSign: set to 1 to discard points below the line to the left and keep those above and to -1 to discard those above;
+     *
+     * */
+    @Query("update taxiBase set isActive=2 where :leftSign*destinationLatitude<:leftSign*(:bLeft+:mLeft*destinationLongitude) " +
+            "and :rightSign*destinationLatitude<:rightSign*(:bRight+:mRight*destinationLongitude) " +
+            "and taxiId not in (:clickedItems) and isActive!=0")
+    public abstract void applyDirectionalFilter(double bLeft, double mLeft, double bRight, double mRight, int leftSign, int rightSign, List<Integer> clickedItems);
 
     //clear taxiOld
     @Query("delete from taxiOld where 1=1")
@@ -31,15 +47,15 @@ public abstract class TaxiDao {
     @Query("delete from taxiBase where 1=1")
     public abstract void clearTaxiBase();
 
-    //delete inactive taxis
-    @Query("delete from taxiBase where isActive=0")
+    //delete inactive taxis  --------include taxis exiting the V shape i.e. change condition to !=1
+    @Query("delete from taxiBase where isActive!=1")
     abstract void clearInactiveTaxis();
 
     //delete inactive taxis that are new
     @Query("delete from taxiBase where isActive=0 and taxiId not in (select taxiId from taxiOld)")
     abstract void clearInactiveNewTaxis();
 
-    //set old taxis to inactive
+    //set old taxis to inactive   ---------include setting taxis to 2 that are filtered out
     @Query("update taxiBase set isActive=0 where (:date-locationTime)>60000")
     abstract void setOldTaxisToInactive(long date);
 
@@ -61,7 +77,7 @@ public abstract class TaxiDao {
     public abstract List<TaxiObject> getMatchingTaxiBase();
 
     //retrieve new taxis to be added
-    @Query("select * from taxiBase where taxiId not in (select taxiId from taxiOld) order by taxiId")
+    @Query("select * from taxiBase where taxiId not in (select taxiId from taxiOld) and isActive=1 order by taxiId")
     public abstract List<TaxiObject> getNewTaxis();
 
 

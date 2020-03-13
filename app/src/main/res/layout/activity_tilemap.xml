@@ -47,6 +47,15 @@
             android:src="@drawable/moon" />
 
         <ImageView
+            android:id="@+id/filter"
+            android:layout_width="32dp"
+            android:layout_height="30dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginStart="9dp"
+            android:layout_gravity="start"
+            android:src="@drawable/filter" />
+
+        <ImageView
             android:id="@+id/back_to_center"
             android:layout_width="40dp"
             android:layout_height="40dp"
