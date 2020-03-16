@@ -15,7 +15,6 @@ import com.example.android.taxitest.utils.PaintUtils;
 import com.example.android.taxitest.utils.ZoomUtils;
 import com.example.android.taxitest.vectorLayer.BarrioPolygonDrawable;
 import com.example.android.taxitest.vectorLayer.BarriosLayer;
-import com.example.android.taxitest.vectorLayer.ConnectionLineLayer;
 import com.example.android.taxitest.vectorLayer.ConnectionLineLayer2;
 import com.sdsmdg.harjot.vectormaster.VectorMasterDrawable;
 import com.sdsmdg.harjot.vectormaster.models.PathModel;
@@ -34,6 +33,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import static com.example.android.taxitest.utils.ZoomUtils.getDrawableIndex;
+import static com.example.android.taxitest.utils.ZoomUtils.getDrawableSize;
 
 public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.UpdateListener
 {
@@ -49,6 +49,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
     PathModel pathModelCircle;
     double mapScale;
     private Bitmap[] scaledGrayedSymbols = new Bitmap[100];
+    private Bitmap[] appearDisappearAnim = new Bitmap[100];
     private WebSocketConnection mWebSocketConnection;
     private ConnectionLineLayer2 mConnectionLines;
     private CommunicationsAdapter mCommunicationsAdapter;
@@ -77,7 +78,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
         pathModelCircle = drawable.getPathModelByName("circle");
         mapScale=map.getMapPosition().getScale();
 
-        prepareScaledBitmapArray();
+        prepareScaleAndAppearanceTransitions();
     }
 
     public void initializeWebSocket(){
@@ -193,7 +194,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
 
     //adds a new taxi to the layer
     public void addTaxi(TaxiMarker item) {
-        MarkerSymbol symbol = new MarkerSymbol(fetchBitmap(item), MarkerSymbol.HotspotPlace.CENTER, false);
+        MarkerSymbol symbol = new MarkerSymbol(appearDisappearAnim[0], MarkerSymbol.HotspotPlace.CENTER, false);
         item.setRotatedSymbol(symbol);
         mItemList.add(item);
         populate();
@@ -273,11 +274,19 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
             mMap.postDelayed(new Runnable() {
                 @Override
                 public void run() {
+
                     for (TaxiMarker marker : mItemList) {
-                        marker.executeFrame(a, frames);
-//                        if (marker.isClicked){
-//                            mConnectionLines.moveLineFromOtherLayer(marker.taxiObject.getTaxiId(),marker.geoPoint);
-//                        }
+
+                        if (marker.getPurpose()== TaxiMarker.Purpose.MOVE){
+                            marker.executeFrame(a, frames);
+                        }else if (marker.getPurpose()== TaxiMarker.Purpose.APPEAR){
+                            //play appear animation
+                            Bitmap appearDisappear=getAppearDisappearFrame(a,frames,true);
+                            MarkerSymbol symbol=new MarkerSymbol(appearDisappear, MarkerSymbol.HotspotPlace.CENTER,false);
+                        }else{
+                            //play disappear animation
+                            marker.setRotatedSymbol(new MarkerSymbol(getAppearDisappearFrame(a,frames,false), MarkerSymbol.HotspotPlace.CENTER,false));
+                        }
                     }
                     mConnectionLines.updateLines();
                     populate();
@@ -294,12 +303,13 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                 while (i.hasNext()) {
                     TaxiMarker m = i.next();
                     if (m.getPurpose() == TaxiMarker.Purpose.DISAPPEAR) {
-                        //mConnectionLines.removeLine(m.taxiObject.getTaxiId());
-                        //mConnectionLines.remove(m.taxiObject.getTaxiId());
                         if(m.isClicked){
                             doUnClick(m);
                         }
                         i.remove();
+                    }else if (m.getPurpose() == TaxiMarker.Purpose.APPEAR){
+                        m.setRotatedSymbol(new MarkerSymbol(fetchBitmap(m), MarkerSymbol.HotspotPlace.CENTER, false));
+                        Log.d("frameRot final"," rot:"+m.getMarker().getRotation());
                     }
                 }
                 //assume all values from purpose at the end of amin
@@ -348,15 +358,33 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
 
     }
 
-    private void prepareScaledBitmapArray(){
+    private void prepareScaleAndAppearanceTransitions(){
         pathModelArrow.setFillColor(Color.GRAY);
         pathModelArrow.setFillAlpha(0.5f);
         pathModelArrow.setStrokeAlpha(0.0f);
         pathModelCircle.setStrokeAlpha(0.0f);
         for (int i = 0; i < 100; i++) {
             scaledGrayedSymbols[i] = AndroidGraphicsCustom.drawableToBitmap(drawable, 101 + i);
+            appearDisappearAnim[i]=AndroidGraphicsCustom.drawableToBitmap(drawable,2+2*i);
         }
     }
+
+
+    private Bitmap getAppearDisappearFrame(int frame, int totalFrames, boolean appear){
+        int currIconSize=getDrawableSize(mZoom2);
+        int maxSizeIndex=currIconSize/2;
+        int currSizeIndex=maxSizeIndex*frame/totalFrames;
+        Log.d("wtf bitmap","iconSize:"+currIconSize+" maxSize:"+maxSizeIndex+" currSizeInd:"+currSizeIndex);
+        Bitmap bitmap;
+        if (appear){
+            bitmap= appearDisappearAnim[currSizeIndex];
+        }else{
+            bitmap= appearDisappearAnim[maxSizeIndex-currSizeIndex];
+        }
+        return bitmap;
+    }
+
+
 
     private double mZoom;
     private synchronized void zoomAdjust(final double zoom){

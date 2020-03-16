@@ -115,26 +115,17 @@ public class TaxiMarker implements MarkerInterface, Comparable<TaxiMarker> {
     }
 
     public void executeFrame(int i, int frames){
-        if (purpose==Purpose.MOVE){
+        float shift=1.0f/(frames-i);
 
-            float shift=1.0f/(frames-i);
+        double latShift=(this.purposeTaxiObject.getLatitude()-this.taxiObject.getLatitude())*(double)shift;
+        double lonShift=(this.purposeTaxiObject.getLongitude()-this.taxiObject.getLongitude())*(double)shift;
+        float rotChange=this.purposeTaxiObject.getRotation()-this.taxiObject.getRotation();
+        rotChange=(float) FastMath.clampDegree(rotChange);
+        float rotShift=rotChange*shift;
 
-            double latShift=(this.purposeTaxiObject.getLatitude()-this.taxiObject.getLatitude())*(double)shift;
-            double lonShift=(this.purposeTaxiObject.getLongitude()-this.taxiObject.getLongitude())*(double)shift;
-            float rotChange=this.purposeTaxiObject.getRotation()-this.taxiObject.getRotation();
-            rotChange=(float) FastMath.clampDegree(rotChange);
-            float rotShift=rotChange*shift;
+        this.setLatitude(this.taxiObject.getLatitude()+latShift);
+        this.setLongitude(this.taxiObject.getLongitude()+lonShift);
+        this.setRotation(this.taxiObject.getRotation()+rotShift);
 
-            this.setLatitude(this.taxiObject.getLatitude()+latShift);
-            this.setLongitude(this.taxiObject.getLongitude()+lonShift);
-            this.setRotation(this.taxiObject.getRotation()+rotShift);
-
-        }else if (purpose==Purpose.APPEAR){
-            //play appear animation
-
-        }else if (purpose==Purpose.DISAPPEAR){
-            //play disappear animation
-
-        }
     }
 }
