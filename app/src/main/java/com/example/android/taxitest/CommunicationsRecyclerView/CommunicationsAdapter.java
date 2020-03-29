@@ -69,8 +69,8 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
         try {
             IO.Options opts=new IO.Options();
             opts.forceNew = true;
-            opts.query = "id=3";
-            mSocket = IO.socket("https://id-ex-websocket-audiochat.herokuapp.com",opts);
+            opts.query = "id=t"+Constants.myId;
+            mSocket = IO.socket("https://id-ex-websocket-audiochat-eu.herokuapp.com",opts);
             Log.d("socketTest","success");
             initializeSocketListener();
             connectSocket();
@@ -275,6 +275,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
             @Override
             public void call(Object... args) {
                 final String jsonString=(String) args[0];
+                Log.d("socketTest","llego el texto");
                 try {
                     JSONObject jsonObject = new JSONObject(jsonString);
                     processReceivedJson(jsonObject);
@@ -310,12 +311,14 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
 
     public void attemptSend(String audioString){
         mSocket.emit("audio chat", audioString);
+        Log.d("socketTest",audioString.substring(0,100));
     }
 
     public void processReceivedJson(JSONObject jsonObject){
         try {
             String idString = jsonObject.getString("from");
             int id = Integer.parseInt(idString.substring(1));
+            Log.d("socketTest",idString);
             String audioString = jsonObject.getString("audio");
             byte[] biteOutput = Base64.decode(audioString, 0);
             File audioFile = new File(mContext.getExternalCacheDir(), "/" + idString + "_" + new Date().getTime() + ".aac");
@@ -328,6 +331,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
                 }
 
             }
+            notifyDataSetChanged();
         }catch (Exception e){
             e.printStackTrace();
             Log.d("error_receiving","fuuck");

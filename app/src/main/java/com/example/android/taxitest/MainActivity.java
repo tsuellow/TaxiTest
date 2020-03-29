@@ -258,8 +258,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                         if (location != null) {
                             mMarkerLoc = location;
                             //use tis to shift location (dev only)
-                            mMarkerLoc.setLatitude(mMarkerLoc.getLatitude()-39.2908);
-                            mMarkerLoc.setLongitude(mMarkerLoc.getLongitude()-96.095);
+//                            mMarkerLoc.setLatitude(mMarkerLoc.getLatitude()-39.2908);
+//                            mMarkerLoc.setLongitude(mMarkerLoc.getLongitude()-96.095);
                             mOwnMarkerLayer.moveMarker(new GeoPoint(mMarkerLoc.getLatitude(),mMarkerLoc.getLongitude()));
                             mapView.map().setMapPosition(mMarkerLoc.getLatitude(), mMarkerLoc.getLongitude(), mScale);
                         }
@@ -276,8 +276,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 }
                 //smoothen transition to new spot
                 Location adjustedLocation = locationResult.getLastLocation();
-                adjustedLocation.setLatitude(mMarkerLoc.getLatitude()-39.2908);
-                adjustedLocation.setLongitude(mMarkerLoc.getLongitude()-96.095);
+//                adjustedLocation.setLatitude(mMarkerLoc.getLatitude()-39.2908);
+//                adjustedLocation.setLongitude(mMarkerLoc.getLongitude()-96.095);
                 endLocation=adjustedLocation;
                 mCompass.setCurrLocation(endLocation);
                 if (mCurrMapLoc != null && mMarkerLoc != null ) {
