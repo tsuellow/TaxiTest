@@ -39,6 +39,7 @@ dependencies {
 
     //gif library
     implementation 'com.github.bumptech.glide:glide:4.9.0'
+    implementation 'androidx.appcompat:appcompat:1.0.2'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.9.0'
 
     //vector libs
@@ -48,11 +49,6 @@ dependencies {
     implementation 'com.google.protobuf:protobuf-java:3.5.1'
     implementation 'com.wdtinc:mapbox-vector-tile:3.0.0'
 
-    //implementation 'com.googlecode.json-simple:json-simple:1.1.1'
-
-//    implementation 'com.fasterxml.jackson.core:jackson-core:2.8.4'
-//    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.8.4'
-//    implementation 'com.fasterxml.jackson.core:jackson-databind:2.8.4'
     implementation 'de.grundid.opendatalab:geojson-jackson:1.8.1'
 
     //websocket

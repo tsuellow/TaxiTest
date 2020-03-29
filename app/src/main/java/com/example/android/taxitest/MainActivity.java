@@ -3,6 +3,7 @@ package com.example.android.taxitest;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
@@ -98,6 +99,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     ImageView barriosImage;
     ImageView nightModeImage;
     ImageView filterImage;
+    ImageView settings;
 
     //websocket connection
     WebSocketConnection mWebSocketConnection;
@@ -133,7 +135,6 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     float mTilt;
     double mScale;
     TaxiObject mOwnTaxiObject;
-    InputStream geoJsonIs;
     AnimatedVectorDrawableCompat advCompat;
     AnimatedVectorDrawable adv;
     boolean wasMoved=false;
@@ -160,6 +161,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         barriosImage=(ImageView) findViewById(R.id.barrios);
         nightModeImage= (ImageView) findViewById(R.id.moon);
         nightModeImage.setImageAlpha(100);
+        settings= (ImageView) findViewById(R.id.settings);
         filterImage=(ImageView) findViewById(R.id.filter);
         filterImage.setImageAlpha(100);
         mapView = (MapView) findViewById(R.id.mapView);
@@ -189,7 +191,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         //initialize map
         MapFileTileSource tileSource = new MapFileTileSource();
         copyFileToExternalStorage(R.raw.result);//put in async task
-        File file=new File(Environment.getExternalStorageDirectory(), Constants.MAP_FILE);
+        File file=new File(mContext.getExternalFilesDir(null), Constants.MAP_FILE);
         String mapPath = file.getAbsolutePath();
         if (!tileSource.setMapFile(mapPath)) {
             //Toast.makeText(mContext,"could not read map",Toast.LENGTH_LONG).show();
@@ -219,12 +221,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         // MapEventsReceiver
         mMapEventsReceiver=new MapEventsReceiver(mapView);
         // BarriosLayer
-        geoJsonIs=getResources().openRawResource(R.raw.barrios);
-        mBarriosLayer =new BarriosLayer(mapView.map(),mContext);
-        FeatureCollection fc= GeoJsonUtils.loadFeatureCollection(geoJsonIs);
-        if (fc != null) {
-            GeoJsonUtils.addBarrios(mBarriosLayer,fc);
-        }
+        mBarriosLayer =new BarriosLayer(mapView.map(), mContext, Constants.barriosFile);
         // OwnMarkerLayer
         otherIcon=new VectorMasterDrawable(this,R.drawable.taxi_marker);
         mOwnMarkerLayer= new OwnMarkerLayer(mContext, mBarriosLayer,mapView.map(),new ArrayList<OwnMarker>(),otherIcon,Constants.lastLocation, new GeoPoint(13.0923151,-86.3609919),mCompass);
@@ -355,12 +352,27 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         });
 
         prepareBackToCenterAnim();
+
+
+        settings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                openTest();
+            }
+        });
+
+    }
+
+    public void openTest(){
+        Intent intent = new Intent(MainActivity.this, ChooseDestination.class);
+        startActivity(intent);
     }
 
     private void setIconColors(int color){
         barriosImage.setColorFilter(color);
         compassImage.setColorFilter(color);
         nightModeImage.setColorFilter(color);
+        filterImage.setColorFilter(color);
     }
 
     private void prepareBackToCenterAnim(){
@@ -395,7 +407,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
     //CHECK IF  NICARAGUAN MAP-FILE IS IN EXTERNAL STORAGE AND ELSE LOAD IT THERE FROM RESOURCES
     private void copyFileToExternalStorage(int resourceId){
-        File sdFile = new File(Environment.getExternalStorageDirectory(), Constants.MAP_FILE);
+        File sdFile = new File(mContext.getExternalFilesDir(null), Constants.MAP_FILE);
         if (!sdFile.exists()) {
             try {
                 InputStream in = getResources().openRawResource(resourceId);

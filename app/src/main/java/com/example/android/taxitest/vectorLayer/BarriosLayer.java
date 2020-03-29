@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.widget.Toast;
 
+import org.geojson.FeatureCollection;
 import org.locationtech.jts.geom.Point;
 import org.oscim.core.Box;
 import org.oscim.core.GeoPoint;
@@ -15,11 +16,13 @@ import org.oscim.map.Map;
 import org.oscim.utils.SpatialIndex;
 import org.oscim.utils.geom.GeomBuilder;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 public class BarriosLayer extends VectorLayer {
     Context mContext;
+    int mResource;
 
     private List<BarrioPolygonDrawable> fullDrawables=new ArrayList<>();
 
@@ -27,9 +30,15 @@ public class BarriosLayer extends VectorLayer {
         super(map, index);
     }
 
-    public BarriosLayer(Map map, Context context) {
+    public BarriosLayer(Map map, Context context, int barriosResourceId) {
         super(map);
         mContext=context;
+        mResource=barriosResourceId;
+        InputStream geoJsonIs=mContext.getResources().openRawResource(mResource);
+        FeatureCollection fc= GeoJsonUtils.loadFeatureCollection(geoJsonIs);
+        if (fc != null) {
+            GeoJsonUtils.addBarrios(this,fc);
+        }
     }
 
 

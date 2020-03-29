@@ -87,6 +87,7 @@ public class WebSocketConnection {
 
     public void attemptSend(String locationObject){
         mSocket.emit("location update", locationObject);
+
     }
 
     public synchronized void addOrReset(boolean reset, TaxiObject taxiObject){

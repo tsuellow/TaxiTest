@@ -9,4 +9,5 @@ public class Constants {
     public static String userType="taxi";
     public static GeoPoint lastLocation=new GeoPoint(0.0,0.0);
     public static double filterDegrees=45;
+    public static int barriosFile=R.raw.barrios;
 }

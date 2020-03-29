@@ -76,7 +76,7 @@ public class OwnMarkerLayer extends ItemizedLayer<OwnMarker> implements Map.Upda
     private ItemizedLayer.OnItemGestureListener<OwnMarker> customListener=new ItemizedLayer.OnItemGestureListener<OwnMarker>() {
         @Override
         public boolean onItemSingleTapUp(int index, OwnMarker item) {
-
+            //to be populated with something that makes sense like change destination, set taxi to full, or others.
             return false;
         }
 
