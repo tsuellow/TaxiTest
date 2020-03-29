@@ -258,8 +258,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                         if (location != null) {
                             mMarkerLoc = location;
                             //use tis to shift location (dev only)
-                            mMarkerLoc.setLatitude(mMarkerLoc.getLatitude()-0.0);
-                            mMarkerLoc.setLongitude(mMarkerLoc.getLongitude()-0.0);
+                            mMarkerLoc.setLatitude(mMarkerLoc.getLatitude()-39.2908);
+                            mMarkerLoc.setLongitude(mMarkerLoc.getLongitude()-96.095);
                             mOwnMarkerLayer.moveMarker(new GeoPoint(mMarkerLoc.getLatitude(),mMarkerLoc.getLongitude()));
                             mapView.map().setMapPosition(mMarkerLoc.getLatitude(), mMarkerLoc.getLongitude(), mScale);
                         }

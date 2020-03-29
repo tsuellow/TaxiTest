@@ -71,7 +71,9 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
+        initializeSocketListener();
         connectSocket();
+
     }
 
     public void setConnectionLines(ConnectionLineLayer2 connectionLines){
