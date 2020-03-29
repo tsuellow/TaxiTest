@@ -276,8 +276,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 }
                 //smoothen transition to new spot
                 Location adjustedLocation = locationResult.getLastLocation();
-                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-0.0);
-                adjustedLocation.setLongitude(adjustedLocation.getLongitude()-0.0);
+                adjustedLocation.setLatitude(mMarkerLoc.getLatitude()-39.2908);
+                adjustedLocation.setLongitude(mMarkerLoc.getLongitude()-96.095);
                 endLocation=adjustedLocation;
                 mCompass.setCurrLocation(endLocation);
                 if (mCurrMapLoc != null && mMarkerLoc != null ) {

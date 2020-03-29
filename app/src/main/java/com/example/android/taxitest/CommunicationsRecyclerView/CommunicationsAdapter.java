@@ -67,12 +67,19 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
 
         //socket code placeholder
         try {
-            mSocket = IO.socket("https://id-ex-websocket-audiochat-eu.herokuapp.com?id=t"+ Constants.myId);
+            IO.Options opts=new IO.Options();
+            opts.forceNew = true;
+            opts.query = "id=3";
+            mSocket = IO.socket("https://id-ex-websocket-audiochat.herokuapp.com",opts);
+            Log.d("socketTest","success");
+            initializeSocketListener();
+            connectSocket();
         } catch (URISyntaxException e) {
             e.printStackTrace();
+            Log.d("socketTest","failed");
         }
-        initializeSocketListener();
-        connectSocket();
+
+        //Log.d("socketTest",mSocket.id());
 
     }
 
@@ -249,14 +256,17 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
     //temporary socket code
     private Socket mSocket;
     Emitter.Listener onChatReceived;
+    Emitter.Listener onSocketsConnected;
 
     public void connectSocket(){
         mSocket.on("audio chat",onChatReceived);
+        mSocket.on("sockets connected",onSocketsConnected);
         mSocket.connect();
     }
 
     public void disconnectSocket(){
         mSocket.off("audio chat",onChatReceived);
+        mSocket.off("sockets connected",onSocketsConnected);
         mSocket.disconnect();
     }
 
@@ -272,6 +282,12 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
                     Log.d("Error", err.toString());
                 }
 
+            }
+        };
+        onSocketsConnected=new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                Log.d("socketTest", args[0].toString());
             }
         };
     }
