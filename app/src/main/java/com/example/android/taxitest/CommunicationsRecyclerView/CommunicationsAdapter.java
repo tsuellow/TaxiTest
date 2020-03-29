@@ -23,6 +23,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.transition.Visibility;
 
+import com.example.android.taxitest.Constants;
 import com.example.android.taxitest.R;
 import com.example.android.taxitest.RecordButtonUtils.RecordButton;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
@@ -66,7 +67,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
 
         //socket code placeholder
         try {
-            mSocket = IO.socket("https://id-ex-websocket-audiochat.herokuapp.com");
+            mSocket = IO.socket("https://id-ex-websocket-audiochat-eu.herokuapp.com?id=t"+ Constants.myId);
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -248,12 +249,12 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
     Emitter.Listener onChatReceived;
 
     public void connectSocket(){
-        mSocket.on("location update",onChatReceived);
+        mSocket.on("audio chat",onChatReceived);
         mSocket.connect();
     }
 
     public void disconnectSocket(){
-        mSocket.off("location update",onChatReceived);
+        mSocket.off("audio chat",onChatReceived);
         mSocket.disconnect();
     }
 
@@ -289,18 +290,18 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
         }
     }
 
-    public void attemptSend(String locationObject){
-        mSocket.emit("location update", locationObject);
+    public void attemptSend(String audioString){
+        mSocket.emit("audio chat", audioString);
     }
 
     public void processReceivedJson(JSONObject jsonObject){
         try {
-            String idString = jsonObject.getString("to");
+            String idString = jsonObject.getString("from");
             int id = Integer.parseInt(idString.substring(1));
             String audioString = jsonObject.getString("audio");
             byte[] biteOutput = Base64.decode(audioString, 0);
             File audioFile = new File(mContext.getExternalCacheDir(), "/" + idString + "_" + new Date().getTime() + ".aac");
-            FileOutputStream fos = new FileOutputStream(mContext.getExternalCacheDir() + "/hello-2.mp3");
+            FileOutputStream fos = new FileOutputStream(audioFile);
             fos.write(biteOutput);
             fos.close();
             for (CommsObject comm : mComms) {
