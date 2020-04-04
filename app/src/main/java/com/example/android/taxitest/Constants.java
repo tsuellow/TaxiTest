@@ -10,4 +10,7 @@ public class Constants {
     public static GeoPoint lastLocation=new GeoPoint(0.0,0.0);
     public static double filterDegrees=45;
     public static int barriosFile=R.raw.barrios;
+    public static GeoPoint lowerRightLabelLimit=new GeoPoint(13.041135, -86.309543);
+    public static GeoPoint upperLeftLabelLimit=new GeoPoint(13.124386, -86.406090);
+
 }

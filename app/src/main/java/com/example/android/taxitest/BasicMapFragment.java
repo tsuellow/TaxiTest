@@ -72,6 +72,7 @@ public class BasicMapFragment extends Fragment implements GoogleApiClient.Connec
     private ImageView compassImage;
     private ImageView backToCenterImage;
 
+    MapFileTileSource mTileSource;
     private BuildingLayer mBuildingLayer;
     private LabelLayer mLabelLayer;
     private MapScaleBar mapScaleBar;
@@ -113,16 +114,16 @@ public class BasicMapFragment extends Fragment implements GoogleApiClient.Connec
         mapView = (MapView) rootView.findViewById(R.id.simple_map);
 
         //initialize map
-        MapFileTileSource tileSource = new MapFileTileSource();
+       mTileSource = new MapFileTileSource();
         //copyFileToExternalStorage(R.raw.result);//put in async task
         File file=new File(getContext().getExternalFilesDir(null), Constants.MAP_FILE);
         String mapPath = file.getAbsolutePath();
-        if (!tileSource.setMapFile(mapPath)) {
+        if (!mTileSource.setMapFile(mapPath)) {
             //Toast.makeText(mContext,"could not read map",Toast.LENGTH_LONG).show();
             Log.d("First Launch","could not read map");
         }
         // Vector layer
-        VectorTileLayer tileLayer = mapView.map().setBaseMap(tileSource);
+        VectorTileLayer tileLayer = mapView.map().setBaseMap(mTileSource);
         // Render theme
         mapView.map().setTheme(new AssetsRenderTheme(Objects.requireNonNull(getContext()).getAssets(),"", "vtm/day_mode.xml"));
         //add set pivot

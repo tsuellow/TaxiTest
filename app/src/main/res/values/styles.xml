@@ -18,4 +18,10 @@
         <item name="cornerSize">50%</item>
     </style>
 
+    <!-- ExposedDropdownMenu -->
+    <style name="ExposedDropDownMenu2" parent="Widget.MaterialComponents.TextInputLayout.FilledBox">
+        <item name="boxStrokeColor">@color/colorRed</item>
+        <item name="hintTextColor">@color/colorBlue</item>
+    </style>
+
 </resources>

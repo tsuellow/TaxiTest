@@ -41,8 +41,9 @@ import org.oscim.utils.FastMath;
 import java.util.List;
 
 @SuppressWarnings("deprecation")
-public class Compass extends Layer implements SensorEventListener, Map.UpdateListener,
-        LocationRenderer.Callback {
+public class Compass extends Layer implements SensorEventListener, Map.UpdateListener
+        //,LocationRenderer.Callback
+{
 
     // static final Logger log = LoggerFactory.getLogger(Compass.class);
 
@@ -166,12 +167,12 @@ public class Compass extends Layer implements SensorEventListener, Map.UpdateLis
         }
     }
 
-    @Override
+    //@Override
     public boolean hasRotation() {
         return true;
     }
 
-    @Override
+    //@Override
     public synchronized float getRotation() {
         return mCurRotation;
     }
