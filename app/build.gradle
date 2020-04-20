@@ -21,7 +21,7 @@ android {
 dependencies {
     implementation 'androidx.appcompat:appcompat'
 
-    //room dep
+    //vtm dep
     def vtm_version = "0.13.0"
 
     implementation "org.mapsforge:vtm:$vtm_version"
@@ -34,6 +34,20 @@ dependencies {
     implementation "org.mapsforge:vtm-android:$vtm_version:natives-x86_64"
     implementation "com.caverock:androidsvg:1.4"
 
+    //vector libs
+    implementation "org.mapsforge:vtm-jts:$vtm_version"
+    implementation 'org.locationtech.jts:jts-core:1.15.0'
+    implementation "org.mapsforge:vtm-mvt:$vtm_version"
+    implementation 'com.google.protobuf:protobuf-java:3.5.1'
+    implementation 'com.wdtinc:mapbox-vector-tile:3.1.0'
+
+    //POI db
+    implementation 'org.mapsforge:mapsforge-poi-android:0.13.0'
+    implementation 'org.mapsforge:sqlite-android:0.13.0:natives-armeabi-v7a'
+    implementation 'org.mapsforge:sqlite-android:0.13.0:natives-arm64-v8a'
+    implementation 'org.mapsforge:sqlite-android:0.13.0:natives-x86'
+    implementation 'org.mapsforge:sqlite-android:0.13.0:natives-x86_64'
+
     //volley
     implementation 'com.android.volley:volley:1.1.1'
     //google play api location
@@ -44,12 +58,6 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.1.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.9.0'
 
-    //vector libs
-    implementation "org.mapsforge:vtm-jts:$vtm_version"
-    implementation 'org.locationtech.jts:jts-core:1.15.0'
-    implementation "org.mapsforge:vtm-mvt:$vtm_version"
-    implementation 'com.google.protobuf:protobuf-java:3.5.1'
-    implementation 'com.wdtinc:mapbox-vector-tile:3.1.0'
 
     implementation 'de.grundid.opendatalab:geojson-jackson:1.8.1'
 
@@ -82,6 +90,9 @@ dependencies {
 
     //circular progress bar
     implementation 'com.mikhaellopez:circularprogressbar:3.0.3'
+
+    //bson
+    implementation 'org.mongodb:bson:4.0.1'
 
 
 }

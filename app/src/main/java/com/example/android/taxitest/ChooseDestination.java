@@ -5,30 +5,50 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.res.Resources;
+import android.graphics.PorterDuff;
+import android.opengl.Visibility;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.NumberPicker;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.android.taxitest.vtmExtension.AndroidGraphicsCustom;
 import com.google.android.material.textfield.TextInputLayout;
 
+import org.mapsforge.core.model.Tag;
+import org.mapsforge.poi.android.storage.AndroidPoiPersistenceManagerFactory;
+import org.mapsforge.poi.storage.ExactMatchPoiCategoryFilter;
+import org.mapsforge.poi.storage.PoiCategoryFilter;
+import org.mapsforge.poi.storage.PoiCategoryManager;
+import org.mapsforge.poi.storage.PoiPersistenceManager;
 import org.oscim.android.MapView;
 import org.oscim.backend.canvas.Bitmap;
+import org.oscim.core.BoundingBox;
 import org.oscim.core.GeoPoint;
 import org.oscim.core.MercatorProjection;
 import org.oscim.core.Point;
-import org.oscim.core.Tag;
+
 import org.oscim.core.Tile;
 import org.oscim.event.Gesture;
 import org.oscim.event.MotionEvent;
@@ -41,24 +61,52 @@ import org.oscim.tiling.source.mapfile.MapReadResult;
 import org.oscim.tiling.source.mapfile.PointOfInterest;
 import org.slf4j.Marker;
 
+import java.io.File;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toCollection;
 
 
 public class ChooseDestination extends AppCompatActivity {
 
 
-    public static GeoPoint destGeo;
+    public GeoPoint destGeo;
     DestinationFragment fragment;
     AutoCompleteTextView chooseBarrio;
-    TextInputLayout loChooseBarrio;
     AutoCompleteTextView chooseReference;
-    NumberPicker amountPassengers;
+    ProgressBar loadingBarrios;
+    ProgressBar loadingReference;
+    ImageButton btUp;
+    ImageButton btDown;
+    Button btOk;
+    Button btCancel;
+    TextView seats;
+    LinearLayout chosenDestLayout;
+    LinearLayout parentLayout;
+    ImageView fakeSplash;
+    TextView chosenBarrioName;
+
+    int seatAmount=1;
+    HashMap<String,GeoPoint> barriosList;
+    HashMap<String,GeoPoint> ptOfReferenceList;
+    private PoiPersistenceManager mPersistenceManager;
+    File poiDb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setTheme(R.style.AppTheme);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_choose_destination);
+        getSupportActionBar().setTitle("Choose your destination");
+
+        parentLayout=(LinearLayout) findViewById(R.id.parent_layout_choose_dest);
+        fakeSplash=(ImageView) findViewById(R.id.logo_fake_splash);
 
         fragment=new DestinationFragment();
         if (savedInstanceState == null) {
@@ -68,94 +116,230 @@ public class ChooseDestination extends AppCompatActivity {
                     .commit();
         }
 
+        //set up poi search
+
+        barriosList=new HashMap<>();
+        ptOfReferenceList=new HashMap<>();
+
+
+        poiDb=new File(getApplicationContext().getExternalFilesDir(null).getAbsolutePath()+"/db_nica.poi");
+        mPersistenceManager = AndroidPoiPersistenceManagerFactory.getPoiPersistenceManager(poiDb.getAbsolutePath());
+
+
+        seats=(TextView) findViewById(R.id.tv_seats);
+        btUp=(ImageButton) findViewById(R.id.bt_up);
+        btDown=(ImageButton) findViewById(R.id.bt_down);
+        btDown.setColorFilter(getResources().getColor(R.color.colorDeselected),
+                PorterDuff.Mode.SRC_ATOP);
+        btDown.setClickable(false);
+
+        btOk=(Button) findViewById(R.id.bt_dest_confirm);
+        btCancel=(Button) findViewById(R.id.bt_dest_cancel);
+
+        chosenDestLayout=(LinearLayout) findViewById(R.id.confirm_layout);
+        chosenBarrioName=(TextView) findViewById(R.id.tv_chosen_barrio);
 
         chooseBarrio= (AutoCompleteTextView) findViewById(R.id.actv_barrio);
         chooseReference= (AutoCompleteTextView) findViewById(R.id.actv_reference);
-        String[] array={"uno","dos" ,"tres", "cuatro","cinco","seis"};
-        //List<String> pois=fragment.getPoiList();
-        ArrayAdapter<String> adapter=new ArrayAdapter<String>(ChooseDestination.this,
-                android.R.layout.simple_expandable_list_item_1,array);
-        chooseBarrio.setAdapter(adapter);
+        loadingBarrios=(ProgressBar) findViewById(R.id.pb_barrio);
+        loadingReference=(ProgressBar) findViewById(R.id.pb_reference);
+
         chooseBarrio.setOnTouchListener(new View.OnTouchListener() {
 
             @Override
             public boolean onTouch(View view, android.view.MotionEvent motionEvent) {
+                if (loadingBarrios.getVisibility()==View.VISIBLE){
+                    Toast.makeText(getApplicationContext(),"please wait, content is still loading", Toast.LENGTH_SHORT).show();
+                    return false;
+                }
                 ((AutoCompleteTextView) view).showDropDown();
                 return false;
             }
 
 
         });
-        loChooseBarrio=(TextInputLayout) findViewById(R.id.lo_barrio);
 
-        chooseReference.setOnClickListener(new View.OnClickListener() {
+        chooseReference.setOnTouchListener(new View.OnTouchListener() {
+
             @Override
-            public void onClick(View view) {
-                List<String> pois=fragment.getPoiList();
-                ArrayAdapter<String> adapter=new ArrayAdapter<String>(ChooseDestination.this,
-                        android.R.layout.simple_expandable_list_item_1,pois);
-                chooseBarrio.setAdapter(adapter);
+            public boolean onTouch(View view, android.view.MotionEvent motionEvent) {
+                if (loadingReference.getVisibility()==View.VISIBLE){
+                    Toast.makeText(getApplicationContext(),"please wait, content is still loading", Toast.LENGTH_SHORT).show();
+                    return false;
+                }
+                ((AutoCompleteTextView) view).showDropDown();
+                return false;
+            }
+
+
+        });
+
+        populateBarriosDropdown();
+        populateReferenceDropdown();
+
+        chooseBarrio.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                chooseReference.setText(null);
+                hideSoftKeyboard(ChooseDestination.this);
+                String name=(String) adapterView.getItemAtPosition(i);
+                Toast.makeText(getApplicationContext(),name,Toast.LENGTH_LONG).show();
+                GeoPoint p = barriosList.get(name);
+                fragment.moveDestination(p);
             }
         });
 
+        chooseReference.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                chooseBarrio.setText(null);
+                hideSoftKeyboard(ChooseDestination.this);
+                String name=(String) adapterView.getItemAtPosition(i);
+                Toast.makeText(getApplicationContext(),name,Toast.LENGTH_LONG).show();
+                GeoPoint p= ptOfReferenceList.get(name);
+                fragment.moveDestination(p);
+            }
+        });
 
+        //seat amount logic
+        btUp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (seatAmount<4){
+                    if (seatAmount==1){
+                        btDown.setClickable(true);
+                        btDown.setColorFilter(getResources().getColor(R.color.colorSelected),PorterDuff.Mode.SRC_ATOP);
+                    }
+                    seatAmount++;
+                    if (seatAmount==4){
+                        btUp.setClickable(false);
+                        btUp.setColorFilter(getResources().getColor(R.color.colorDeselected),PorterDuff.Mode.SRC_ATOP);
+                    }
+                    seats.setText(""+seatAmount);
+                }
+            }
+        });
+
+        btDown.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (seatAmount>1){
+                    if (seatAmount==4){
+                        btUp.setClickable(true);
+                        btUp.setColorFilter(getResources().getColor(R.color.colorSelected),PorterDuff.Mode.SRC_ATOP);
+                    }
+                    seatAmount--;
+                    if (seatAmount==1){
+                        btDown.setClickable(false);
+                        btDown.setColorFilter(getResources().getColor(R.color.colorDeselected),PorterDuff.Mode.SRC_ATOP);
+                    }
+                    seats.setText(""+seatAmount);
+                }
+            }
+        });
+
+        fragment.setDestinationSetListener(new DestinationFragment.DestinationSetListener() {
+            @Override
+            public void destinationSet(String barrioName, int color, GeoPoint dest) {
+                destGeo=dest;
+                chosenDestLayout.setVisibility(View.VISIBLE);
+                chosenBarrioName.setText(barrioName);
+                chosenBarrioName.setTextColor(color);
+            }
+        });
+
+        btCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                chooseBarrio.setText(null);
+                chooseReference.setText(null);
+                chooseBarrio.clearFocus();
+                chooseReference.clearFocus();
+                fragment.customItemLayer.removeAllItems();
+                chosenDestLayout.setVisibility(View.GONE);
+            }
+        });
+
+        btOk.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                parentLayout.setVisibility(View.GONE);
+                getSupportActionBar().hide();
+                fakeSplash.setVisibility(View.VISIBLE);
+
+                //Toast.makeText(getApplicationContext(),"destination chosen",Toast.LENGTH_LONG).show();
+                Handler handler=new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        Intent intent = new Intent(ChooseDestination.this, MainActivity.class);
+                        intent.putExtra("DEST_LAT",destGeo.getLatitude());
+                        intent.putExtra("DEST_LON",destGeo.getLongitude());
+                        startActivity(intent);
+                    }
+                },300);
+
+            }
+        });
 
         destGeo=new GeoPoint(0.0,0.0);
+    }
 
-
-
-
-
+    public static void hideSoftKeyboard(Activity activity) {
+        InputMethodManager inputMethodManager =
+                (InputMethodManager) activity.getSystemService(
+                        Activity.INPUT_METHOD_SERVICE);
+        inputMethodManager.hideSoftInputFromWindow(
+                activity.getCurrentFocus().getWindowToken(), 0);
     }
 
 
 
 
-    public static void someMethodOutside(GeoPoint geoPoint){
-        destGeo=geoPoint;
-    }
+//    public static void someMethodOutside(GeoPoint geoPoint){
+//        destGeo=geoPoint;
+//
+//    }
 
     public static class DestinationFragment extends BasicMapFragment{
 
-        List<String> poiList;
-        public List<String> getPoiList(){
-            List<String> result=new ArrayList<>();
-            long mapSize = MercatorProjection.getMapSize((byte) 18);
-
-            int tileLRLat = MercatorProjection.latitudeToTileY(Constants.lowerRightLabelLimit.getLatitude(),(byte)18);
-            int tileLRLon = MercatorProjection.longitudeToTileX(Constants.lowerRightLabelLimit.getLongitude(),(byte)18);
-            int tileULLat = MercatorProjection.latitudeToTileY(Constants.upperLeftLabelLimit.getLatitude(),(byte)18);
-            int tileULLon = MercatorProjection.longitudeToTileX(Constants.upperLeftLabelLimit.getLongitude(),(byte)18);
-            //Tile upperLeft = new Tile(tileULLon, tileULLat, (byte) 18);
-            //Tile lowerRight = new Tile(tileLRLon, tileLRLat, (byte) 18);
-            Tile lowerRight = new Tile(68189,121454, (byte) 18);
-            Tile upperLeft = new Tile(68186,121453, (byte) 18);
-            Tile entire = new Tile(1065,1897, (byte) 12);
-            //Log.d("pois",""+upperLeft.tileX+","+upperLeft.tileY+","+(int)upperLeft.zoomLevel);
-
-            MapReadResult mapReadResult = ((MapDatabase) ((OverzoomTileDataSource) mTileSource.getDataSource()).getDataSource()).readMapData(upperLeft,lowerRight);
-
-            Log.d("pois",mapReadResult.pointOfInterests.size()+"size");
-            // Filter POI
-            //sb.append("*** POI ***");
-            for (PointOfInterest pointOfInterest : mapReadResult.pointOfInterests) {
-                List<Tag> tags = pointOfInterest.tags;
-                Log.d("pois",tags.size()+"size");
-                for (Tag tag1 : tags) {
-                    //if (tag1.key.contains("name")) {
-                        String entry = tag1.key+ "=" + tag1.value;
-                        result.add(entry);
-
-                    //}
+        public void moveDestination(final GeoPoint p){
+            mOwnMarkerLayer.setDest(p);
+            customItemLayer.removeAllItems();
+            MarkerItem pin=new MarkerItem("Destination", "picked on touch",p);
+            MarkerItem blur=new MarkerItem("Destination Area", "picked on touch",p);
+            pin.setMarker(new MarkerSymbol(AndroidGraphicsCustom.drawableToBitmap(getContext().getResources().getDrawable(R.drawable.location_pin,null),50), MarkerSymbol.HotspotPlace.BOTTOM_CENTER,true));
+            Bitmap blurBitmap=AndroidGraphicsCustom.drawableToBitmap(getContext().getResources().getDrawable(R.drawable.blur,null),5);
+            blurBitmap.scaleTo(200,200);
+            blur.setMarker(new MarkerSymbol(blurBitmap, MarkerSymbol.HotspotPlace.CENTER,false));
+            customItemLayer.addItem(pin);
+            customItemLayer.addItem(blur);
+            //someMethodOutside(p);
+            String barrioDest=mBarriosLayer.getContainingBarrio(p).getBarrioName();
+            int colorDest=mBarriosLayer.getContainingBarrio(p).getStyle().fillColor;
+            destinationSetListener.destinationSet(barrioDest,colorDest,p);
+            mapView.map().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mapView.map().animator().animateTo(p);
                 }
-            }
-            return result;
+            },500);
         }
+
+        interface DestinationSetListener{
+            void destinationSet(String barrioName, int color, GeoPoint dest);
+        }
+
+        public void setDestinationSetListener(DestinationSetListener destinationSetListener) {
+            this.destinationSetListener = destinationSetListener;
+        }
+
+        DestinationSetListener destinationSetListener;
 
         @Override
         public void onActivityCreated(@Nullable Bundle savedInstanceState) {
             super.onActivityCreated(savedInstanceState);
-            poiList=getPoiList();
         }
 
         @Override
@@ -176,20 +360,7 @@ public class ChooseDestination extends AppCompatActivity {
 //            }
                 if (g instanceof Gesture.Tap) {
                     GeoPoint p = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
-                    mOwnMarkerLayer.setDest(p);
-                    customItemLayer.removeAllItems();
-                    MarkerItem pin=new MarkerItem("Destination", "picked on touch",p);
-                    MarkerItem blur=new MarkerItem("Destination Area", "picked on touch",p);
-                    pin.setMarker(new MarkerSymbol(AndroidGraphicsCustom.drawableToBitmap(getContext().getResources().getDrawable(R.drawable.location_pin,null),50), MarkerSymbol.HotspotPlace.BOTTOM_CENTER,true));
-                    Bitmap blurBitmap=AndroidGraphicsCustom.drawableToBitmap(getContext().getResources().getDrawable(R.drawable.blur,null),5);
-                    blurBitmap.scaleTo(200,200);
-                    blur.setMarker(new MarkerSymbol(blurBitmap, MarkerSymbol.HotspotPlace.CENTER,false));
-                    customItemLayer.addItem(pin);
-                    customItemLayer.addItem(blur);
-                    someMethodOutside(p);
-
-
-                    mapView.map().animator().animateTo(p);
+                    moveDestination(p);
                     return true;
                 }
 //            if (g instanceof Gesture.TripleTap) {
@@ -198,6 +369,115 @@ public class ChooseDestination extends AppCompatActivity {
             }
         }
     }
+
+    private HashMap<String,GeoPoint> getPoiData(GeoPoint geoPoint, final String category, final List<Tag> patterns, String exclusion){
+        Collection<org.mapsforge.poi.storage.PointOfInterest> result;
+        try {
+            PoiCategoryManager categoryManager = mPersistenceManager.getCategoryManager();
+            PoiCategoryFilter categoryFilter = new ExactMatchPoiCategoryFilter();
+            if (category != null)
+                categoryFilter.addCategory(categoryManager.getPoiCategoryByTitle(category));
+            org.mapsforge.core.model.BoundingBox bb = new org.mapsforge.core.model.BoundingBox(
+                    //TODO choose box dynamically based on location
+                    Constants.lowerLeftLabelLimit.getLatitude(),Constants.lowerLeftLabelLimit.getLongitude(),
+                    Constants.upperRightLabelLimit.getLatitude(),Constants.upperRightLabelLimit.getLongitude());
+            result= mPersistenceManager.findInRect(bb, categoryFilter, patterns, Integer.MAX_VALUE);
+        } catch (Throwable t) {
+            result=null;
+        }
+        HashMap<String,GeoPoint> output=new HashMap<>();
+        if (result!=null) {
+            for (org.mapsforge.poi.storage.PointOfInterest poi : result) {
+                //CustomPoi poiCust = new CustomPoi(poi.getName(), new GeoPoint(poi.getLatitude(), poi.getLongitude()));
+                if (exclusion==null) {
+                    output.put(poi.getName(),new GeoPoint(poi.getLatitude(), poi.getLongitude()));
+                }else{
+                    boolean isRelevant=true;
+                    for(Tag tag:poi.getTags()){
+                        if (exclusion.contentEquals(tag.key)){
+                            isRelevant=false;
+                        }
+                    }
+                    if (isRelevant){
+                        output.put(poi.getName(),new GeoPoint(poi.getLatitude(), poi.getLongitude()));
+                    }
+                }
+            }
+        }else{
+            output= null;
+        }
+        return output;
+    }
+
+    private void populateBarriosDropdown(){
+        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                List<Tag> patterns=new ArrayList<>();
+                patterns.add(new Tag("place","suburb"));
+                final HashMap<String,GeoPoint> output=getPoiData(null,null, patterns,null);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        barriosList.putAll(output);
+                        List<String> barrioNames=new ArrayList<String>(barriosList.keySet());
+                        ArrayAdapter<String> adapter=new ArrayAdapter<String>(ChooseDestination.this,
+                                android.R.layout.simple_expandable_list_item_1,barrioNames);
+                        chooseBarrio.setAdapter(adapter);
+                        loadingBarrios.setVisibility(View.GONE);
+                    }
+                });
+            }
+        });
+    }
+
+    private void populateReferenceDropdown(){
+        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                final HashMap<String,GeoPoint> output=getPoiData(null,null, null,"place");
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ptOfReferenceList.putAll(output);
+                        List<String>  ptOfReferenceNames = new ArrayList<String>(ptOfReferenceList.keySet());
+                        ArrayAdapter<String> adapter=new ArrayAdapter<String>(ChooseDestination.this,
+                                android.R.layout.simple_expandable_list_item_1,ptOfReferenceNames);
+                        chooseReference.setAdapter(adapter);
+                        loadingReference.setVisibility(View.GONE);
+                    }
+                });
+            }
+        });
+    }
+
+    public class CustomPoi{
+        String name;
+        GeoPoint geoPoint;
+
+        public CustomPoi( String name, GeoPoint geoPoint) {
+            this.name = name;
+            this.geoPoint = geoPoint;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public GeoPoint getGeoPoint() {
+            return geoPoint;
+        }
+
+        public void setGeoPoint(GeoPoint geoPoint) {
+            this.geoPoint = geoPoint;
+        }
+    }
+
+
 
 
 

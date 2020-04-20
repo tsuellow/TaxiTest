@@ -23,6 +23,7 @@ import java.util.List;
 public class BarriosLayer extends VectorLayer {
     Context mContext;
     int mResource;
+    BarrioPolygonDrawable noBarrioSelected;
 
     private List<BarrioPolygonDrawable> fullDrawables=new ArrayList<>();
 
@@ -39,7 +40,18 @@ public class BarriosLayer extends VectorLayer {
         if (fc != null) {
             GeoJsonUtils.addBarrios(this,fc);
         }
+
+        //create catch it all drawable
+        List<GeoPoint> entireCountry=new ArrayList<>();
+        entireCountry.add(new GeoPoint(15.3,-89.0));
+        entireCountry.add(new GeoPoint(15.3,-82.0));
+        entireCountry.add(new GeoPoint(10.5,-82.0));
+        entireCountry.add(new GeoPoint(10.5,-89.0));
+        noBarrioSelected=new BarrioPolygonDrawable(entireCountry,BarrioPolygonDrawable.sb.build(),"outside of city",-1);
     }
+
+
+
 
 
     public void addBarrio(BarrioPolygonDrawable drawable){
@@ -60,7 +72,7 @@ public class BarriosLayer extends VectorLayer {
                 }
             }
         }
-        return "nothing tapped";
+        return "outside of city";
     }
 
     public synchronized BarrioPolygonDrawable getContainingBarrio(GeoPoint geoPoint){
@@ -70,7 +82,7 @@ public class BarriosLayer extends VectorLayer {
                 return drawable;
             }
         }
-        return fullDrawables.get(0);
+        return noBarrioSelected;
     }
 
     @Override

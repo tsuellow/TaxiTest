@@ -1,5 +1,7 @@
 package com.example.android.taxitest.vectorLayer;
 
+import android.graphics.Color;
+
 import org.locationtech.jts.geom.Geometry;
 import org.oscim.core.GeoPoint;
 import org.oscim.layers.vector.geometries.PolygonDrawable;
@@ -10,6 +12,11 @@ import java.util.List;
 public class BarrioPolygonDrawable extends PolygonDrawable {
     private String barrioName;
     private int barrioId;
+
+    static Style.Builder sb = Style.builder()
+            .strokeColor(Color.BLACK)
+            .fillColor(Color.BLACK)
+            .strokeWidth(1.5f);
 
     public String getBarrioName() {
         return barrioName;

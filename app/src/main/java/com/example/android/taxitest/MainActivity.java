@@ -154,6 +154,15 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         //basic settings
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
+        //get destination from intent
+        Intent intent=getIntent();
+        if (intent!=null){
+            destGeo=new GeoPoint(intent.getDoubleExtra("DEST_LAT",0.0), intent.getDoubleExtra("DEST_LON",0.0));
+            Log.d("desst",destGeo.getLatitude()+" "+destGeo.getLongitude()+"wtf");
+        }else {
+            destGeo = new GeoPoint(0.0, 0.0);
+        }
+
         //set content view assets and multiple components
         setContentView(R.layout.activity_tilemap);
         compassImage = (ImageView) findViewById(R.id.compass);
@@ -203,6 +212,10 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         mapView.map().setTheme(new AssetsRenderTheme(getAssets(),"", "vtm/day_mode.xml"));
         //add set pivot
         mapView.map().viewport().setMapViewCenter(0.0f, 0.75f);
+        //set important variables
+        mTilt = mapView.map().viewport().getMinTilt();
+        mScale = 1 << 17;
+        mapView.map().setMapPosition(Constants.lastLocation.getLatitude(),Constants.lastLocation.getLongitude(), mScale);
 
         // SET LAYERS
         // Building layer
@@ -224,7 +237,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         mBarriosLayer =new BarriosLayer(mapView.map(), mContext, Constants.barriosFile);
         // OwnMarkerLayer
         otherIcon=new VectorMasterDrawable(this,R.drawable.taxi_marker);
-        mOwnMarkerLayer= new OwnMarkerLayer(mContext, mBarriosLayer,mapView.map(),new ArrayList<OwnMarker>(),otherIcon,Constants.lastLocation, new GeoPoint(13.0923151,-86.3609919),mCompass);
+        mOwnMarkerLayer= new OwnMarkerLayer(mContext, mBarriosLayer,mapView.map(),new ArrayList<OwnMarker>(),otherIcon,Constants.lastLocation,destGeo,mCompass);
         //ConnectionLineLayer
         mConnectionLineLayer=new ConnectionLineLayer2(mapView.map());
         // OtherMarkerLayer
@@ -233,10 +246,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         // ADD ALL LAYERS TO MAP
         addMapLayers();
 
-        //set important variables
-        mTilt = mapView.map().viewport().getMinTilt();
-        mScale = 1 << 17;
-        destGeo=new GeoPoint(0.0,0.0);
+
         mOwnTaxiObject=new TaxiObject(Constants.myId,0.0,0.0,new Date().getTime(),0.0f,Constants.userType,destGeo.getLatitude(),destGeo.getLongitude(),1);
 
         //google api client for location services

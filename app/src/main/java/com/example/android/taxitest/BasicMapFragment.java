@@ -79,7 +79,7 @@ public class BasicMapFragment extends Fragment implements GoogleApiClient.Connec
     private MapScaleBarLayer mMapScaleBarLayer;
     private Compass mCompass;
     MapEventsReceiver mMapEventsReceiver;
-    private BarriosLayer mBarriosLayer;
+    BarriosLayer mBarriosLayer;
     OwnMarkerLayer mOwnMarkerLayer;
     ItemizedLayer<MarkerItem> customItemLayer;
 
@@ -100,11 +100,13 @@ public class BasicMapFragment extends Fragment implements GoogleApiClient.Connec
     double mScale;
 
     boolean wasMoved=false;
+    private static final String TAG = "BasicMapFragment";
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         //return super.onCreateView(inflater, container, savedInstanceState);
+        Log.d(TAG, "onCreateView: executed");
 
         //set content view assets and multiple components
         View rootView=inflater.inflate(R.layout.fragment_basic_map,container,false);
@@ -114,7 +116,7 @@ public class BasicMapFragment extends Fragment implements GoogleApiClient.Connec
         mapView = (MapView) rootView.findViewById(R.id.simple_map);
 
         //initialize map
-       mTileSource = new MapFileTileSource();
+        mTileSource = new MapFileTileSource();
         //copyFileToExternalStorage(R.raw.result);//put in async task
         File file=new File(getContext().getExternalFilesDir(null), Constants.MAP_FILE);
         String mapPath = file.getAbsolutePath();
@@ -128,6 +130,11 @@ public class BasicMapFragment extends Fragment implements GoogleApiClient.Connec
         mapView.map().setTheme(new AssetsRenderTheme(Objects.requireNonNull(getContext()).getAssets(),"", "vtm/day_mode.xml"));
         //add set pivot
         mapView.map().viewport().setMapViewCenter(0.0f, 0.0f);
+        //set important variables
+        mTilt = mapView.map().viewport().getMinTilt();
+        mScale = 1 << 14;
+        destGeo=new GeoPoint(0.0,0.0);
+        mapView.map().setMapPosition(Constants.lastLocation.getLatitude(),Constants.lastLocation.getLongitude(), mScale);
 
         // SET LAYERS
         // Building layer
@@ -158,10 +165,7 @@ public class BasicMapFragment extends Fragment implements GoogleApiClient.Connec
         addMapLayers();
 
 
-        //set important variables
-        mTilt = mapView.map().viewport().getMinTilt();
-        mScale = 1 << 17;
-        destGeo=new GeoPoint(0.0,0.0);
+
 
 
         //google api client for location services
@@ -185,8 +189,8 @@ public class BasicMapFragment extends Fragment implements GoogleApiClient.Connec
                                 //use tis to shift location (dev only)
                                 mMarkerLoc.setLatitude(mMarkerLoc.getLatitude()-0.0);
                                 mMarkerLoc.setLongitude(mMarkerLoc.getLongitude()-0.0);
-                                mOwnMarkerLayer.moveMarker(new GeoPoint(mMarkerLoc.getLatitude(),mMarkerLoc.getLongitude()));
                                 mapView.map().setMapPosition(mMarkerLoc.getLatitude(), mMarkerLoc.getLongitude(), mScale);
+                                mOwnMarkerLayer.moveMarker(new GeoPoint(mMarkerLoc.getLatitude(),mMarkerLoc.getLongitude()));
                                 endLocation=location;
                             }
                         }
@@ -389,7 +393,10 @@ public class BasicMapFragment extends Fragment implements GoogleApiClient.Connec
         super.onPause();
         //here we need this
         fusedLocationProviderClient.removeLocationUpdates(locationCallback);
+        Log.d(TAG, "onPause: happened");
     }
+
+
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {

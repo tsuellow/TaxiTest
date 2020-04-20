@@ -59,7 +59,7 @@ public class OwnMarkerLayer extends ItemizedLayer<OwnMarker> implements Map.Upda
 
         addTaxi(ownMarker);
         //correction for slow map
-        mItemList.get(0).setRotatedMarker(new MarkerSymbol(fetchBitmap(dest,false,17.0), MarkerSymbol.HotspotPlace.CENTER,false),mCompass.getRotation());
+        mItemList.get(0).setRotatedMarker(new MarkerSymbol(fetchBitmap(dest,false,map.getMapPosition().getZoom()), MarkerSymbol.HotspotPlace.CENTER,false),mCompass.getRotation());
         //prepare for zooming
         prepareScaledBitmapArray(fetchDrawable(dest,false));
 
@@ -121,8 +121,10 @@ public class OwnMarkerLayer extends ItemizedLayer<OwnMarker> implements Map.Upda
     }
 
     public void setDest(GeoPoint dest){
-        mItemList.get(0).destGeoPoint=dest;
-        moveMarker(mItemList.get(0).geoPoint);
+        if (mItemList.size()>0) {
+            mItemList.get(0).destGeoPoint = dest;
+            moveMarker(mItemList.get(0).geoPoint);
+        }
     }
 
 
