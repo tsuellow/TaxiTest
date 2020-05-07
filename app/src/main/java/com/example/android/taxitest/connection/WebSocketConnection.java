@@ -36,6 +36,7 @@ public class WebSocketConnection {
     public List<TaxiObject> mNewPositionsList=new ArrayList<TaxiObject>();
     CommunicationsAdapter commsInfo;
     boolean filterOn=false;
+    boolean processIsRunning=false;
 
 
     SqlLittleDB mDb;
@@ -64,6 +65,13 @@ public class WebSocketConnection {
         mSocket.disconnect();
     }
 
+    public void setProcessIsRunning(boolean processIsRunning) {
+        this.processIsRunning = processIsRunning;
+    }
+
+    public boolean getProcessIsRunning() {
+        return processIsRunning;
+    }
 
     private CsvMapper mapper=new CsvMapper();
     private CsvSchema schema = mapper.schemaFor(TaxiObject.class).withColumnSeparator('|');
@@ -91,6 +99,7 @@ public class WebSocketConnection {
     }
 
     public synchronized void addOrReset(boolean reset, TaxiObject taxiObject){
+        setProcessIsRunning(true);
         if (reset){
             processReceivedData();
             mNewPositionsList.clear();
@@ -107,10 +116,11 @@ public class WebSocketConnection {
         }
     };
 
+    Timer mDataAccumulateTimer=new Timer("accumulationTimer",true);
+    ExecuteReset executeReset=new ExecuteReset();
+
     public void startAccumulationTimer(){
-        Timer mDataAccumulateTimer=new Timer("accumulationTimer",true);
-        ExecuteReset executeReset=new ExecuteReset();
-        mDataAccumulateTimer.schedule(executeReset,3000,3000);
+        mDataAccumulateTimer.schedule(executeReset,100,3000);
     }
 
     private void processReceivedData(){

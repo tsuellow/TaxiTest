@@ -51,4 +51,8 @@ public class MiscellaneousUtils {
         return dir.delete();
     }
 
+    public static int getNumericId(String stringId){
+        return Integer.parseInt(stringId.substring(1));
+    }
+
 }

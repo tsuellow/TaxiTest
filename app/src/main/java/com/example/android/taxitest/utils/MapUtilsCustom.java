@@ -13,8 +13,8 @@ import java.io.InputStream;
 public class MapUtilsCustom {
 
     //CHECK IF  NICARAGUAN MAP-FILE IS IN EXTERNAL STORAGE AND ELSE LOAD IT THERE FROM RESOURCES
-    private void copyFileToExternalStorage(int resourceId, Context context){
-        File sdFile = new File(context.getExternalFilesDir(null), Constants.MAP_FILE);
+    public static void copyFileToExternalStorage(int resourceId, String fileName, Context context){
+        File sdFile = new File(context.getExternalFilesDir(null), fileName);
         if (!sdFile.exists()) {
             try {
                 InputStream in = context.getResources().openRawResource(resourceId);

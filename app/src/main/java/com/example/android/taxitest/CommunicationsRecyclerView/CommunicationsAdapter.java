@@ -15,8 +15,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.LinearInterpolator;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
@@ -29,6 +31,7 @@ import com.example.android.taxitest.R;
 import com.example.android.taxitest.RecordButtonUtils.RecordButton;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
 import com.example.android.taxitest.vectorLayer.ConnectionLineLayer2;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
@@ -61,6 +64,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
     private Context mContext;
     private MediaPlayer player = null;
     ConnectionLineLayer2 connectionLines;
+    public List<MessageObject> newIncomingComms=new ArrayList<>();
 
 
     public CommunicationsAdapter(Context context, ConnectionLineLayer2 connectionLineLayer){
@@ -105,6 +109,9 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
         for (CommsObject comm:mComms){
             result.add(comm.taxiMarker.taxiObject.getTaxiId());
         }
+        for (MessageObject msj:newIncomingComms){
+            result.add(MiscellaneousUtils.getNumericId(msj.getSendingId()));
+        }
         return result;
     }
 
@@ -128,7 +135,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
                 return mComms.indexOf(comm);
             }
         }
-        return mComms.size()-1;
+        return -1;//case when comm not found
     }
 
     boolean isPlaying=false;
@@ -183,6 +190,10 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
         private CircularProgressBar progressBar;
         private FloatingActionButton confirmOrPlay;
         public FloatingActionButton cancel;
+        //acknowledgements
+        private LinearLayout ackBubble;
+        private ImageView ackCheck, ackPlayed, ackHeard, ackRecording;
+
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             name = (TextView) itemView.findViewById(R.id.tv_name);
@@ -195,7 +206,12 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
             progressBar=(CircularProgressBar) itemView.findViewById(R.id.play_progress_bar);
             confirmOrPlay = (FloatingActionButton) itemView.findViewById(R.id.bt_confirm);
             cancel = (FloatingActionButton) itemView.findViewById(R.id.bt_cancel);
-
+            //acknowledgements
+            ackBubble=(LinearLayout) itemView.findViewById(R.id.ack_bubble);
+            ackCheck=(ImageView) itemView.findViewById(R.id.ack_check);
+            ackPlayed=(ImageView) itemView.findViewById(R.id.ack_played);
+            ackHeard=(ImageView) itemView.findViewById(R.id.ack_heard);
+            ackRecording=(ImageView) itemView.findViewById(R.id.ack_recording);
 
         }
 
@@ -215,63 +231,41 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
 
     @Override
     public void onBindViewHolder(@NonNull final CommunicationsAdapter.ViewHolder holder, int position) {
-        final CommsObject comm=mComms.get(position);
+        CommsObject comm=mComms.get(position);
         final int taxiId=comm.taxiMarker.taxiObject.getTaxiId();
         holder.name.setText("ID: "+comm.taxiMarker.taxiObject.getTaxiId());
         holder.numberPlate.setText("T"+comm.taxiMarker.taxiObject.getTaxiId());
         holder.destination.setText("barrio: "+comm.taxiMarker.color);
         holder.destColor.setCardBackgroundColor(comm.taxiMarker.color);
 
+        comm.setMsjUpdateListener(new CommsObject.MsjUpdateListener() {
+            @Override
+            public void onMsjUpdateReceived(int intentCode) {
+                //blablabla
+                Log.d("socketTest","code2 "+intentCode);
+                holder.confirmOrPlay.setImageResource(R.drawable.play_button);
+                holder.confirmOrPlay.refreshDrawableState();
+            }
+        });
+
         holder.recordButton.setRecordingFinishedListener(new RecordButton.RecordingFinishedListener() {
             @Override
             public void onRecordingFinished(File file) {
-                //mComms.get(getCommIndex(taxiId)).addAtTopOfList(file);
-                holder.confirmOrPlay.setImageResource(R.drawable.play_button);
-                //sockte test
-                JSONObject output = new JSONObject();
-                try {
-                    output.put("receivingId", taxiId);
-                    output.put("sendingId", Constants.myId);
-                    InputStream inputStream = new FileInputStream(file.getAbsolutePath());
-                    byte[] byteArray = IOUtils.toByteArray(inputStream);
-                    Log.d("binaryTest","audio"+byteArray.length);
-                    output.put("audio",byteArray);
-                    Log.d("binaryTest","success writing");
-//                    ByteArrayOutputStream ostream = new ByteArrayOutputStream();
-//                    ObjectOutputStream obStream = new ObjectOutputStream(ostream);
-//                    obStream.writeObject(output);
-//                    byte[] rawObject = ostream.toByteArray();
-//                    ostream.close();
-
-                }catch (Exception e){
-                    output=null;
-                    e.printStackTrace();
-                    Log.d("error_sending","fuuck");
-                    Log.d("binaryTest","failed writing");
-                }
-                try {
-                    byte[] bin=(byte[])output.get("audio");
-                    File audioFile = new File(mContext.getExternalCacheDir(), "/test_" + new Date().getTime() + ".aac");
-                    FileOutputStream fos = new FileOutputStream(audioFile);
-                    fos.write(bin);
-                    fos.close();
-                    mComms.get(getCommIndex(taxiId)).addAtTopOfList(audioFile);
-                    Log.d("binaryTest","success reading");
-                }catch (Exception e){
-                    e.printStackTrace();
-                    Log.d("binaryTest","failed reading");
-                }
-                JSONObject jsonObject=processOutgoingExperiment("t"+Constants.myId,"t"+taxiId,file,true);
-                //JSONObject jsonObject=processOutgoingMessage("t"+comm.taxiMarker.taxiObject.getTaxiId(),file);
-                if (jsonObject!=null)attemptSend(jsonObject);
+                CommsObject currComm=mComms.get(getCommIndex(taxiId));
+                MetaMessageObject metaMsj=new MetaMessageObject(CommsObject.REQUEST_SENT,file,currComm);
+                currComm.addAtTopOfMsjList(metaMsj);
+                MessageObject msj=metaMsj.getMsjObject();
+                JSONObject payload=msj.generateJson();
+                attemptSend(payload);
             }
         });
 
         holder.confirmOrPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(mContext,"confirm or play media"+mComms.get(getCommIndex(taxiId)).getTopOfList().getAbsolutePath(),Toast.LENGTH_LONG).show();
-                startPlaying(mComms.get(getCommIndex(taxiId)).getTopOfList(),holder.progressBar);
+                //Toast.makeText(mContext,"confirm or play media"+mComms.get(getCommIndex(taxiId)).getTopOfList().getAbsolutePath(),Toast.LENGTH_LONG).show();
+                CommsObject currComm=mComms.get(getCommIndex(taxiId));
+                startPlaying(currComm.getTopOfMsjList().getAudioFile(),holder.progressBar);
                 connectionLines.playCommAnim(taxiId);
             }
         });
@@ -311,11 +305,21 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
         onChatReceived=new Emitter.Listener() {
             @Override
             public void call(Object... args) {
-                //final String jsonString=(String) args[0];
-                Log.d("socketTest","llego el texto");
+                Log.d("socketTest","size "+args[0].toString());
                 try {
                     JSONObject jsonObject =(JSONObject)args[0];
-                    processReceivedExperiment(jsonObject,true);
+                    MessageObject msj=MessageObject.readIntoMsj(jsonObject);
+                    String idString=msj.getSendingId();
+                    int id = Integer.parseInt(idString.substring(1));
+                    if (getCommIndex(id)==-1){
+                        newIncomingComms.add(msj);
+                        messageInvitationListener.onInvitationReceived(msj);
+                    }else{//comm is already there
+                        CommsObject comm=mComms.get(getCommIndex(id));
+                        MetaMessageObject metaMsj=new MetaMessageObject(msj,comm);
+                        mComms.get(getCommIndex(id)).addAtTopOfMsjList(metaMsj);
+                    }
+
                 }catch (Exception err){
                     Log.d("Error", err.toString());
                 }
@@ -330,118 +334,20 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
         };
     }
 
-    public JSONObject processOutgoingExperiment(String sender, String receiver, File audio, boolean takeRisk){
-        if (!takeRisk){
-            try {
-                JSONObject output = new JSONObject();
-                output.put("receivingId", receiver);
-                output.put("sendingId", sender);
-                Log.d("socketTest", sender);
-                InputStream inputStream = new FileInputStream(audio.getAbsolutePath());
-                byte[] byteArray = IOUtils.toByteArray(inputStream);
-                String stringFile = Base64.encodeToString(byteArray, 0);
-                output.put("audio",stringFile);
-                return output;
-            }catch (Exception e){
-                e.printStackTrace();
-                Log.d("error_sending","fuuck");
-                return null;
-            }
-        }else{
-            try {
-                JSONObject output = new JSONObject();
-                output.put("receivingId", receiver);
-                output.put("sendingId", sender);
-                InputStream inputStream = new FileInputStream(audio.getAbsolutePath());
-                byte[] byteArray = IOUtils.toByteArray(inputStream);
-                output.put("audio",byteArray);
-                return output;
-            }catch (Exception e){
-                e.printStackTrace();
-                Log.d("error_sending","fuuck");
-                return null;
-            }
-        }
-    }
-
-    public JSONObject processOutgoingMessage(String id, File audio){
-        try {
-            JSONObject output = new JSONObject();
-            output.put("receivingId", id);
-            InputStream inputStream = new FileInputStream(audio.getAbsolutePath());
-            byte[] byteArray = IOUtils.toByteArray(inputStream);
-            String stringFile = Base64.encodeToString(byteArray, 0);
-            output.put("audio",stringFile);
-            return output;
-        }catch (Exception e){
-            e.printStackTrace();
-            Log.d("error_sending","fuuck");
-            return null;
-        }
-    }
 
     public void attemptSend(JSONObject audioString){
         mSocket.emit("audio chat", audioString);
+
         //Log.d("socketTest",audioString.substring(0,100));
     }
 
-    public void processReceivedJson(JSONObject jsonObject){
-        try {
-            String idString = jsonObject.getString("sendingId");
-            int id = Integer.parseInt(idString.substring(1));
-            Log.d("socketTest",idString);
-            String audioString = jsonObject.getString("audio");
-            byte[] biteOutput = Base64.decode(audioString, 0);
-            File audioFile = new File(mContext.getExternalCacheDir(), "/" + idString + "_" + new Date().getTime() + ".aac");
-            FileOutputStream fos = new FileOutputStream(audioFile);
-            fos.write(biteOutput);
-            fos.close();
-            for (CommsObject comm : mComms) {
-                if (id == comm.taxiMarker.taxiObject.getTaxiId()) {
-                    comm.addAtTopOfList(audioFile);
-                }
-
-            }
-            notifyDataSetChanged();
-        }catch (Exception e){
-            e.printStackTrace();
-            Log.d("error_receiving","fuuck");
-        }
-
-
+    public interface MessageInvitationListener{
+        void onInvitationReceived(MessageObject msj);
     }
 
-    public void processReceivedExperiment(JSONObject jsonObject, boolean risky){
-        try {
-            String idString = jsonObject.getString("sendingId");
-            int id = Integer.parseInt(idString.substring(1));
-            Log.d("socketTest",idString);
-            String audioString;
-            byte[] biteOutput;
-            if (!risky) {
-                audioString = jsonObject.getString("audio");
-                biteOutput = Base64.decode(audioString, 0);
-            }else{
-                biteOutput=(byte[])jsonObject.get("audio");
-            }
-            File audioFile = new File(mContext.getExternalCacheDir(), "/" + idString + "_" + new Date().getTime() + ".aac");
-            FileOutputStream fos = new FileOutputStream(audioFile);
-            fos.write(biteOutput);
-            fos.close();
-            for (CommsObject comm : mComms) {
-                if (id == comm.taxiMarker.taxiObject.getTaxiId()) {
-                    comm.addAtTopOfList(audioFile);
-                }
+    MessageInvitationListener messageInvitationListener;
 
-            }
-            notifyDataSetChanged();
-        }catch (Exception e){
-            e.printStackTrace();
-            Log.d("error_receiving","fuuck");
-        }
-
-
+    public void setMessageInvitationListener(MessageInvitationListener messageInvitationListener) {
+        this.messageInvitationListener = messageInvitationListener;
     }
-
-
 }

@@ -136,9 +136,55 @@
             android:backgroundTint="#8BC34A"
             android:src="@drawable/confirm"
             app:tint="#fff"
+            android:scaleType="fitXY"
             app:borderWidth="0dp"
-            app:elevation="2dp"
+            app:elevation="1dp"
             app:fabCustomSize="40dp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="15dp"
+            android:id="@+id/ack_bubble"
+            android:orientation="horizontal"
+            android:background="@drawable/rounded_background_borderless"
+            android:layout_alignParentBottom="true"
+            android:layout_toStartOf="@+id/bt_confirm"
+            android:paddingEnd="2dp"
+            android:paddingStart="2dp"
+            android:layout_marginBottom="4dp"
+            android:gravity="center">
+
+            <ImageView
+                android:layout_width="15dp"
+                android:layout_height="match_parent"
+                android:id="@+id/ack_check"
+                android:tint="#f2ffffff"
+                android:src="@drawable/double_check" />
+
+            <ImageView
+                android:layout_width="15dp"
+                android:layout_height="match_parent"
+                android:id="@+id/ack_played"
+                android:tint="#f2ffffff"
+                android:src="@drawable/played" />
+
+            <ImageView
+                android:layout_width="15dp"
+                android:layout_height="match_parent"
+                android:id="@+id/ack_heard"
+                android:tint="#f2ffffff"
+                android:src="@drawable/ear" />
+
+            <ImageView
+                android:layout_width="12dp"
+                android:layout_height="match_parent"
+                android:id="@+id/ack_recording"
+                android:tint="#f2ffffff"
+                android:visibility="visible"
+                android:src="@drawable/microphone" />
+
+
+        </LinearLayout>
 
 
         <LinearLayout

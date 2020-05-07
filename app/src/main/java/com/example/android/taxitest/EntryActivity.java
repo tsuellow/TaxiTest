@@ -9,6 +9,8 @@ import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
 
+import com.example.android.taxitest.utils.MapUtilsCustom;
+
 public class EntryActivity extends AppCompatActivity {
 
     Button searchTaxi, justWatch;
@@ -20,6 +22,9 @@ public class EntryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         getSupportActionBar().hide();
         setContentView(R.layout.activity_entry);
+
+        MapUtilsCustom.copyFileToExternalStorage(R.raw.db_nica,Constants.POI_FILE,getApplicationContext());
+        MapUtilsCustom.copyFileToExternalStorage(R.raw.result,Constants.MAP_FILE,getApplicationContext());
 
         searchTaxi=(Button) findViewById(R.id.search_taxi);
         justWatch=(Button) findViewById(R.id.watch_only);
@@ -53,5 +58,7 @@ public class EntryActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+
     }
 }

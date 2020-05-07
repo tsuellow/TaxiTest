@@ -73,6 +73,9 @@ dependencies {
     //csv decoding
     implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.8.8"
 
+    //json decoding
+    //implementation "com.fasterxml.jackson.core:jackson-databind:2.9.6"
+
     //drawable modification
     implementation 'com.sdsmdg.harjot:vectormaster:1.1.3'
 
@@ -92,7 +95,7 @@ dependencies {
     implementation 'com.mikhaellopez:circularprogressbar:3.0.3'
 
     //bson
-    implementation 'org.mongodb:bson:4.0.1'
+    //implementation 'org.mongodb:bson:4.0.1'
 
 
 }

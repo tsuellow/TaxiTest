@@ -9,8 +9,11 @@ import android.widget.Toast;
 
 import com.example.android.taxitest.CommunicationsRecyclerView.CommsObject;
 import com.example.android.taxitest.CommunicationsRecyclerView.CommunicationsAdapter;
+import com.example.android.taxitest.CommunicationsRecyclerView.MessageObject;
+import com.example.android.taxitest.CommunicationsRecyclerView.MetaMessageObject;
 import com.example.android.taxitest.connection.WebSocketConnection;
 import com.example.android.taxitest.data.TaxiObject;
+import com.example.android.taxitest.utils.MiscellaneousUtils;
 import com.example.android.taxitest.utils.PaintUtils;
 import com.example.android.taxitest.utils.ZoomUtils;
 import com.example.android.taxitest.vectorLayer.BarrioPolygonDrawable;
@@ -81,6 +84,59 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
         prepareScaleAndAppearanceTransitions();
     }
 
+    boolean hasPayload=false;
+    public void initializeCommsInvitationsProcessor(){
+        mCommunicationsAdapter.setMessageInvitationListener(new CommunicationsAdapter.MessageInvitationListener() {
+            @Override
+            public void onInvitationReceived(MessageObject msj) {
+                int id= MiscellaneousUtils.getNumericId(msj.getSendingId());
+                TaxiMarker tm=findTaxi(id);
+                if (tm!=null){
+                    //normally when a new message is received from a taxi with which no comm is established yet we simply do as if we were clicking it and adding the msj
+                    CommsObject comm=doClick(tm);
+                    comm.addAtTopOfMsjList(new MetaMessageObject(msj,comm));
+                }else{
+                    //if a taxi is not visible because it was filtered out we first have to make it appear
+                    hasPayload=true;
+                    if (!mWebSocketConnection.getProcessIsRunning()){
+                        mWebSocketConnection.startAccumulationTimer();
+
+
+                    }
+                }
+            }
+        });
+    }
+
+    private void runPostAnimationTasks(){
+        if (hasPayload){
+            Iterator<MessageObject> i = mCommunicationsAdapter.newIncomingComms.iterator();
+            while (i.hasNext()) {
+                MessageObject msj = i.next();
+                int id= MiscellaneousUtils.getNumericId(msj.getSendingId());
+                TaxiMarker tm=findTaxi(id);
+                if (tm!=null){
+                    if (!tm.getIsClicked()) {
+                        //when this is the first message we receive from this taxi, we first click the taxi and then add the msg
+                        CommsObject comm=doClick(tm);
+                        comm.addAtTopOfMsjList(new MetaMessageObject(msj,comm));
+                    }else{
+                        //if taxi was already clicked we just find the relevant comm and add the msj
+                        CommsObject comm=mCommunicationsAdapter.getItemList().get(mCommunicationsAdapter.getCommIndex(tm.taxiObject.getTaxiId()));
+                        comm.addAtTopOfMsjList(new MetaMessageObject(msj,comm));
+                    }
+                    i.remove();
+                }
+            }
+            if (mCommunicationsAdapter.newIncomingComms.size()==0){
+                hasPayload=false;
+            }
+//            if (hasPayload){
+//                mWebSocketConnection.startAccumulationTimer();
+//            }
+        }
+    }
+
     public void initializeWebSocket(){
         mWebSocketConnection.initializeSocketListener();
         mWebSocketConnection.startAccumulationTimer();
@@ -139,13 +195,15 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
         });
     }
 
-    public void doClick(TaxiMarker item){
+    public CommsObject doClick(TaxiMarker item){
         item.setIsClicked(true);
         mConnectionLines.addLine(item);
-        mCommunicationsAdapter.addItem(new CommsObject(item));
+        CommsObject comm=new CommsObject(item,context);
+        mCommunicationsAdapter.addItem(comm);
         item.setRotatedSymbol(new MarkerSymbol(fetchBitmap(item), MarkerSymbol.HotspotPlace.CENTER,false));
         update();
         mMap.updateMap(true);
+        return comm;
     }
 
     public void doUnClick(TaxiMarker item){
@@ -198,6 +256,15 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
         item.setRotatedSymbol(symbol);
         mItemList.add(item);
         populate();
+    }
+
+    public TaxiMarker findTaxi(int taxiId){
+        for(TaxiMarker tm:mItemList){
+            if (tm.taxiObject.getTaxiId()==taxiId){
+                return tm;
+            }
+        }
+        return null;
     }
 
     public void addNewTaxi(TaxiObject taxiObject){
@@ -319,6 +386,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                 populate();
                 update();
                 mMap.updateMap(false);
+                mWebSocketConnection.setProcessIsRunning(false);
             }
         }, 500);
     }
