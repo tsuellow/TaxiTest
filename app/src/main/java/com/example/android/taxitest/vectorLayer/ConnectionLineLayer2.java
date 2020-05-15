@@ -36,7 +36,6 @@ public class ConnectionLineLayer2 extends VectorLayer {
     }
 
     public void addLine(TaxiMarker taxiMarker){
-
         ConnectionLineDrawable2 drawable=new ConnectionLineDrawable2(taxiMarker);
         add(drawable);
         mappedDrawables.put(taxiMarker.taxiObject.getTaxiId(),drawable);

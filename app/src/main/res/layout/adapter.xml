@@ -99,47 +99,6 @@
         </LinearLayout>
 
 
-        <com.example.android.taxitest.RecordButtonUtils.RecordButton
-            android:id="@+id/record_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:layout_alignParentEnd="true"
-            android:layout_marginEnd="5dp"
-            android:background="@drawable/record_button_background"
-            android:scaleType="centerInside"
-            app:mic_icon="@drawable/microphone"/>
-
-
-        <com.mikhaellopez.circularprogressbar.CircularProgressBar
-            android:id="@+id/play_progress_bar"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginEnd="12dp"
-            android:layout_toStartOf="@+id/record_button"
-            android:layout_centerVertical="true"
-            app:cpb_background_progressbar_color="@color/colorDeselected"
-            app:cpb_background_progressbar_width="0dp"
-            app:cpb_progress_direction="to_right"
-            app:cpb_progressbar_color="#4CAF50"
-            app:cpb_progressbar_width="3dp"
-            app:cpb_round_border="true"
-            android:visibility="invisible"/>
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/bt_confirm"
-            android:layout_toStartOf="@+id/record_button"
-            android:layout_centerVertical="true"
-            android:layout_marginEnd="12dp"
-            android:backgroundTint="#8BC34A"
-            android:src="@drawable/confirm"
-            app:tint="#fff"
-            android:scaleType="fitXY"
-            app:borderWidth="0dp"
-            app:elevation="1dp"
-            app:fabCustomSize="40dp" />
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -148,10 +107,10 @@
             android:orientation="horizontal"
             android:background="@drawable/rounded_background_borderless"
             android:layout_alignParentBottom="true"
-            android:layout_toStartOf="@+id/bt_confirm"
+            android:layout_toLeftOf="@+id/record_button"
             android:paddingEnd="2dp"
             android:paddingStart="2dp"
-            android:layout_marginBottom="4dp"
+            android:layout_marginBottom="3dp"
             android:gravity="center">
 
             <ImageView
@@ -185,6 +144,53 @@
 
 
         </LinearLayout>
+        <com.example.android.taxitest.RecordButtonUtils.RecordButton
+            android:id="@+id/record_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="5dp"
+            android:background="@drawable/record_button_background"
+            android:scaleType="centerInside"
+            app:mic_icon="@drawable/microphone"/>
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/bt_confirm_wrapper"
+            android:layout_toStartOf="@+id/record_button"
+            android:layout_marginEnd="10dp"
+            android:layout_marginTop="2dp">
+
+            <com.mikhaellopez.circularprogressbar.CircularProgressBar
+                android:id="@+id/play_progress_bar"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_centerVertical="true"
+                app:cpb_background_progressbar_color="@color/colorDeselected"
+                app:cpb_background_progressbar_width="0dp"
+                app:cpb_progress_direction="to_right"
+                app:cpb_progressbar_color="#4CAF50"
+                app:cpb_progressbar_width="3dp"
+                app:cpb_round_border="true"
+                android:visibility="invisible"/>
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/bt_confirm"
+                app:backgroundTint="@color/colorGreen"
+                android:src="@drawable/send"
+                app:tint="#fff"
+                android:scaleType="fitXY"
+                app:borderWidth="0dp"
+                app:elevation="1dp"
+                app:fabCustomSize="40dp" />
+        </RelativeLayout>
+
+
+
 
 
         <LinearLayout

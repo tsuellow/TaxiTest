@@ -158,7 +158,6 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         Intent intent=getIntent();
         if (intent!=null){
             destGeo=new GeoPoint(intent.getDoubleExtra("DEST_LAT",0.0), intent.getDoubleExtra("DEST_LON",0.0));
-            Log.d("desst",destGeo.getLatitude()+" "+destGeo.getLongitude()+"wtf");
         }else {
             destGeo = new GeoPoint(0.0, 0.0);
         }
@@ -456,19 +455,18 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 //                return true;
 //            }
             if (g instanceof Gesture.Tap) {
-                GeoPoint p = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
-                mOwnMarkerLayer.setDest(p);
+
 //                endLocation.setLatitude(p.getLatitude());
 //                endLocation.setLongitude(p.getLongitude());
 //                startMoveAnim(500);
                 //mapView.map().animator().animateTo(new GeoPoint(endLocation.getLatitude(),endLocation.getLongitude()));
                 return true;
             }
-//            if (g instanceof Gesture.TripleTap) {
-//                GeoPoint p = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
-//                Toast.makeText(mContext, "Map triple tap\n" + p, Toast.LENGTH_SHORT).show();
-//                return true;
-//            }
+            if (g instanceof Gesture.LongPress) {
+                GeoPoint p = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
+                mOwnMarkerLayer.setDest(p);
+                return true;
+            }
             return false;
         }
 
@@ -726,8 +724,6 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 ((CommunicationsAdapter.ViewHolder) viewHolder).cancel.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(mContext,R.color.colorRed)));
             }
         }
-
-
 
         @Override
         public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {

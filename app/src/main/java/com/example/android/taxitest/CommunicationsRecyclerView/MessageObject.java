@@ -68,7 +68,11 @@ public class MessageObject {
             String receivingId = jsonObject.getString("receivingId");
             int intentCode=jsonObject.getInt("intentCode");
             byte[] audioBytes;
-            audioBytes=(byte[]) jsonObject.get("audioBytes");
+            if (jsonObject.get("audioBytes")==JSONObject.NULL){
+                audioBytes=null;
+            }else{
+                audioBytes=(byte[]) jsonObject.get("audioBytes");
+            }
             long timestamp=jsonObject.getLong("timestamp");
             String msgId=jsonObject.getString("msgId");
 
@@ -138,7 +142,11 @@ public class MessageObject {
             output.put("receivingId", receivingId);
             output.put("sendingId", sendingId);
             output.put("intentCode", intentCode);
-            output.put("audioBytes",audioBytes);
+            if (audioBytes!=null) {
+                output.put("audioBytes", audioBytes);
+            }else{
+                output.put("audioBytes", JSONObject.NULL);
+            }
             output.put("timestamp", timestamp);
             output.put("msgId", msgId);
             return output;

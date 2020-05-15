@@ -12,10 +12,19 @@ import java.util.List;
 
 public class MetaMessageObject{
     boolean isOutgoing;
+    boolean wasPlayed=false;
     MessageObject msjObject;
     File audioFile;
     List<AcknowledgementObject> ackList=new ArrayList<>();
     CommsObject comm;
+
+    public boolean isWasPlayed() {
+        return wasPlayed;
+    }
+
+    public void setWasPlayed(boolean wasPlayed) {
+        this.wasPlayed = wasPlayed;
+    }
 
     public MessageObject getMsjObject() {
         return msjObject;
@@ -44,15 +53,21 @@ public class MetaMessageObject{
                 Log.d("socketTest",audioFile.getAbsolutePath());
                 FileOutputStream fos = new FileOutputStream(audioFile);
                 fos.write(msjObject.getAudioBytes());
+                wasPlayed=false;
             } catch (Exception e) {
                 audioFile = null;
+                wasPlayed=true;
                 e.printStackTrace();
             }
+        }else{
+            audioFile = null;
+            wasPlayed=true;
         }
     }
 
     public MetaMessageObject(int intendCode, File audioFile, CommsObject comm) {
         isOutgoing=true;
+        wasPlayed=true;
         this.comm=comm;
         this.msjObject = new MessageObject("t"+ Constants.myId,"t"+comm.taxiMarker.taxiObject.getTaxiId(),intendCode,audioFile,new Date().getTime());
         this.audioFile = audioFile;

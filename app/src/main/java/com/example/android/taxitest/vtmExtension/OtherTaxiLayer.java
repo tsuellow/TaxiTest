@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -29,6 +30,7 @@ import org.oscim.event.Event;
 import org.oscim.layers.marker.ItemizedLayer;
 import org.oscim.layers.marker.MarkerSymbol;
 import org.oscim.map.Map;
+import org.oscim.utils.ThreadUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -74,6 +76,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
         mConnectionLines =connectionLineLayer;
         mCommunicationsAdapter=commsAdapter;
         mCommunicationsAdapter.setConnectionLines(mConnectionLines);
+        initializeCommsInvitationsProcessor();
 
         setOnItemGestureListener(customListener);
 
@@ -89,19 +92,25 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
         mCommunicationsAdapter.setMessageInvitationListener(new CommunicationsAdapter.MessageInvitationListener() {
             @Override
             public void onInvitationReceived(MessageObject msj) {
+                final MessageObject msj1=msj;
                 int id= MiscellaneousUtils.getNumericId(msj.getSendingId());
-                TaxiMarker tm=findTaxi(id);
+                final TaxiMarker tm=findTaxi(id);
+                Log.d("socketTest","incomming id"+tm.taxiObject.getTaxiId());
                 if (tm!=null){
                     //normally when a new message is received from a taxi with which no comm is established yet we simply do as if we were clicking it and adding the msj
-                    CommsObject comm=doClick(tm);
-                    comm.addAtTopOfMsjList(new MetaMessageObject(msj,comm));
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            CommsObject comm=doClick(tm);
+                            comm.addAtTopOfMsjList(new MetaMessageObject(msj1,comm));
+                        }
+                    });
+
                 }else{
                     //if a taxi is not visible because it was filtered out we first have to make it appear
                     hasPayload=true;
                     if (!mWebSocketConnection.getProcessIsRunning()){
                         mWebSocketConnection.startAccumulationTimer();
-
-
                     }
                 }
             }
@@ -197,12 +206,19 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
 
     public CommsObject doClick(TaxiMarker item){
         item.setIsClicked(true);
-        mConnectionLines.addLine(item);
-        CommsObject comm=new CommsObject(item,context);
-        mCommunicationsAdapter.addItem(comm);
         item.setRotatedSymbol(new MarkerSymbol(fetchBitmap(item), MarkerSymbol.HotspotPlace.CENTER,false));
+        Log.d("socketTest","click "+item.taxiObject.getTaxiId());
+        Log.d("socketTest","line "+item.taxiObject.getTaxiId());
+        CommsObject comm=new CommsObject(item,context);
+        Log.d("socketTest","comm "+comm.taxiMarker.taxiObject.getTaxiId());
+        mCommunicationsAdapter.addItem(comm);
+        Log.d("socketTest","count "+mCommunicationsAdapter.getItemCount());
+        mConnectionLines.addLine(item);
+
+
         update();
         mMap.updateMap(true);
+        mMap.render();
         return comm;
     }
 
@@ -225,7 +241,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                 doClick(item);
             }
             Toast.makeText(context, item.taxiObject.getTaxiId() + " id", Toast.LENGTH_LONG).show();
-            return false;
+            return true;
         }
 
         @Override
@@ -387,6 +403,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                 update();
                 mMap.updateMap(false);
                 mWebSocketConnection.setProcessIsRunning(false);
+                runPostAnimationTasks();
             }
         }, 500);
     }

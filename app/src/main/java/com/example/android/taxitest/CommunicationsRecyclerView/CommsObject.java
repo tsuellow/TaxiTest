@@ -58,6 +58,11 @@ public class CommsObject {
     }
     //legacy
 
+    public void performUpdates(){
+        if (msjUpdateListener!=null) {
+            msjUpdateListener.onMsjUpdateReceived(mMsjStatus);
+        }
+    }
 
     public void addAtTopOfMsjList(MetaMessageObject msj){
         msjList.add(0,msj);
@@ -68,11 +73,41 @@ public class CommsObject {
             mMsjStatus=REQUEST_RECEIVED;
         }
         Log.d("socketTest","code "+mMsjStatus);
-        msjUpdateListener.onMsjUpdateReceived(mMsjStatus);
+        //do something and send it in place of mMsjStatus
+        if (msjUpdateListener!=null) {
+            msjUpdateListener.onMsjUpdateReceived(mMsjStatus);
+        }
     }
 
-    public MetaMessageObject getTopOfMsjList(){
+    public MetaMessageObject getNextUnplayedMsj(){
+        for (int i=msjList.size()-1;i>=0;i--){
+            MetaMessageObject msj=msjList.get(i);
+            if(!msj.isWasPlayed() && msj.getAudioFile()!=null && !msj.isOutgoing){
+                return msjList.get(i);
+            }
+        }
         return msjList.get(0);
+    }
+
+    public static final int INVITE=0;
+    public static final int AWAITING=1;
+    public static final int PLAY=2;
+    public static final int ACCEPT=3;
+    public static final int BT_ACCEPTED=4;
+
+    public int getButtonCode(){
+        if (mMsjStatus==OBSERVING)
+            return INVITE;
+        if (mMsjStatus==REQUEST_SENT)
+            return AWAITING;
+        if (mMsjStatus==REQUEST_RECEIVED && msjList.get(0).getAudioFile()!=null && !msjList.get(0).isWasPlayed())
+            return PLAY;
+        if (mMsjStatus==REQUEST_RECEIVED)
+            return ACCEPT;
+        if (mMsjStatus==ACCEPTED)
+            return BT_ACCEPTED;
+
+        return INVITE;
     }
 
     public MetaMessageObject findMsjById(String msjId){
