@@ -26,6 +26,8 @@ public class MetaMessageObject{
         this.wasPlayed = wasPlayed;
     }
 
+
+
     public MessageObject getMsjObject() {
         return msjObject;
     }
@@ -73,15 +75,29 @@ public class MetaMessageObject{
         this.audioFile = audioFile;
     }
 
+    public List<AcknowledgementObject> getAckList() {
+        return ackList;
+    }
+
     public void addAckAtTopOfList(AcknowledgementObject ack){
         ackList.add(0,ack);
-        if (ack.getMsgId().equals(comm.mLatestMsjId)) {
-            comm.ackUpdateListener.onAckUpdateReceived(ack.getAckCode());
+        if (ack.getMsgId().equals(comm.mLatestMsjId) && isOutgoing) {
+            comm.ackUpdateListener.onAckUpdateReceived(ack);
         }
     }
 
     public AcknowledgementObject getAckAtTopOfList(){
         return ackList.get(0);
+    }
+
+    public int getTopAck(){
+        int topAck=CommsObject.SENT;
+        for (AcknowledgementObject ack:ackList){
+            if (ack.getAckCode()>0 && ack.getAckCode()>topAck){
+                topAck=ack.getAckCode();
+            }
+        }
+        return topAck;
     }
 
 

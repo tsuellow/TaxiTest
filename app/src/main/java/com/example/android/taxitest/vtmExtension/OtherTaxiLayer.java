@@ -96,22 +96,42 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                 int id= MiscellaneousUtils.getNumericId(msj.getSendingId());
                 final TaxiMarker tm=findTaxi(id);
                 Log.d("socketTest","incomming id"+tm.taxiObject.getTaxiId());
+                if (msj.getIntentCode()==CommsObject.REQUEST_SENT) { //only mind new, not jet initialized invitations
+                    if (tm != null) {
+                        //normally when a new message is received from a taxi with which no comm is established yet we simply do as if we were clicking it and adding the msj
+                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+                                CommsObject comm = doClick(tm);
+                                comm.addAtTopOfMsjList(new MetaMessageObject(msj1, comm));
+                            }
+                        });
+
+                    } else {
+                        //if a taxi is not visible because it was filtered out we first have to make it appear
+                        hasPayload = true;
+                        if (!mWebSocketConnection.getProcessIsRunning()) {
+                            mWebSocketConnection.startAccumulationTimer();
+                        }
+                    }
+                }
+            }
+        });
+        mCommunicationsAdapter.setMessageCancellationListener(new CommunicationsAdapter.MessageCancellationListener() {
+            @Override
+            public void onCancellationReceived(MessageObject msj) {
+                int id= MiscellaneousUtils.getNumericId(msj.getSendingId());
+                final TaxiMarker tm=findTaxi(id);
                 if (tm!=null){
                     //normally when a new message is received from a taxi with which no comm is established yet we simply do as if we were clicking it and adding the msj
                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                         @Override
                         public void run() {
-                            CommsObject comm=doClick(tm);
-                            comm.addAtTopOfMsjList(new MetaMessageObject(msj1,comm));
+                            Toast.makeText(context,tm.taxiObject.getTaxiId()+" te mando a la verga",Toast.LENGTH_LONG).show();
+                            doUnClick(tm);
                         }
                     });
 
-                }else{
-                    //if a taxi is not visible because it was filtered out we first have to make it appear
-                    hasPayload=true;
-                    if (!mWebSocketConnection.getProcessIsRunning()){
-                        mWebSocketConnection.startAccumulationTimer();
-                    }
                 }
             }
         });
@@ -207,14 +227,9 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
     public CommsObject doClick(TaxiMarker item){
         item.setIsClicked(true);
         item.setRotatedSymbol(new MarkerSymbol(fetchBitmap(item), MarkerSymbol.HotspotPlace.CENTER,false));
-        Log.d("socketTest","click "+item.taxiObject.getTaxiId());
-        Log.d("socketTest","line "+item.taxiObject.getTaxiId());
         CommsObject comm=new CommsObject(item,context);
-        Log.d("socketTest","comm "+comm.taxiMarker.taxiObject.getTaxiId());
         mCommunicationsAdapter.addItem(comm);
-        Log.d("socketTest","count "+mCommunicationsAdapter.getItemCount());
         mConnectionLines.addLine(item);
-
 
         update();
         mMap.updateMap(true);
@@ -227,6 +242,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
         //mConnectionLines.removeLine(item.taxiObject.getTaxiId());
         mConnectionLines.remove(item.taxiObject.getTaxiId());
         mCommunicationsAdapter.cancelById(item.taxiObject.getTaxiId());
+        CommunicationsAdapter.soundPool.play(CommunicationsAdapter.soundCanceled,1,1,0,0,1);
         item.setRotatedSymbol(new MarkerSymbol(fetchBitmap(item), MarkerSymbol.HotspotPlace.CENTER,false));
         update();
         mMap.updateMap(true);

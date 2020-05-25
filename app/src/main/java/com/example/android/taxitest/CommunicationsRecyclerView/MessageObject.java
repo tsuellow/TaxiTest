@@ -4,6 +4,8 @@ import android.util.Log;
 
 import androidx.room.Ignore;
 
+import com.example.android.taxitest.Constants;
+import com.example.android.taxitest.utils.MiscellaneousUtils;
 import com.google.android.gms.common.util.IOUtils;
 
 import org.json.JSONException;
@@ -13,6 +15,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.util.Date;
 
 public class MessageObject {
     String sendingId;
@@ -23,6 +26,14 @@ public class MessageObject {
     String msgId;
 
     public MessageObject() {
+    }
+
+    public MessageObject(String receivingId, int intentCode) {
+        this.sendingId = MiscellaneousUtils.getStringId(Constants.myId);
+        this.receivingId = receivingId;
+        this.intentCode = intentCode;
+        this.timestamp = new Date().getTime();
+        this.msgId=sendingId+"_"+timestamp;
     }
 
     @Ignore

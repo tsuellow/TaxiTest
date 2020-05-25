@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="280dp"
+    android:layout_height="55dp"
+    android:id="@+id/parent_layout_dialog"
+    android:gravity="start"
+    android:padding="8dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:id="@+id/group_layout">
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp">
+
+            <com.mikhaellopez.circularprogressbar.CircularProgressBar
+                android:id="@+id/play_progress_bar_dialog"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_centerVertical="true"
+                app:cpb_background_progressbar_color="@color/colorDeselected"
+                app:cpb_background_progressbar_width="0dp"
+                app:cpb_progress_direction="to_right"
+                app:cpb_progressbar_color="#4CAF50"
+                app:cpb_progressbar_width="3dp"
+                app:cpb_round_border="true"
+                android:visibility="invisible"/>
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/bt_confirm_dialog"
+                android:layout_centerVertical="true"
+                android:layout_centerHorizontal="true"
+                app:backgroundTint="@color/colorGreen"
+                android:src="@drawable/send"
+                app:tint="#fff"
+                android:scaleType="fitXY"
+                app:borderWidth="0dp"
+                app:elevation="1dp"
+                app:fabCustomSize="40dp" />
+        </RelativeLayout>
+
+        <TextView
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/tv_time_of_msg_dialog"
+            android:layout_gravity="center_vertical"
+            android:text="00:00:00 pm"
+            android:textAlignment="center"
+            tools:ignore="RtlCompat"
+            android:layout_marginEnd="8dp"/>
+
+        <LinearLayout
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center_vertical"
+            android:gravity="center_horizontal">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="15dp"
+                android:id="@+id/ack_bubble_dialog"
+                android:layout_gravity="center_horizontal"
+                android:orientation="horizontal"
+                android:background="@drawable/rounded_background_borderless"
+                android:paddingEnd="4dp"
+                android:paddingStart="4dp"
+                android:gravity="center">
+
+                <ImageView
+                    android:layout_width="10dp"
+                    android:layout_height="match_parent"
+                    android:id="@+id/ack_failed_dialog"
+                    android:tint="@color/colorRed"
+                    android:src="@drawable/close"
+                    android:visibility="gone"/>
+
+                <ImageView
+                    android:layout_width="15dp"
+                    android:layout_height="match_parent"
+                    android:id="@+id/ack_check_dialog"
+                    android:tint="#f2ffffff"
+                    android:src="@drawable/double_check" />
+
+                <ImageView
+                    android:layout_width="15dp"
+                    android:layout_height="match_parent"
+                    android:id="@+id/ack_played_dialog"
+                    android:tint="#f2ffffff"
+                    android:src="@drawable/played" />
+
+                <ImageView
+                    android:layout_width="15dp"
+                    android:layout_height="match_parent"
+                    android:id="@+id/ack_heard_dialog"
+                    android:tint="#f2ffffff"
+                    android:src="@drawable/ear" />
+
+
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+
+
+    </LinearLayout>
+
+
+</RelativeLayout>

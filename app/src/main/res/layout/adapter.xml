@@ -53,6 +53,7 @@
         </androidx.cardview.widget.CardView>
 
 
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -72,7 +73,7 @@
                     android:id="@+id/tv_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Juan"
+                    android:text="Cuactemoc"
                     android:textColor="#000"
                     android:textSize="14sp" />
 
@@ -100,50 +101,8 @@
 
 
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="15dp"
-            android:id="@+id/ack_bubble"
-            android:orientation="horizontal"
-            android:background="@drawable/rounded_background_borderless"
-            android:layout_alignParentBottom="true"
-            android:layout_toLeftOf="@+id/record_button"
-            android:paddingEnd="2dp"
-            android:paddingStart="2dp"
-            android:layout_marginBottom="3dp"
-            android:gravity="center">
-
-            <ImageView
-                android:layout_width="15dp"
-                android:layout_height="match_parent"
-                android:id="@+id/ack_check"
-                android:tint="#f2ffffff"
-                android:src="@drawable/double_check" />
-
-            <ImageView
-                android:layout_width="15dp"
-                android:layout_height="match_parent"
-                android:id="@+id/ack_played"
-                android:tint="#f2ffffff"
-                android:src="@drawable/played" />
-
-            <ImageView
-                android:layout_width="15dp"
-                android:layout_height="match_parent"
-                android:id="@+id/ack_heard"
-                android:tint="#f2ffffff"
-                android:src="@drawable/ear" />
-
-            <ImageView
-                android:layout_width="12dp"
-                android:layout_height="match_parent"
-                android:id="@+id/ack_recording"
-                android:tint="#f2ffffff"
-                android:visibility="visible"
-                android:src="@drawable/microphone" />
 
 
-        </LinearLayout>
         <com.example.android.taxitest.RecordButtonUtils.RecordButton
             android:id="@+id/record_button"
             android:layout_width="wrap_content"
@@ -155,41 +114,153 @@
             android:scaleType="centerInside"
             app:mic_icon="@drawable/microphone"/>
 
-        <RelativeLayout
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/bt_confirm_wrapper"
-            android:layout_toStartOf="@+id/record_button"
-            android:layout_marginEnd="10dp"
-            android:layout_marginTop="2dp">
+            android:orientation="horizontal"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@+id/dynamic_btn_container"
+            android:layout_marginEnd="-6dp"
+            android:gravity="center_vertical">
 
-            <com.mikhaellopez.circularprogressbar.CircularProgressBar
-                android:id="@+id/play_progress_bar"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_centerVertical="true"
-                app:cpb_background_progressbar_color="@color/colorDeselected"
-                app:cpb_background_progressbar_width="0dp"
-                app:cpb_progress_direction="to_right"
-                app:cpb_progressbar_color="#4CAF50"
-                app:cpb_progressbar_width="3dp"
-                app:cpb_round_border="true"
-                android:visibility="invisible"/>
-
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/bt_confirm"
-                app:backgroundTint="@color/colorGreen"
-                android:src="@drawable/send"
-                app:tint="#fff"
-                android:scaleType="fitXY"
-                app:borderWidth="0dp"
-                app:elevation="1dp"
-                app:fabCustomSize="40dp" />
-        </RelativeLayout>
+                android:id="@+id/tv_description_text"
+                android:maxWidth="45dp"
+                android:textAlignment="textEnd"
+                android:text="awaiting response"
+                android:textColor="@color/colorDeselected"
+                android:textSize="10sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/tv_description_pointer"
+                android:layout_gravity="center"
+                android:layout_marginStart="4dp"
+                android:textColor="@color/colorDeselected"
+                android:textSize="8sp"
+                android:text="\u276f" />
+
+        </LinearLayout>
 
 
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:id="@+id/dynamic_btn_container"
+            android:layout_height="match_parent"
+            android:layout_toStartOf="@+id/record_button"
+            android:gravity="center"
+            android:animateLayoutChanges="true"
+            android:orientation="vertical">
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/bt_confirm_wrapper"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp">
+
+                <com.mikhaellopez.circularprogressbar.CircularProgressBar
+                    android:id="@+id/play_progress_bar"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_centerVertical="true"
+                    app:cpb_background_progressbar_color="@color/colorDeselected"
+                    app:cpb_background_progressbar_width="0dp"
+                    app:cpb_progress_direction="to_right"
+                    app:cpb_progressbar_color="#4CAF50"
+                    app:cpb_progressbar_width="3dp"
+                    app:cpb_round_border="true"
+                    android:visibility="invisible"/>
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/bt_confirm"
+                    app:backgroundTint="@color/colorGreen"
+                    android:src="@drawable/send"
+                    app:tint="#fff"
+                    android:scaleType="fitXY"
+                    app:borderWidth="0dp"
+                    app:elevation="1dp"
+                    app:fabCustomSize="40dp" />
+            </RelativeLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="15dp"
+                android:id="@+id/ack_bubble"
+                android:orientation="horizontal"
+                android:background="@drawable/rounded_background_borderless"
+                android:paddingEnd="2dp"
+                android:paddingStart="2dp"
+                android:gravity="center">
+
+                <ImageView
+                    android:layout_width="10dp"
+                    android:layout_height="match_parent"
+                    android:id="@+id/ack_failed"
+                    android:tint="@color/colorRed"
+                    android:src="@drawable/close"
+                    android:visibility="gone"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:id="@+id/ack_failed_text"
+                    android:text=" failed  "
+                    android:textSize="10sp"
+                    android:textColor="#f2ffffff"
+                    android:gravity="center_vertical"
+                    android:visibility="gone"/>
+
+                <ImageView
+                    android:layout_width="15dp"
+                    android:layout_height="match_parent"
+                    android:id="@+id/ack_check"
+                    android:tint="#f2ffffff"
+                    android:src="@drawable/double_check" />
+
+                <ImageView
+                    android:layout_width="15dp"
+                    android:layout_height="match_parent"
+                    android:id="@+id/ack_played"
+                    android:tint="#f2ffffff"
+                    android:src="@drawable/played" />
+
+                <ImageView
+                    android:layout_width="15dp"
+                    android:layout_height="match_parent"
+                    android:id="@+id/ack_heard"
+                    android:tint="#f2ffffff"
+                    android:src="@drawable/ear" />
+
+                <ImageView
+                    android:layout_width="12dp"
+                    android:layout_height="match_parent"
+                    android:id="@+id/ack_recording"
+                    android:tint="#f2ffffff"
+                    android:visibility="visible"
+                    android:src="@drawable/microphone" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+
+        <ImageButton
+            android:layout_width="28dp"
+            android:layout_height="11dp"
+            android:scaleType="fitXY"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="3dp"
+            android:tint="@color/colorSelected"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/three_dots"
+            android:id="@+id/bt_comm_history" />
 
 
 

@@ -2,6 +2,8 @@ package com.example.android.taxitest;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -10,6 +12,7 @@ import android.graphics.Color;
 import android.graphics.drawable.AnimatedVectorDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Vibrator;
@@ -141,11 +144,14 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     boolean barriosVisible=true;
     boolean nightModeOn=false;
     boolean filterOn= false;
+    public static final String NOTIFICATION_CHANNEL_ID="999";
     //helper locations
     public static Location mMarkerLoc;
     Location endLocation=new Location("");
     Location mCurrMapLoc =new Location("");
+    //TODO fix redundancy of destGeo and location in OwnTaxiLayer
     public static GeoPoint destGeo;
+    public static boolean isActivityInForeground;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -362,7 +368,6 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
         prepareBackToCenterAnim();
 
-
         settings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -370,11 +375,13 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             }
         });
 
+        createNotificationChannel();
+
     }
 
     public void openTest(){
-        Intent intent = new Intent(MainActivity.this, ChooseDestination.class);
-        startActivity(intent);
+        //TODO decide what goes in the settings
+        Toast.makeText(mContext,"do something",Toast.LENGTH_SHORT).show();
     }
 
     private void setIconColors(int color){
@@ -664,6 +671,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             return;
         }
         fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
+        isActivityInForeground=true;
     }
 
     @Override
@@ -672,6 +680,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         super.onPause();
         //do we really need this?
         fusedLocationProviderClient.removeLocationUpdates(locationCallback);
+        isActivityInForeground=false;
     }
 
     //GOOGLE API FUSED LOCATION CONNECTION METHODS TO BE OVERRIDDEN
@@ -693,7 +702,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     private void initRecyclerView(){
         SmoothLinearLayoutManager linearLayoutManager=new SmoothLinearLayoutManager(mContext);
         //LinearLayoutManager linearLayoutManager=new LinearLayoutManager(mContext);
-        rvCommsAdapter =new CommunicationsAdapter(mContext, mConnectionLineLayer);
+        rvCommsAdapter =new CommunicationsAdapter(MainActivity.this, mConnectionLineLayer);
         rvCommunications.setAdapter(rvCommsAdapter);
         rvCommunications.setLayoutManager(linearLayoutManager);
         new ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(rvCommunications);
@@ -720,6 +729,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         public void onSelectedChanged(@Nullable RecyclerView.ViewHolder viewHolder, int actionState) {
             super.onSelectedChanged(viewHolder, actionState);
             if (actionState==ItemTouchHelper.ACTION_STATE_SWIPE) {
+                assert viewHolder != null;
                 ((CommunicationsAdapter.ViewHolder) viewHolder).arrows.setTextColor(getResources().getColor(R.color.colorSelected));
                 ((CommunicationsAdapter.ViewHolder) viewHolder).cancel.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(mContext,R.color.colorRed)));
             }
@@ -732,4 +742,25 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             //rvCommsAdapter.cancelComm(viewHolder.getAdapterPosition());
         }
     };
+
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "taxi_test_notification_channel";
+            String description = "channel for communication notifications when app is in the background";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            assert notificationManager != null;
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    public static boolean getIsActivityInForeground(){
+        return isActivityInForeground;
+    }
 }

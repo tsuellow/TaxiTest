@@ -19,6 +19,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.appcompat.widget.AppCompatImageView;
 
+import com.example.android.taxitest.CommunicationsRecyclerView.CommsObject;
 import com.example.android.taxitest.R;
 
 import java.io.File;
@@ -30,7 +31,7 @@ public class RecordButton extends AppCompatImageView implements View.OnTouchList
 
     private ScaleAnim scaleAnim;
     private boolean listenForRecord = true;
-    private int commId;
+    private int comm;
     private MediaRecorder recorder = null;
     private boolean isRecording;
 
@@ -41,7 +42,10 @@ public class RecordButton extends AppCompatImageView implements View.OnTouchList
     public RecordButton(Context context, int id) {
         super(context);
         init(context, null);
-        commId=id;
+    }
+
+    public void setComm(int comm) {
+        this.comm = comm;
     }
 
     public RecordButton(Context context, AttributeSet attrs) {
@@ -142,7 +146,7 @@ public class RecordButton extends AppCompatImageView implements View.OnTouchList
         if (isRecording){
             stopRecording();
         }
-        String fileName=getContext().getExternalCacheDir().getAbsolutePath()+"/"+commId+"_"+new Date().getTime()+".aac";
+        String fileName=getContext().getExternalCacheDir().getAbsolutePath()+"/"+comm+"_"+new Date().getTime()+".aac";
         file=new File(fileName);
         recorder = new MediaRecorder();
         recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
@@ -159,8 +163,8 @@ public class RecordButton extends AppCompatImageView implements View.OnTouchList
         }
         Toast.makeText(getContext(),fileName,Toast.LENGTH_LONG).show();
         recorder.start();
-
         setIsRecording(true);
+        recordingStartedListener.onRecordingStarted();
     }
 
     private void stopRecording() {
@@ -215,6 +219,17 @@ public class RecordButton extends AppCompatImageView implements View.OnTouchList
 
     public void setRecordingFinishedListener(RecordingFinishedListener recordingFinishedListener) {
         this.recordingFinishedListener = recordingFinishedListener;
+    }
+
+    //callback for when a recording has started
+    public interface RecordingStartedListener{
+        void onRecordingStarted();
+    }
+
+    RecordingStartedListener recordingStartedListener;
+
+    public void setRecordingStartedListener(RecordingStartedListener recordingStartedListener) {
+        this.recordingStartedListener = recordingStartedListener;
     }
 }
 
