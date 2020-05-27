@@ -3,6 +3,7 @@ package com.example.android.taxitest.CommunicationsRecyclerView;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.media.MediaPlayer;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -13,9 +14,11 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.ColorUtils;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.android.taxitest.R;
@@ -45,6 +48,7 @@ public class CommsDialogAdapter extends RecyclerView.Adapter<CommsDialogAdapter.
         private LinearLayout ackBubble;
         private ImageView ackCheck, ackPlayed, ackHeard, ackRecording, ackFailed;
         RelativeLayout parent;
+        LinearLayout group;
 
 
         public ViewHolder(@NonNull View itemView) {
@@ -61,6 +65,7 @@ public class CommsDialogAdapter extends RecyclerView.Adapter<CommsDialogAdapter.
             ackFailed=(ImageView) itemView.findViewById(R.id.ack_failed_dialog);
 
             parent=(RelativeLayout) itemView.findViewById(R.id.parent_layout_dialog);
+            group=(LinearLayout) itemView.findViewById(R.id.group_layout);
         }
 
 
@@ -80,40 +85,49 @@ public class CommsDialogAdapter extends RecyclerView.Adapter<CommsDialogAdapter.
     @Override
     public void onBindViewHolder(@NonNull final CommsDialogAdapter.ViewHolder holder, int position) {
         final MetaMessageObject msj=comm.getMsjList().get(position);
-//        setNewReproductionListener(new NewReproductionListener() {
-//            @Override
-//            public void onNewReproduction(String msjId) {
-//                if (!msjId.equals(msj.getMsjObject().getMsgId())){
-//                    holder.progressBar.setProgress(0.0f);
-//                    holder.progressBar.setVisibility(View.INVISIBLE);
-//                }
-//            }
-//        });
         if(msj.isOutgoing){
             holder.parent.setGravity(Gravity.END);
             holder.confirmOrPlay.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(mContext,R.color.colorBlue)));
+            holder.group.getBackground().setTint(ColorUtils.setAlphaComponent(ContextCompat.getColor(mContext,R.color.colorBlue),100));
+            holder.progressBar.setProgressBarColor(ContextCompat.getColor(mContext,R.color.colorBlueDark));
         }else{
             holder.parent.setGravity(Gravity.START);
             holder.confirmOrPlay.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(mContext,R.color.colorGreen)));
+            holder.group.getBackground().setTint(ColorUtils.setAlphaComponent(ContextCompat.getColor(mContext,R.color.colorGreen),100));
+            holder.progressBar.setProgressBarColor(ContextCompat.getColor(mContext,R.color.colorGreenDark));
         }
 
         holder.time.setText(MiscellaneousUtils.convertTime(msj.getMsjObject().getTimestamp()));
+        holder.time.setTypeface(Typeface.defaultFromStyle(Typeface.ITALIC));
 
-        paintButtons(msj,holder.confirmOrPlay,holder.ackCheck,holder.ackPlayed,holder.ackHeard,holder.ackFailed);
-        paintAck(msj,holder.ackCheck,holder.ackPlayed,holder.ackHeard,holder.ackFailed);
+        final String toastButton=paintButtons(msj,holder.confirmOrPlay,holder.ackCheck,holder.ackPlayed,holder.ackHeard,holder.ackFailed);
+        final String toastAck=paintAck(msj,holder.ackCheck,holder.ackPlayed,holder.ackHeard,holder.ackFailed);
+
+
+
 
         holder.confirmOrPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (msj.getAudioFile()!=null){
                     startPlaying(msj,holder.progressBar);
+                    holder.progressBar.setVisibility(View.VISIBLE);
                 }
+                Toast.makeText(mContext,toastButton,Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        holder.ackBubble.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(mContext,toastAck.trim(),Toast.LENGTH_LONG).show();
             }
         });
 
     }
 
-    private void paintButtons(MetaMessageObject msj, FloatingActionButton fab, ImageView ackCheck, ImageView ackPlayed, ImageView ackHeard, ImageView ackFailed){
+    private String paintButtons(MetaMessageObject msj, FloatingActionButton fab, ImageView ackCheck, ImageView ackPlayed, ImageView ackHeard, ImageView ackFailed){
+        String toast="";
         ackFailed.setVisibility(View.GONE);
         if (msj.getAudioFile()==null){
             ackCheck.setVisibility(View.VISIBLE);
@@ -121,20 +135,25 @@ public class CommsDialogAdapter extends RecyclerView.Adapter<CommsDialogAdapter.
             ackHeard.setVisibility(View.GONE);
             if (msj.getMsjObject().getIntentCode()!=CommsObject.ACCEPT){
                 fab.setImageResource(R.drawable.send);
+                toast=msj.isOutgoing?"invitation sent by you":"invitation sent by "+MiscellaneousUtils.getNumericId(msj.getMsjObject().getSendingId());
             }else{
                 fab.setImageResource(R.drawable.accepted);
                 fab.setBackgroundTintList(ColorStateList.valueOf(Color.BLACK));
+                toast=msj.isOutgoing?"deal accepted by you":"deal accepted by "+MiscellaneousUtils.getNumericId(msj.getMsjObject().getSendingId());
             }
         }else{
             fab.setImageResource(R.drawable.play_button);
             ackCheck.setVisibility(View.VISIBLE);
             ackPlayed.setVisibility(View.VISIBLE);
             ackHeard.setVisibility(View.VISIBLE);
+            toast=msj.isOutgoing?"playing audio sent by you":"playing audio sent by "+MiscellaneousUtils.getNumericId(msj.getMsjObject().getSendingId());
         }
+        return toast;
 
     }
 
-    private  void paintAck(MetaMessageObject msj, ImageView ackCheck, ImageView ackPlayed, ImageView ackHeard, ImageView ackFailed){
+    private String paintAck(MetaMessageObject msj, ImageView ackCheck, ImageView ackPlayed, ImageView ackHeard, ImageView ackFailed){
+        StringBuilder toast= new StringBuilder(msj.getAckList().size() == 0 ? "nothing to show" : "");
         ackCheck.setColorFilter(Color.WHITE);
         ackPlayed.setColorFilter(Color.WHITE);
         ackHeard.setColorFilter(Color.WHITE);
@@ -158,6 +177,26 @@ public class CommsDialogAdapter extends RecyclerView.Adapter<CommsDialogAdapter.
                 ackFailed.setVisibility(View.VISIBLE);
                 break;
         }
+
+        for (AcknowledgementObject ack:msj.getAckList()){
+            String part="";
+            switch (ack.getAckCode()){
+                case CommsObject.RECEIVED:
+                    part="received: "+MiscellaneousUtils.convertTime(ack.getTimestamp());
+                    break;
+                case CommsObject.PLAYED:
+                    part="played: "+MiscellaneousUtils.convertTime(ack.getTimestamp());
+                    break;
+                case CommsObject.HEARD:
+                    part="heard: "+MiscellaneousUtils.convertTime(ack.getTimestamp());
+                    break;
+                case CommsObject.FAILED:
+                    part="failed: "+MiscellaneousUtils.convertTime(ack.getTimestamp());
+                    break;
+            }
+            toast.append(part).append("\n");
+        }
+        return toast.toString();
     }
 
     @Override
@@ -169,13 +208,14 @@ public class CommsDialogAdapter extends RecyclerView.Adapter<CommsDialogAdapter.
     //CommsObject media player
     private MediaPlayer player = null;
     boolean isPlaying=false;
+    CircularProgressBar currentlyMovingBar=null;
     public void startPlaying(final MetaMessageObject msj, final CircularProgressBar circularProgressBar) {
         if (isPlaying){
             player.stop();
-            circularProgressBar.setProgress(0.0f);
-            circularProgressBar.setVisibility(View.INVISIBLE);
-            newReproductionListener.onNewReproduction(msj.getMsjObject().getMsgId());
+            currentlyMovingBar.setProgress(0.0f);
+            currentlyMovingBar.setVisibility(View.INVISIBLE);
         }
+
 
         player = new MediaPlayer();
         player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
@@ -190,10 +230,12 @@ public class CommsDialogAdapter extends RecyclerView.Adapter<CommsDialogAdapter.
         try {
             player.setDataSource(msj.getAudioFile().getAbsolutePath());
             player.prepare();
+            circularProgressBar.setProgress(0.0f);
             circularProgressBar.setVisibility(View.VISIBLE);
             player.start();
             circularProgressBar.setProgressWithAnimation(100.0f,(long) player.getDuration(),new LinearInterpolator());
             isPlaying=true;
+            currentlyMovingBar=circularProgressBar;
         } catch (IOException e) {
             isPlaying=false;
         }
@@ -207,15 +249,7 @@ public class CommsDialogAdapter extends RecyclerView.Adapter<CommsDialogAdapter.
         player = null;
     }
 
-    public interface NewReproductionListener{
-        void onNewReproduction(String msjId);
-    }
 
-    NewReproductionListener newReproductionListener;
-
-    public void setNewReproductionListener(NewReproductionListener newReproductionListener) {
-        this.newReproductionListener = newReproductionListener;
-    }
 }
 
 

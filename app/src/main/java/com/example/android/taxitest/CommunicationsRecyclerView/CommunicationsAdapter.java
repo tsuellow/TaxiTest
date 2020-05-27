@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.media.MediaPlayer;
 import android.media.SoundPool;
 import android.os.Handler;
 import android.os.Looper;
@@ -12,7 +11,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.LinearInterpolator;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -26,7 +24,6 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.android.taxitest.Constants;
-import com.example.android.taxitest.MainActivity;
 import com.example.android.taxitest.R;
 import com.example.android.taxitest.RecordButtonUtils.RecordButton;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
@@ -41,7 +38,6 @@ import org.json.JSONObject;
 import org.oscim.utils.ThreadUtils;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -219,7 +215,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
         holder.numberPlate.setText("T"+comm.taxiMarker.taxiObject.getTaxiId());
         holder.destination.setText("barrio: "+comm.taxiMarker.color);
         holder.destColor.setCardBackgroundColor(comm.taxiMarker.color);
-        holder.recordButton.setComm(taxiId);
+        holder.recordButton.setCommId(MiscellaneousUtils.getStringId(taxiId));
 
 
         //resetting values for recycling process
@@ -263,6 +259,8 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
         holder.recordButton.setRecordingStartedListener(new RecordButton.RecordingStartedListener() {
             @Override
             public void onRecordingStarted() {
+                isRecording=true;
+                whoIsRecording=MiscellaneousUtils.getStringId(taxiId);
                 attemptSendAck(new AcknowledgementObject(comm, CommsObject.RECORDING_STARTED,"rec"));
             }
         });
@@ -270,13 +268,18 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
         holder.recordButton.setRecordingFinishedListener(new RecordButton.RecordingFinishedListener() {
             @Override
             public void onRecordingFinished(File file) {
-                attemptSendAck(new AcknowledgementObject(comm, CommsObject.RECORDING_STOPPED,"rec"));
-                CommsObject currComm=mComms.get(getCommIndex(taxiId));
-                MetaMessageObject metaMsj=new MetaMessageObject(CommsObject.REQUEST_SENT,file,currComm);
-                currComm.addAtTopOfMsjList(metaMsj);
-                metaMsj.addAckAtTopOfList(new AcknowledgementObject(metaMsj.getMsjObject(),CommsObject.SENT));
-                MessageObject msj=metaMsj.getMsjObject();
-                attemptSendMsj(msj);
+                isRecording=false;
+                whoIsRecording=null;
+                if (file != null) {
+                    attemptSendAck(new AcknowledgementObject(comm, CommsObject.RECORDING_STOPPED,"rec"));
+                    CommsObject currComm=mComms.get(getCommIndex(taxiId));
+                    MetaMessageObject metaMsj=new MetaMessageObject(CommsObject.REQUEST_SENT,file,currComm);
+                    currComm.addAtTopOfMsjList(metaMsj);
+                    metaMsj.addAckAtTopOfList(new AcknowledgementObject(metaMsj.getMsjObject(),CommsObject.SENT));
+                    MessageObject msj=metaMsj.getMsjObject();
+                    attemptSendMsj(msj);
+                }
+                resolvePendingCancellations();
             }
         });
 
@@ -381,11 +384,11 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
                 break;
             default:
                 ackBubble.setVisibility(View.GONE);
-                fab.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(mContext,R.color.colorGreen)));
+                fab.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(mContext,R.color.colorBlueDark)));
                 fab.setImageResource(R.drawable.send);
                 descriptionText.setText("invite");
-                descriptionText.setTextColor(ContextCompat.getColor(mContext,R.color.colorGreen));
-                descriptionPointer.setTextColor(ContextCompat.getColor(mContext,R.color.colorGreen));
+                descriptionText.setTextColor(ContextCompat.getColor(mContext,R.color.colorBlueDark));
+                descriptionPointer.setTextColor(ContextCompat.getColor(mContext,R.color.colorBlueDark));
         }
         fab.hide();
         fab.show();
@@ -491,7 +494,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
                         MetaMessageObject metaMsj=new MetaMessageObject(msj,comm);
                         mComms.get(getCommIndex(id)).addAtTopOfMsjList(metaMsj);
                         if (msj.getIntentCode()==CommsObject.REJECTED){
-                            messageCancellationListener.onCancellationReceived(msj);
+                            processCancellations(msj);
                         }
                     }
                     //acknowledge receipt of msj
@@ -533,6 +536,29 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
                 Log.d("socketTest", args[0].toString());
             }
         };
+    }
+
+    //elegant cancellations framework. (consider just ignoring, alternative isn't that bad)
+    List<MessageObject> mToBeCancelled=new ArrayList<>();
+    boolean isRecording=false;
+    String whoIsRecording=null;
+    private void processCancellations(MessageObject msj){
+        if (!isRecording || whoIsRecording.equals(msj.getSendingId())){
+            messageCancellationListener.onCancellationReceived(msj);
+        }else{
+            mToBeCancelled.add(msj);
+        }
+    }
+
+    private void resolvePendingCancellations(){
+        if (mToBeCancelled.size()>0){
+            Iterator<MessageObject> i = mToBeCancelled.iterator();
+            while (i.hasNext()) {
+                MessageObject cancellation = i.next();
+                messageCancellationListener.onCancellationReceived(cancellation);
+                i.remove();
+            }
+        }
     }
 
 

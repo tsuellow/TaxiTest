@@ -8,6 +8,7 @@ import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.android.taxitest.CommunicationsRecyclerView.AcknowledgementObject;
 import com.example.android.taxitest.CommunicationsRecyclerView.CommsObject;
 import com.example.android.taxitest.CommunicationsRecyclerView.CommunicationsAdapter;
 import com.example.android.taxitest.CommunicationsRecyclerView.MessageObject;
@@ -103,7 +104,10 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                             @Override
                             public void run() {
                                 CommsObject comm = doClick(tm);
-                                comm.addAtTopOfMsjList(new MetaMessageObject(msj1, comm));
+                                //you need to do the following as both the msj and the ack arrive/are sent before the commsObject exists properly
+                                MetaMessageObject metaMsj=new MetaMessageObject(msj1, comm);
+                                metaMsj.addAckAtTopOfList(new AcknowledgementObject(msj1,CommsObject.RECEIVED));
+                                comm.addAtTopOfMsjList(metaMsj);
                             }
                         });
 
@@ -470,7 +474,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
         }
     }
 
-
+    //TODO this is causing fatal exceptions it was trying to access frame 100 where 99 is the max value. rethink this
     private Bitmap getAppearDisappearFrame(int frame, int totalFrames, boolean appear){
         int currIconSize=getDrawableSize(mZoom2);
         int maxSizeIndex=currIconSize/2;

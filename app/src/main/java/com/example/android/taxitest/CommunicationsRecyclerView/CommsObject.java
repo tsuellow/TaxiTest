@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.animation.LinearInterpolator;
 import android.widget.Button;
 import android.widget.Filter;
+import android.widget.TextView;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
@@ -49,13 +50,13 @@ public class CommsObject {
     public static final int BT_ACCEPTED=4;
 
     //list of ack statuses
-    static final int SENT=0;
-    static final int RECEIVED=1;
-    static final int PLAYED=2;
-    static final int HEARD=3;
-    static final int FAILED=4;
-    static final int RECORDING_STARTED=-1;
-    static final int RECORDING_STOPPED=-2;
+    public static final int SENT=0;
+    public static final int RECEIVED=1;
+    public static final int PLAYED=2;
+    public static final int HEARD=3;
+    public static final int FAILED=4;
+    public static final int RECORDING_STARTED=-1;
+    public static final int RECORDING_STOPPED=-2;
 
     Context mContext;
     String mLatestMsjId;
@@ -231,8 +232,9 @@ public class CommsObject {
     //Comms Object dialog inflater
     public void showCommsDialog(Context context){
         final Dialog dialog=new Dialog(context);
-        dialog.setTitle("Chat with "+taxiMarker.taxiObject.getTaxiId());
         dialog.setContentView(R.layout.comm_dialog);
+        TextView title=dialog.findViewById(R.id.tv_title_dialog);
+        title.setText("Chat with "+taxiMarker.taxiObject.getTaxiId());
         RecyclerView commsRV=(RecyclerView) dialog.findViewById(R.id.rv_comms_dialog);
         Button closeBtn=(Button) dialog.findViewById(R.id.bt_dialog_close);
         CommsDialogAdapter adapter=new CommsDialogAdapter(context,this);

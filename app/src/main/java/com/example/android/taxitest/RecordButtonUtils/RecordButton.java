@@ -1,25 +1,20 @@
 package com.example.android.taxitest.RecordButtonUtils;
 
 import android.content.Context;
-import android.content.res.AssetFileDescriptor;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
-import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.media.SoundPool;
 import android.os.Handler;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.appcompat.widget.AppCompatImageView;
 
-import com.example.android.taxitest.CommunicationsRecyclerView.CommsObject;
 import com.example.android.taxitest.R;
 
 import java.io.File;
@@ -31,7 +26,7 @@ public class RecordButton extends AppCompatImageView implements View.OnTouchList
 
     private ScaleAnim scaleAnim;
     private boolean listenForRecord = true;
-    private int comm;
+    private String commId;
     private MediaRecorder recorder = null;
     private boolean isRecording;
 
@@ -44,8 +39,8 @@ public class RecordButton extends AppCompatImageView implements View.OnTouchList
         init(context, null);
     }
 
-    public void setComm(int comm) {
-        this.comm = comm;
+    public void setCommId(String commId) {
+        this.commId = commId;
     }
 
     public RecordButton(Context context, AttributeSet attrs) {
@@ -146,7 +141,7 @@ public class RecordButton extends AppCompatImageView implements View.OnTouchList
         if (isRecording){
             stopRecording();
         }
-        String fileName=getContext().getExternalCacheDir().getAbsolutePath()+"/"+comm+"_"+new Date().getTime()+".aac";
+        String fileName=getContext().getExternalCacheDir().getAbsolutePath()+"/"+ commId +"_"+new Date().getTime()+".aac";
         file=new File(fileName);
         recorder = new MediaRecorder();
         recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
@@ -179,6 +174,7 @@ public class RecordButton extends AppCompatImageView implements View.OnTouchList
                     }catch (RuntimeException e){
                         e.printStackTrace();
                         Toast.makeText(getContext(),"recording failed",Toast.LENGTH_LONG).show();
+                        recordingFinishedListener.onRecordingFinished(null);
                     }
                     recorder.release();
                     setIsRecording(false);

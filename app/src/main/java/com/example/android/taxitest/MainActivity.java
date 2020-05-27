@@ -283,6 +283,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         }
 
         //callback every 3000ms
+        //TODO send old locations if callback  fails to execute. prevent from unclicking on other users
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {

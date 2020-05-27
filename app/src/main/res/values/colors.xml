@@ -11,7 +11,11 @@
     <color name="colorBlue">#03A9F4</color>
     <color name="colorGreen">#8BC34A</color>
 
-    <color name="colorBlueAcc">#34B7F1</color>
-    <color name="colorGreenAcc">#25D366</color>
+
+    <color name="colorGreenDark">#4CAF50</color>
+    <color name="colorBlueDark">#1E88E5</color>
+
+    <color name="colorBlueAcc">#40C4FF</color>
+    <color name="colorGreenAcc">#76FF03</color>
 
 </resources>
