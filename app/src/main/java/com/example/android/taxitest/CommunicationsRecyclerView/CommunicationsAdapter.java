@@ -5,6 +5,7 @@ import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.media.SoundPool;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -228,6 +229,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
         repaintButton(comm,holder.confirmOrPlay, holder.ackBubble, holder.descriptionText, holder.descriptionPointer);
 
 
+
         comm.setMsjUpdateListener(new CommsObject.MsjUpdateListener() {
             @Override
             public void onMsjUpdateReceived(int intentCode) {
@@ -256,12 +258,29 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
             }
         });
 
+        final CountDownTimer recordingTimer=new CountDownTimer(20000, 1000) {
+            public void onTick(long millisUntilFinished) {
+                int secsLeft=(int)millisUntilFinished/1000;
+                holder.descriptionText.setText("recording:\n"+secsLeft+"s      ");
+
+            }
+
+            public void onFinish() {
+                holder.descriptionText.setText("recording ended");
+                holder.recordButton.stopRecording();
+            }
+
+        };
+
         holder.recordButton.setRecordingStartedListener(new RecordButton.RecordingStartedListener() {
             @Override
             public void onRecordingStarted() {
                 isRecording=true;
                 whoIsRecording=MiscellaneousUtils.getStringId(taxiId);
                 attemptSendAck(new AcknowledgementObject(comm, CommsObject.RECORDING_STARTED,"rec"));
+                holder.descriptionText.setTextColor(ContextCompat.getColor(mContext,R.color.colorBlue));
+                holder.descriptionPointer.setTextColor(ContextCompat.getColor(mContext,R.color.colorBlue));
+                recordingTimer.start();
             }
         });
 
@@ -270,6 +289,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
             public void onRecordingFinished(File file) {
                 isRecording=false;
                 whoIsRecording=null;
+                recordingTimer.cancel();
                 if (file != null) {
                     attemptSendAck(new AcknowledgementObject(comm, CommsObject.RECORDING_STOPPED,"rec"));
                     CommsObject currComm=mComms.get(getCommIndex(taxiId));
@@ -299,7 +319,12 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
                         break;
                     case  CommsObject.AWAITING:
                         //do nothing, only toast/play own msg
-                        Toast.makeText(mContext,"awaiting response from other party", Toast.LENGTH_LONG).show();
+                        if (currComm.getNextUnplayedMsj()==null) {
+                            Toast.makeText(mContext, "awaiting response from other party", Toast.LENGTH_LONG).show();
+                        }else{
+                            currComm.startPlaying(currComm.getNextUnplayedMsj(),holder.progressBar);
+                            sendAndRegisterOwnAck(new AcknowledgementObject(currComm.getNextUnplayedMsj().getMsjObject(),CommsObject.PLAYED));
+                        }
                         break;
                     case  CommsObject.PLAY:
                         //start playing
@@ -309,6 +334,8 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
                     case  CommsObject.ACCEPT:
                         //send acceptance
                         MetaMessageObject metaMsjAccept=new MetaMessageObject(CommsObject.ACCEPTED,null,currComm);
+                        currComm.setAccepted(true);
+                        commAcceptedListener.onCommAccepted(currComm);
                         currComm.addAtTopOfMsjList(metaMsjAccept);
                         MessageObject msjAccept=metaMsjAccept.getMsjObject();
                         attemptSendMsj(msjAccept);
@@ -316,7 +343,12 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
                         break;
                     case  CommsObject.BT_ACCEPTED:
                         //paint btn black
-                        Toast.makeText(mContext,"taxi was already accepted", Toast.LENGTH_LONG).show();
+                        if (currComm.getNextUnplayedMsj()==null){
+                            Toast.makeText(mContext,"taxi was already accepted", Toast.LENGTH_LONG).show();
+                        }else{
+                            currComm.startPlaying(currComm.getNextUnplayedMsj(),holder.progressBar);
+                            sendAndRegisterOwnAck(new AcknowledgementObject(currComm.getNextUnplayedMsj().getMsjObject(),CommsObject.PLAYED));
+                        }
                         break;
                 }
             }
@@ -339,59 +371,59 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
             case  CommsObject.AWAITING:
                 //do nothing, only toast/play own msg
                 ackBubble.setVisibility(View.VISIBLE);
-                if (!currComm.isAccepted()) {
+                if (currComm.getNextUnplayedMsj()==null) {
                     fab.setImageResource(R.drawable.waiting);
-                    fab.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(mContext,R.color.colorDeselected)));
-                    descriptionText.setText("awaiting response");
-                    descriptionText.setTextColor(ContextCompat.getColor(mContext, R.color.colorDeselected));
-                    descriptionPointer.setTextColor(ContextCompat.getColor(mContext, R.color.colorDeselected));
+                }else{
+                    fab.setImageResource(R.drawable.awaiting_but_playable);
                 }
+                fab.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(mContext,R.color.colorDeselected)));
+                repaintDescription("awaiting response",ContextCompat.getColor(mContext, R.color.colorDeselected),descriptionText,descriptionPointer);
                 break;
             case  CommsObject.PLAY:
                 //start playing
                 ackBubble.setVisibility(View.GONE);
                 fab.setImageResource(R.drawable.play_button);
-                if (!currComm.isAccepted()) {
-                    fab.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(mContext,R.color.colorGreen)));
-                    descriptionText.setText("play audio");
-                    descriptionText.setTextColor(ContextCompat.getColor(mContext, R.color.colorGreen));
-                    descriptionPointer.setTextColor(ContextCompat.getColor(mContext, R.color.colorGreen));
-                }
+                fab.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(mContext,R.color.colorGreen)));
+                repaintDescription("play audio",ContextCompat.getColor(mContext, R.color.colorGreen),descriptionText,descriptionPointer);
                 break;
             case  CommsObject.ACCEPT:
                 //send acceptance
                 ackBubble.setVisibility(View.GONE);
                 fab.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(mContext,R.color.colorGreen)));
                 fab.setImageResource(R.drawable.confirm);
-                descriptionText.setText("accept");
-                descriptionText.setTextColor(ContextCompat.getColor(mContext,R.color.colorGreen));
-                descriptionPointer.setTextColor(ContextCompat.getColor(mContext,R.color.colorGreen));
+                repaintDescription("accept",ContextCompat.getColor(mContext, R.color.colorGreen),descriptionText,descriptionPointer);
                 break;
             case  CommsObject.BT_ACCEPTED:
                 //paint btn black
                 if (currComm.getTopOfList().isOutgoing){
-                    ackBubble.setVisibility(View.VISIBLE);
                     currComm.getTopOfList().addAckAtTopOfList(new AcknowledgementObject(currComm.getTopOfList().getMsjObject(),CommsObject.SENT));
+                    ackBubble.setVisibility(View.VISIBLE);
                 }else {
                     ackBubble.setVisibility(View.GONE);
                 }
-                fab.setImageResource(R.drawable.accepted);
                 fab.setBackgroundTintList(ColorStateList.valueOf(Color.BLACK));
-                descriptionText.setText("accepted");
+                if (currComm.getNextUnplayedMsj()==null) {
+                    fab.setImageResource(R.drawable.accepted);
+                }else{
+                    fab.setImageResource(R.drawable.accepted_but_playable);
+                }
                 descriptionText.setTypeface(null, Typeface.BOLD);
-                descriptionText.setTextColor(Color.BLACK);
-                descriptionPointer.setTextColor(Color.BLACK);
+                repaintDescription("accepted",Color.BLACK,descriptionText,descriptionPointer);
                 break;
             default:
                 ackBubble.setVisibility(View.GONE);
                 fab.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(mContext,R.color.colorBlueDark)));
                 fab.setImageResource(R.drawable.send);
-                descriptionText.setText("invite");
-                descriptionText.setTextColor(ContextCompat.getColor(mContext,R.color.colorBlueDark));
-                descriptionPointer.setTextColor(ContextCompat.getColor(mContext,R.color.colorBlueDark));
+                repaintDescription("invite",ContextCompat.getColor(mContext,R.color.colorBlueDark),descriptionText,descriptionPointer);
         }
         fab.hide();
         fab.show();
+    }
+
+    private void repaintDescription(String text, int color, TextView descriptionText, TextView descriptionPointer){
+        descriptionText.setText(text);
+        descriptionText.setTextColor(color);
+        descriptionPointer.setTextColor(color);
     }
 
     public void repaintAck(CommsObject currCom, AcknowledgementObject ack, ImageView ackCheck, ImageView ackPlayed, ImageView ackHeard, ImageView ackRecording, ImageView ackFailed, TextView ackFailedText){
@@ -409,18 +441,18 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
                     ackHeard.setColorFilter(Color.WHITE);
                     ackRecording.setColorFilter(Color.WHITE);
                     ackCheck.setVisibility(View.VISIBLE);
-                    ackPlayed.setVisibility(View.VISIBLE);
-                    ackHeard.setVisibility(View.VISIBLE);
                     ackRecording.setVisibility(View.VISIBLE);
                     ackFailed.setVisibility(View.GONE);
                     ackFailedText.setVisibility(View.GONE);
                     if (currCom.findMsjById(ack.getMsgId()).getAudioFile()==null){
                         ackPlayed.setVisibility(View.GONE);
                         ackHeard.setVisibility(View.GONE);
+                    }else{
+                        ackPlayed.setVisibility(View.VISIBLE);
+                        ackHeard.setVisibility(View.VISIBLE);
                     }
                     break;
                 case CommsObject.RECEIVED:
-
                     ackCheck.setColorFilter(ContextCompat.getColor(mContext, R.color.colorBlueAcc));
                     soundPool.play(CommunicationsAdapter.soundAck,1,1,0,0,1);
                     break;
@@ -490,10 +522,17 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
                         newIncomingComms.add(msj);
                         messageInvitationListener.onInvitationReceived(msj);
                     }else{//comm is already there
-                        CommsObject comm=mComms.get(getCommIndex(id));
-                        MetaMessageObject metaMsj=new MetaMessageObject(msj,comm);
-                        mComms.get(getCommIndex(id)).addAtTopOfMsjList(metaMsj);
-                        if (msj.getIntentCode()==CommsObject.REJECTED){
+                        if (msj.getIntentCode()!=CommsObject.REJECTED) {
+                            CommsObject comm = mComms.get(getCommIndex(id));
+                            if (msj.getIntentCode()==CommsObject.ACCEPTED){
+                                comm.setAccepted(true);
+                                Log.d("socketTest","codemsj0 "+msj.getIntentCode());
+                                commAcceptedListener.onCommAccepted(comm);
+                            }
+                            Log.d("socketTest","codemsj "+msj.getIntentCode());
+                            MetaMessageObject metaMsj = new MetaMessageObject(msj, comm);
+                            mComms.get(getCommIndex(id)).addAtTopOfMsjList(metaMsj);
+                        }else{
                             processCancellations(msj);
                         }
                     }
@@ -583,6 +622,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
         }
     }
 
+    //callback for when new message invitation is received
     public interface MessageInvitationListener{
         void onInvitationReceived(MessageObject msj);
     }
@@ -593,6 +633,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
         this.messageInvitationListener = messageInvitationListener;
     }
 
+    //callback for when message is cancelled
     public interface MessageCancellationListener{
         void onCancellationReceived(MessageObject msj);
     }
@@ -601,6 +642,17 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
 
     public void setMessageCancellationListener(MessageCancellationListener messageCancellationListener) {
         this.messageCancellationListener = messageCancellationListener;
+    }
+
+    //callback for when comm was accepted
+    public interface CommAcceptedListener{
+        void onCommAccepted(CommsObject comm);
+    }
+
+    CommAcceptedListener commAcceptedListener;
+
+    public void setCommAcceptedListener(CommAcceptedListener commAcceptedListener) {
+        this.commAcceptedListener = commAcceptedListener;
     }
 
     //multiple methods

@@ -4,7 +4,7 @@ import org.oscim.core.GeoPoint;
 
 public class Constants {
     //should be mostly in shared prefs
-    public static int myId=4;
+    public static int myId=3;
     public static final String MAP_FILE = "result.map";
     public static final String POI_FILE ="db_nica.poi";
     public static String userType="taxi";

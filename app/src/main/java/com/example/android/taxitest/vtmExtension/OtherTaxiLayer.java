@@ -139,6 +139,17 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                 }
             }
         });
+        mCommunicationsAdapter.setCommAcceptedListener(new CommunicationsAdapter.CommAcceptedListener() {
+            @Override
+            public void onCommAccepted(CommsObject comm) {
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(context,"comm was just accepted", Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+        });
     }
 
     private void runPostAnimationTasks(){
@@ -186,6 +197,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                         if (taxiObject.getIsActive() != 1) {
                             mItemList.get(i).setPurpose(TaxiMarker.Purpose.DISAPPEAR);
                         } else {
+                            //TODO figure out how to fix this bug
                             mItemList.get(i).setPurpose(TaxiMarker.Purpose.MOVE);
                         }
                         mItemList.get(i).setPurposeTaxiObject(taxiObject);

@@ -181,7 +181,7 @@
                     android:id="@+id/bt_confirm"
                     app:backgroundTint="@color/colorGreen"
                     android:src="@drawable/send"
-                    app:tint="#fff"
+                    app:tint="@null"
                     android:scaleType="fitXY"
                     app:borderWidth="0dp"
                     app:elevation="1dp"

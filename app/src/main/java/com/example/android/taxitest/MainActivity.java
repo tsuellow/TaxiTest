@@ -272,7 +272,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                         // Got last known location. In some rare situations this can be null.
                         if (location != null) {
                             mMarkerLoc = location;
-                            //use tis to shift location (dev only)
+                            //use this to shift location (dev only)
 //                            mMarkerLoc.setLatitude(mMarkerLoc.getLatitude()-39.2908);
 //                            mMarkerLoc.setLongitude(mMarkerLoc.getLongitude()-96.095);
                             mOwnMarkerLayer.moveMarker(new GeoPoint(mMarkerLoc.getLatitude(),mMarkerLoc.getLongitude()));
@@ -702,15 +702,10 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
     private void initRecyclerView(){
         SmoothLinearLayoutManager linearLayoutManager=new SmoothLinearLayoutManager(mContext);
-        //LinearLayoutManager linearLayoutManager=new LinearLayoutManager(mContext);
         rvCommsAdapter =new CommunicationsAdapter(MainActivity.this, mConnectionLineLayer);
         rvCommunications.setAdapter(rvCommsAdapter);
         rvCommunications.setLayoutManager(linearLayoutManager);
         new ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(rvCommunications);
-
-
-
-
     }
 
     ItemTouchHelper.SimpleCallback itemTouchHelperCallback= new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
@@ -739,8 +734,6 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         @Override
         public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
             mOtherTaxisLayer.doUnClick(rvCommsAdapter.getItemList().get(viewHolder.getAdapterPosition()).taxiMarker);
-
-            //rvCommsAdapter.cancelComm(viewHolder.getAdapterPosition());
         }
     };
 

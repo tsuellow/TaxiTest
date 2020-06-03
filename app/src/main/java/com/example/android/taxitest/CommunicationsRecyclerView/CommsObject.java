@@ -104,6 +104,7 @@ public class CommsObject {
         }
 
         if (msjUpdateListener!=null) {
+            Log.d("socketTest","msjStatus:"+mMsjStatus);
             msjUpdateListener.onMsjUpdateReceived(mMsjStatus);
         }
     }
@@ -121,20 +122,17 @@ public class CommsObject {
 
 
     public int getButtonCode(){
-        if (mMsjStatus==OBSERVING)
-            return INVITE;
-        if (mMsjStatus==REQUEST_SENT)
-            return AWAITING;
-        if (mMsjStatus==REQUEST_RECEIVED && msjList.get(0).getAudioFile()!=null && !msjList.get(0).isWasPlayed())
-            return PLAY;
-        if (mMsjStatus==REQUEST_RECEIVED && !accepted)
-            return ACCEPT;
-        if (mMsjStatus==ACCEPTED || accepted) {
-            setAccepted(true);
+        if (accepted){
             return BT_ACCEPTED;
+        }else if (mMsjStatus==REQUEST_RECEIVED && msjList.get(0).getAudioFile()!=null && !msjList.get(0).isWasPlayed()){
+            return PLAY;
+        }else if (mMsjStatus==REQUEST_RECEIVED){
+            return ACCEPT;
+        }else if (mMsjStatus==REQUEST_SENT){
+            return AWAITING;
+        }else{
+            return INVITE;
         }
-
-        return INVITE;
     }
 
     public MetaMessageObject findMsjById(String msjId){
@@ -153,6 +151,7 @@ public class CommsObject {
     public void setAccepted(boolean accepted) {
         this.accepted = accepted;
     }
+
 
     //callback for when a new acknowledgement has arrived
     public interface AckUpdateListener{
@@ -234,7 +233,13 @@ public class CommsObject {
         final Dialog dialog=new Dialog(context);
         dialog.setContentView(R.layout.comm_dialog);
         TextView title=dialog.findViewById(R.id.tv_title_dialog);
+        TextView noMsgs=dialog.findViewById(R.id.tv_no_msgs);
         title.setText("Chat with "+taxiMarker.taxiObject.getTaxiId());
+        if (msjList.size()==0){
+            noMsgs.setVisibility(View.VISIBLE);
+        }else{
+            noMsgs.setVisibility(View.GONE);
+        }
         RecyclerView commsRV=(RecyclerView) dialog.findViewById(R.id.rv_comms_dialog);
         Button closeBtn=(Button) dialog.findViewById(R.id.bt_dialog_close);
         CommsDialogAdapter adapter=new CommsDialogAdapter(context,this);

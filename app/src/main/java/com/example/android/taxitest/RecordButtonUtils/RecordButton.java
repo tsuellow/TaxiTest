@@ -119,13 +119,11 @@ public class RecordButton extends AppCompatImageView implements View.OnTouchList
 
                 case MotionEvent.ACTION_DOWN:
                     ((RecordButton) v).startScale();
-                    soundPool.play(soundStart,1,1,0,0,1);
                     startRecording();
                     break;
                 case MotionEvent.ACTION_CANCEL:
                 case MotionEvent.ACTION_UP:
                     stopRecording();
-                    soundPool.play(soundEnd,1,1,0,0,1);
                     ((RecordButton) v).stopScale();
                     break;
 
@@ -156,14 +154,16 @@ public class RecordButton extends AppCompatImageView implements View.OnTouchList
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Toast.makeText(getContext(),fileName,Toast.LENGTH_LONG).show();
+        //Toast.makeText(getContext(),fileName,Toast.LENGTH_LONG).show();
+        soundPool.play(soundStart,1,1,0,0,1);
         recorder.start();
         setIsRecording(true);
         recordingStartedListener.onRecordingStarted();
     }
 
-    private void stopRecording() {
+    public void stopRecording() {
         if (isRecording) {
+            soundPool.play(soundEnd,1,1,0,0,1);
             Handler handler=new Handler();
             handler.postDelayed(new Runnable() {
                 @Override

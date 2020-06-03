@@ -52,11 +52,11 @@
         </RelativeLayout>
 
         <TextView
-            android:layout_width="80dp"
+            android:layout_width="90dp"
             android:layout_height="wrap_content"
             android:id="@+id/tv_time_of_msg_dialog"
             android:layout_gravity="center_vertical"
-            android:text="00:00:00 pm"
+            android:text="00:00:00 p.m."
             android:textAlignment="center"
             tools:ignore="RtlCompat"
             android:layout_marginEnd="8dp"/>
