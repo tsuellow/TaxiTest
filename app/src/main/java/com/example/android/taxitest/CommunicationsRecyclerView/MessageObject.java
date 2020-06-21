@@ -5,6 +5,7 @@ import android.util.Log;
 import androidx.room.Ignore;
 
 import com.example.android.taxitest.Constants;
+import com.example.android.taxitest.MainActivity;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
 import com.google.android.gms.common.util.IOUtils;
 
@@ -29,7 +30,7 @@ public class MessageObject {
     }
 
     public MessageObject(String receivingId, int intentCode) {
-        this.sendingId = MiscellaneousUtils.getStringId(Constants.myId);
+        this.sendingId = MainActivity.myId;
         this.receivingId = receivingId;
         this.intentCode = intentCode;
         this.timestamp = new Date().getTime();

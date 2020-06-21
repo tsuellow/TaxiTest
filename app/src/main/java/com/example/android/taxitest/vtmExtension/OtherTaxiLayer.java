@@ -332,6 +332,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
     public Bitmap fetchBitmap(TaxiMarker taxiMarker) {
         BarrioPolygonDrawable barrio = barriosLayer.getContainingBarrio(taxiMarker.destGeoPoint);
         taxiMarker.color=barrio.getStyle().fillColor;
+        taxiMarker.barrio=barrio.getBarrioName();
         if (!taxiMarker.getIsClicked()) {
             for (DrawableBitmapCorrespondence item : bitmapReferenceList) {
                 if (barrio.getBarrioId() == item.barrioId) {

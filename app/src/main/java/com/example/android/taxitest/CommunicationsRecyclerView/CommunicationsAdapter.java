@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,8 +26,10 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.android.taxitest.Constants;
+import com.example.android.taxitest.MainActivity;
 import com.example.android.taxitest.R;
 import com.example.android.taxitest.RecordButtonUtils.RecordButton;
+import com.example.android.taxitest.utils.CurvedTextView;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
 import com.example.android.taxitest.vectorLayer.ConnectionLineLayer2;
 import com.github.nkzawa.emitter.Emitter;
@@ -66,7 +69,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
         try {
             IO.Options opts=new IO.Options();
             opts.forceNew = true;
-            opts.query = "id=t"+Constants.myId;
+            opts.query = "id="+ MainActivity.myId;
             mSocket = IO.socket("https://id-ex-websocket-audiochat-eu.herokuapp.com",opts);
             Log.d("socketTest","success");
             initializeSocketListener();
@@ -151,7 +154,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
 
         private int adapterPosition;
         private TextView name;
-        private TextView numberPlate;
+        private CurvedTextView numberPlate;
         private TextView destination;
         private ImageView photo;
         private CardView destColor;
@@ -160,6 +163,9 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
         private CircularProgressBar progressBar;
         private FloatingActionButton confirmOrPlay;
         public FloatingActionButton cancel;
+        private ProgressBar loadingFace;
+        private TextView reputation;
+        private ImageView reputationStar;
         //acknowledgements
         private LinearLayout ackBubble;
         private ImageView ackCheck, ackPlayed, ackHeard, ackRecording, ackFailed;
@@ -170,10 +176,13 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             name = (TextView) itemView.findViewById(R.id.tv_name);
-            numberPlate = (TextView) itemView.findViewById(R.id.tv_plate);
+            numberPlate = (CurvedTextView) itemView.findViewById(R.id.ct_plate);
             destination = (TextView) itemView.findViewById(R.id.tv_destination);
             arrows=(TextView) itemView.findViewById(R.id.tv_arrows);
             photo = (ImageView) itemView.findViewById(R.id.iv_photo);
+            loadingFace=(ProgressBar) itemView.findViewById(R.id.pb_loading_face);
+            reputation=(TextView) itemView.findViewById(R.id.tv_rep);
+            reputationStar=(ImageView) itemView.findViewById(R.id.iv_rep);
             destColor = (CardView) itemView.findViewById(R.id.cv_border_color);
             recordButton=(RecordButton) itemView.findViewById(R.id.record_button);
             progressBar=(CircularProgressBar) itemView.findViewById(R.id.play_progress_bar);
@@ -212,11 +221,25 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
     public void onBindViewHolder(@NonNull final CommunicationsAdapter.ViewHolder holder, int position) {
         final CommsObject comm=mComms.get(position);
         final int taxiId=comm.taxiMarker.taxiObject.getTaxiId();
-        holder.name.setText("ID: "+comm.taxiMarker.taxiObject.getTaxiId());
-        holder.numberPlate.setText("T"+comm.taxiMarker.taxiObject.getTaxiId());
-        holder.destination.setText("barrio: "+comm.taxiMarker.color);
+        //holder.name.setText("ID: "+comm.taxiMarker.taxiObject.getTaxiId());
+
+        //holder.numberPlate.setText("T"+comm.taxiMarker.taxiObject.getTaxiId());
+        holder.destination.setText(comm.taxiMarker.barrio);
+        holder.destination.setTextColor(comm.taxiMarker.color);
         holder.destColor.setCardBackgroundColor(comm.taxiMarker.color);
         holder.recordButton.setCommId(MiscellaneousUtils.getStringId(taxiId));
+
+        comm.setDataUpdateListener(new CommsObject.DataUpdateListener() {
+            @Override
+            public void onDataUpdateReceived() {
+                holder.name.setText(comm.firstName);
+                holder.photo.setImageBitmap(comm.photo);
+                holder.loadingFace.setVisibility(View.GONE);
+                holder.numberPlate.setText(comm.nrPlate);
+                double rounded = Math. round(comm.reputation * 100.0) / 100.0;
+                holder.reputation.setText(String.valueOf(rounded));
+            }
+        });
 
 
         //resetting values for recycling process

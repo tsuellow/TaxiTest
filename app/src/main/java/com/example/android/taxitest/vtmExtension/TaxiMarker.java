@@ -17,6 +17,7 @@ public class TaxiMarker implements MarkerInterface, Comparable<TaxiMarker> {
     public GeoPoint geoPoint;
     public GeoPoint destGeoPoint;
     protected MarkerSymbol markerSymbol;
+    public String barrio;
     public int color;
 
 

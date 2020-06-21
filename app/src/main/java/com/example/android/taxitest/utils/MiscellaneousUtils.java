@@ -5,7 +5,10 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Location;
+import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
@@ -16,9 +19,12 @@ import com.example.android.taxitest.R;
 
 import org.oscim.core.GeoPoint;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.text.Format;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 public class MiscellaneousUtils {
@@ -105,6 +111,82 @@ public class MiscellaneousUtils {
         Date date = new Date(time);
         Format format = new SimpleDateFormat("hh:mm:ss a");
         return format.format(date);
+    }
+
+    public static String getDateString(Date date){
+        String dateString=null;
+        if(date!=null){
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+            dateString= sdf.format(date);
+        }
+        return dateString;
+    }
+
+    public static Date String2Date(String dateStr){
+        SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        Date date = null;
+        if(dateStr!=null) {
+            try {
+                date = sdf.parse(dateStr);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+        return date;
+    }
+
+    public static String getShortDateString(Calendar cal){
+        int year = cal.get(Calendar.YEAR);
+        int month = cal.get(Calendar.MONTH);
+        int day = cal.get(Calendar.DAY_OF_MONTH);
+        month = 1 + month;
+        return day + "/" + month + "/" + year;
+    }
+
+    public static Date getRoundDate(Date date){
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+
+        return calendar.getTime();
+    }
+
+    public static Bitmap makeSquaredImage(Bitmap bitmap){
+        int width  = bitmap.getWidth();
+        int height = bitmap.getHeight();
+        int newWidth = (height > width) ? width : height;
+        int newHeight = (height > width)? height - ( height - width) : height;
+        int cropW = (width - height) / 2;
+        cropW = (cropW < 0)? 0: cropW;
+        int cropH = (height - width) / 2;
+        cropH = (cropH < 0)? 0: cropH;
+        Bitmap cropImg = Bitmap.createBitmap(bitmap, cropW, cropH, newWidth, newHeight);
+        return cropImg;
+    }
+
+    public static String base64Bitmap(Bitmap bitmap){
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG,100,baos);
+        byte[] b = baos.toByteArray();
+        return Base64.encodeToString(b, 0);
+    }
+
+    //TODO make this method country agnostic use libphone
+    public static String depuratePhone(String rawPhone){
+        String phone=rawPhone.replace(" ","").replace("+","00").replace("-","");
+        String depPhone=null;
+        if (phone.length()>2){
+            if (phone.substring(0,2).contentEquals("00")){
+                depPhone=phone;
+            }else{
+                depPhone="00505"+phone;
+            }
+        }
+        return depPhone;
+
     }
 
 }

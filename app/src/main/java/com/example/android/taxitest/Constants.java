@@ -13,5 +13,7 @@ public class Constants {
     public static int barriosFile=R.raw.barrios;
     public static GeoPoint lowerLeftLabelLimit=new GeoPoint(13.041135,-86.406090 );
     public static GeoPoint upperRightLabelLimit=new GeoPoint(13.124386, -86.309543);
+    public static String SERVER_URL="https://www.awicon.de/theostaxi/php/";
+
 
 }

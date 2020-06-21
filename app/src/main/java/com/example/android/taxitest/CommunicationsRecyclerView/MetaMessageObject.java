@@ -3,6 +3,7 @@ package com.example.android.taxitest.CommunicationsRecyclerView;
 import android.util.Log;
 
 import com.example.android.taxitest.Constants;
+import com.example.android.taxitest.MainActivity;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -71,7 +72,7 @@ public class MetaMessageObject{
         isOutgoing=true;
         wasPlayed=true;
         this.comm=comm;
-        this.msjObject = new MessageObject("t"+ Constants.myId,"t"+comm.taxiMarker.taxiObject.getTaxiId(),intendCode,audioFile,new Date().getTime());
+        this.msjObject = new MessageObject(MainActivity.myId,"t"+comm.taxiMarker.taxiObject.getTaxiId(),intendCode,audioFile,new Date().getTime());
         this.audioFile = audioFile;
     }
 

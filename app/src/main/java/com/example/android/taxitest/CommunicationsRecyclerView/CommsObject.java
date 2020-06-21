@@ -4,13 +4,18 @@ import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
 import android.widget.Button;
 import android.widget.Filter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
@@ -18,12 +23,20 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.android.taxitest.Constants;
 import com.example.android.taxitest.MainActivity;
 import com.example.android.taxitest.R;
+import com.example.android.taxitest.connection.MySingleton;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
 import com.example.android.taxitest.vtmExtension.TaxiMarker;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -70,11 +83,20 @@ public class CommsObject {
     }
 
     //driver info driverObject from room DB
+    String firstName;
+    String lastName;
+    String nrPlate;
+    double reputation;
+    Date dob;
+    String gender;
+    Bitmap photo;
+
     //list of individual communications
 
     public CommsObject(TaxiMarker taxiMarker, Context context) {
         this.taxiMarker=taxiMarker;
         mContext=context;
+        sendDataRequest();
     }
 
     public MetaMessageObject getTopOfList(){
@@ -259,7 +281,77 @@ public class CommsObject {
         dialog.show();
     }
 
+    public void sendDataRequest(){
+        try {
+            JSONObject json=new JSONObject();
+            json.put("taxiId" ,taxiMarker.taxiObject.getTaxiId());
+            requestCommData(json);
+        }catch (JSONException e){
+            e.printStackTrace();
+        }
 
+    }
+
+
+    public void requestCommData(JSONObject json){
+
+        JsonObjectRequest jsonObjectRequest;
+
+        jsonObjectRequest = new JsonObjectRequest
+                (Request.Method.POST, Constants.SERVER_URL + "get_driver.php", json, new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            String res = response.getString("response");
+                            if (res.equals("OK")) {
+                                JSONObject data=(JSONObject) response.get("data");
+                                firstName=data.getString("firstName");
+                                lastName=data.getString("lastName");
+                                nrPlate=data.getString("nrPlate");
+                                String dateStr=data.getString("dob");
+                                dob=MiscellaneousUtils.String2Date(dateStr);
+                                String genStr=data.getString("gender");
+                                gender= genStr.equals("m") ?"male":"female";
+                                reputation=data.getDouble("repAvg");
+                                String base64=data.getString("photo");
+                                byte[] biteOutput = Base64.decode(base64, 0);
+                                photo = BitmapFactory.decodeByteArray(biteOutput, 0, biteOutput.length);
+                                dataUpdateListener.onDataUpdateReceived();
+
+
+                                //change comms strings and photo
+                            }else{
+                                //error on server side fix
+                            }
+                            //notification
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            Toast.makeText(mContext,"json failed",Toast.LENGTH_LONG).show();
+
+                        }
+
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        error.printStackTrace();
+                        //send request again
+
+                    }
+                });
+        MySingleton.getInstance(mContext).addToRequestQueue(jsonObjectRequest);
+    }
+
+    //callback for when a new message has arrived
+    public interface DataUpdateListener{
+        void onDataUpdateReceived();
+    }
+
+    DataUpdateListener dataUpdateListener;
+
+    public void setDataUpdateListener(DataUpdateListener dataUpdateListener) {
+        this.dataUpdateListener = dataUpdateListener;
+    }
 
 
 }

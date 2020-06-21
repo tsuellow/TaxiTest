@@ -46,7 +46,19 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:scaleType="centerCrop"
-                    android:src="@drawable/ic_launcher_background" />
+                    android:src="@drawable/clooney" />
+
+                <com.example.android.taxitest.utils.CurvedTextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:id="@+id/ct_plate"/>
+
+                <ProgressBar
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:id="@+id/pb_loading_face"
+                    android:alpha="0.7"
+                    android:indeterminateTint="@color/colorDeselected" />
 
             </androidx.cardview.widget.CardView>
 
@@ -68,23 +80,36 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:animateLayoutChanges="true"
                 android:orientation="horizontal">
                 <TextView
                     android:id="@+id/tv_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Cuactemoc"
+                    android:text="Fulanito"
                     android:textColor="#000"
                     android:textSize="14sp" />
 
+
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:id="@+id/iv_rep"
+                    android:src="@drawable/star"
+                    android:layout_marginStart="6dp"
+                    android:tint="@color/colorDeselected"
+                    android:layout_gravity="bottom"
+                    android:layout_marginBottom="2dp"/>
+
                 <TextView
-                    android:id="@+id/tv_plate"
+                    android:id="@+id/tv_rep"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="[T0000]"
+                    android:text="4.0"
+                    android:layout_marginStart="2dp"
                     android:textColor="#000"
-                    android:textSize="14sp" />
+                    android:textSize="12sp" />
 
             </LinearLayout>
 
@@ -93,9 +118,13 @@
                 android:id="@+id/tv_destination"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="El Rosario"
-                android:textSize="10sp"
-                android:textColor="#000" />
+                android:textColor="@color/colorRed"
+                android:shadowColor="@android:color/black"
+                android:shadowRadius="1"
+                android:shadowDx="1"
+                android:shadowDy="1"
+                android:text="barrio name"
+                android:textSize="10sp" />
 
         </LinearLayout>
 

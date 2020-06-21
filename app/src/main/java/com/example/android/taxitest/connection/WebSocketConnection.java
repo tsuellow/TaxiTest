@@ -10,6 +10,7 @@ import com.example.android.taxitest.MainActivity;
 import com.example.android.taxitest.data.SqlLittleDB;
 import com.example.android.taxitest.data.TaxiDao;
 import com.example.android.taxitest.data.TaxiObject;
+import com.example.android.taxitest.utils.MiscellaneousUtils;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
@@ -32,7 +33,6 @@ import static com.example.android.taxitest.utils.MiscellaneousUtils.locToGeo;
 public class WebSocketConnection {
 
     private Socket mSocket;
-    private Context mContext;
     public List<TaxiObject> mNewPositionsList=new ArrayList<TaxiObject>();
     CommunicationsAdapter commsInfo;
     boolean filterOn=false;
@@ -50,7 +50,6 @@ public class WebSocketConnection {
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
-        mContext=context;
         mDb=SqlLittleDB.getInstance(context);
         commsInfo=communicationsAdapter;
     }
@@ -125,7 +124,7 @@ public class WebSocketConnection {
 
     private void processReceivedData(){
 
-        mDb.taxiDao().runPreOutputTransactions(mNewPositionsList, Constants.myId);
+        mDb.taxiDao().runPreOutputTransactions(mNewPositionsList, MiscellaneousUtils.getNumericId(MainActivity.myId));
 
         if (filterOn) {
             //this applies a filter to the data coming through the websocket and leaves only relevant

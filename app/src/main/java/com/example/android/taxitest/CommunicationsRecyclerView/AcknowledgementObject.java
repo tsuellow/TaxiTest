@@ -3,6 +3,7 @@ package com.example.android.taxitest.CommunicationsRecyclerView;
 import android.util.Log;
 
 import com.example.android.taxitest.Constants;
+import com.example.android.taxitest.MainActivity;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
 
 import org.json.JSONException;
@@ -21,7 +22,7 @@ public class AcknowledgementObject {
     }
 
     public AcknowledgementObject(CommsObject comm, int ackCode, String msgId) {
-        sendingId = MiscellaneousUtils.getStringId(Constants.myId);
+        sendingId = MainActivity.myId;
         receivingId = MiscellaneousUtils.getStringId(comm.taxiMarker.taxiObject.getTaxiId());
         this.ackCode = ackCode;
         this.msgId=msgId;

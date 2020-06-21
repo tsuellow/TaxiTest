@@ -6,6 +6,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
@@ -16,6 +17,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Vibrator;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -35,6 +37,7 @@ import com.example.android.taxitest.CommunicationsRecyclerView.SmoothLinearLayou
 import com.example.android.taxitest.connection.WebSocketConnection;
 import com.example.android.taxitest.data.SqlLittleDB;
 import com.example.android.taxitest.data.TaxiObject;
+import com.example.android.taxitest.utils.MiscellaneousUtils;
 import com.example.android.taxitest.vectorLayer.BarriosLayer;
 import com.example.android.taxitest.vectorLayer.ConnectionLineLayer;
 import com.example.android.taxitest.vectorLayer.ConnectionLineLayer2;
@@ -153,12 +156,18 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     public static GeoPoint destGeo;
     public static boolean isActivityInForeground;
 
+    SharedPreferences preferences;
+    public static String myId;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         setTheme(R.style.AppTheme);
         super.onCreate(savedInstanceState);
         //basic settings
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        preferences= PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        myId=preferences.getString("taxiId","t0");
 
         //get destination from intent
         Intent intent=getIntent();
@@ -252,7 +261,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         addMapLayers();
 
 
-        mOwnTaxiObject=new TaxiObject(Constants.myId,0.0,0.0,new Date().getTime(),0.0f,Constants.userType,destGeo.getLatitude(),destGeo.getLongitude(),1);
+        mOwnTaxiObject=new TaxiObject(MiscellaneousUtils.getNumericId(myId),0.0,0.0,new Date().getTime(),0.0f,Constants.userType,destGeo.getLatitude(),destGeo.getLongitude(),1);
 
         //google api client for location services
         //settings
@@ -300,7 +309,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                     startMoveAnim(500);
                 }
                 //emit current position
-                mOwnTaxiObject=new TaxiObject(Constants.myId,endLocation.getLatitude(),endLocation.getLongitude(),endLocation.getTime(),mCompass.getRotation(),"taxi",destGeo.getLatitude(),destGeo.getLongitude(),1);
+                mOwnTaxiObject=new TaxiObject(MiscellaneousUtils.getNumericId(myId),endLocation.getLatitude(),endLocation.getLongitude(),endLocation.getTime(),mCompass.getRotation(),"taxi",destGeo.getLatitude(),destGeo.getLongitude(),1);
                 //this should be different websocket
                 mWebSocketConnection.attemptSend(mOwnTaxiObject.taxiObjectToCsv());
             }
