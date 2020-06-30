@@ -25,7 +25,6 @@ import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.android.taxitest.Constants;
 import com.example.android.taxitest.MainActivity;
 import com.example.android.taxitest.R;
 import com.example.android.taxitest.RecordButtonUtils.RecordButton;
@@ -235,7 +234,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
                 holder.name.setText(comm.firstName);
                 holder.photo.setImageBitmap(comm.photo);
                 holder.loadingFace.setVisibility(View.GONE);
-                holder.numberPlate.setText(comm.nrPlate);
+                holder.numberPlate.setText(comm.collar);
                 double rounded = Math. round(comm.reputation * 100.0) / 100.0;
                 holder.reputation.setText(String.valueOf(rounded));
             }

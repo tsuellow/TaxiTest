@@ -1,6 +1,7 @@
 package com.example.android.taxitest.vtmExtension;
 
 
+import com.example.android.taxitest.data.SocketObject;
 import com.example.android.taxitest.data.TaxiObject;
 import org.oscim.core.GeoPoint;
 import org.oscim.layers.marker.MarkerInterface;
@@ -13,7 +14,7 @@ public class TaxiMarker implements MarkerInterface, Comparable<TaxiMarker> {
         APPEAR, DISAPPEAR, MOVE, NULL
     }
 
-    public TaxiObject taxiObject;
+    public SocketObject taxiObject;
     public GeoPoint geoPoint;
     public GeoPoint destGeoPoint;
     protected MarkerSymbol markerSymbol;
@@ -22,17 +23,17 @@ public class TaxiMarker implements MarkerInterface, Comparable<TaxiMarker> {
 
 
     private Purpose purpose=Purpose.NULL;
-    private TaxiObject purposeTaxiObject;
+    private SocketObject purposeTaxiObject;
     public boolean isClicked=false;
 
-    public TaxiMarker(TaxiObject taxiObject){
+    public TaxiMarker(SocketObject taxiObject){
         this.taxiObject=taxiObject;
         geoPoint=new GeoPoint(taxiObject.getLatitude(),taxiObject.getLongitude());
         destGeoPoint=new GeoPoint(taxiObject.getDestinationLatitude(),taxiObject.getDestinationLongitude());
         //set marker automatically  computeSymbol
     }
 
-    public void setTaxiObject(TaxiObject taxiObject){
+    public void setTaxiObject(SocketObject taxiObject){
         this.taxiObject=taxiObject;
         geoPoint=new GeoPoint(taxiObject.getLatitude(),taxiObject.getLongitude());
         destGeoPoint=new GeoPoint(taxiObject.getDestinationLatitude(),taxiObject.getDestinationLongitude());
@@ -52,11 +53,11 @@ public class TaxiMarker implements MarkerInterface, Comparable<TaxiMarker> {
         this.purpose = purpose;
     }
 
-    public TaxiObject getPurposeTaxiObject() {
+    public SocketObject getPurposeTaxiObject() {
         return purposeTaxiObject;
     }
 
-    public void setPurposeTaxiObject(TaxiObject purposeTaxiObject) {
+    public void setPurposeTaxiObject(SocketObject purposeTaxiObject) {
         this.purposeTaxiObject = purposeTaxiObject;
     }
 

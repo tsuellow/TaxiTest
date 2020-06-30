@@ -15,7 +15,6 @@ import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -34,14 +33,14 @@ import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat;
 
 import com.example.android.taxitest.CommunicationsRecyclerView.CommunicationsAdapter;
 import com.example.android.taxitest.CommunicationsRecyclerView.SmoothLinearLayoutManager;
-import com.example.android.taxitest.connection.WebSocketConnection;
+import com.example.android.taxitest.connection.WebSocketClientLocations;
+import com.example.android.taxitest.connection.WebSocketDriverLocations;
+import com.example.android.taxitest.data.SocketObject;
 import com.example.android.taxitest.data.SqlLittleDB;
 import com.example.android.taxitest.data.TaxiObject;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
 import com.example.android.taxitest.vectorLayer.BarriosLayer;
-import com.example.android.taxitest.vectorLayer.ConnectionLineLayer;
 import com.example.android.taxitest.vectorLayer.ConnectionLineLayer2;
-import com.example.android.taxitest.vectorLayer.GeoJsonUtils;
 import com.example.android.taxitest.vtmExtension.OtherTaxiLayer;
 import com.example.android.taxitest.vtmExtension.OwnMarker;
 import com.example.android.taxitest.vtmExtension.OwnMarkerLayer;
@@ -56,7 +55,6 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.sdsmdg.harjot.vectormaster.VectorMasterDrawable;
 
-import org.geojson.FeatureCollection;
 import org.oscim.android.MapView;
 import org.oscim.android.theme.AssetsRenderTheme;
 import org.oscim.backend.CanvasAdapter;
@@ -108,7 +106,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     ImageView settings;
 
     //websocket connection
-    WebSocketConnection mWebSocketConnection;
+    WebSocketDriverLocations mWebSocketDriverLocs;
+    WebSocketClientLocations mWebSocketClientLocs;
 
     //database
     SqlLittleDB mDb;
@@ -118,29 +117,29 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     LabelLayer mLabelLayer;
     MapScaleBar mapScaleBar;
     MapScaleBarLayer mMapScaleBarLayer;
-    Compass mCompass;
-    MapEventsReceiver mMapEventsReceiver;
-    BarriosLayer mBarriosLayer;
-    OwnMarkerLayer mOwnMarkerLayer;
-    OtherTaxiLayer mOtherTaxisLayer;
+    public Compass mCompass;
+    public MapEventsReceiver mMapEventsReceiver;
+    public BarriosLayer mBarriosLayer;
+    public OwnMarkerLayer mOwnMarkerLayer;
+    public OtherTaxiLayer mOtherTaxisLayer;
     ConnectionLineLayer2 mConnectionLineLayer;
 
     //google fused location provider variables
     FusedLocationProviderClient fusedLocationProviderClient;
     LocationRequest locationRequest;
-    LocationCallback locationCallback;
+    public LocationCallback locationCallback;
 
     //recycler view and co
     RecyclerView rvCommunications;
     CommunicationsAdapter rvCommsAdapter;
 
     //other helper and component variables
-    Context mContext;
+    public Context mContext;
     Vibrator mVibrator;
-    VectorMasterDrawable otherIcon;
+    public VectorMasterDrawable otherIcon, ownIcon;
     float mTilt;
     double mScale;
-    TaxiObject mOwnTaxiObject;
+    SocketObject mOwnTaxiObject;
     AnimatedVectorDrawableCompat advCompat;
     AnimatedVectorDrawable adv;
     boolean wasMoved=false;
@@ -222,41 +221,25 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         }
         // Vector layer
         VectorTileLayer tileLayer = mapView.map().setBaseMap(tileSource);
-        // Render theme
-        mapView.map().setTheme(new AssetsRenderTheme(getAssets(),"", "vtm/day_mode.xml"));
-        //add set pivot
-        mapView.map().viewport().setMapViewCenter(0.0f, 0.75f);
-        //set important variables
-        mTilt = mapView.map().viewport().getMinTilt();
-        mScale = 1 << 17;
-        mapView.map().setMapPosition(Constants.lastLocation.getLatitude(),Constants.lastLocation.getLongitude(), mScale);
+
+        setupMap();
 
         // SET LAYERS
-        // Building layer
-        mBuildingLayer=new BuildingLayer(mapView.map(), tileLayer);
-        // Label layer
-        mLabelLayer=new LabelLayer(mapView.map(), tileLayer);
-        // Scale bar
-        mapScaleBar = new DefaultMapScaleBar(mapView.map());
-        mMapScaleBarLayer = new MapScaleBarLayer(mapView.map(), mapScaleBar);
-        mMapScaleBarLayer.getRenderer().setPosition(GLViewport.Position.BOTTOM_LEFT);
-        mMapScaleBarLayer.getRenderer().setOffset(5 * CanvasAdapter.getScale(), 0);
+        addMapDecorations(tileLayer);
         // Compass
-        mCompass = new Compass(this, mapView.map(), compassImage);
-        mCompass.setEnabled(true);
-        mCompass.setMode(Compass.Mode.C2D);
+        setupCompass();
         // MapEventsReceiver
         mMapEventsReceiver=new MapEventsReceiver(mapView);
         // BarriosLayer
         mBarriosLayer =new BarriosLayer(mapView.map(), mContext, Constants.barriosFile);
         // OwnMarkerLayer
-        otherIcon=new VectorMasterDrawable(this,R.drawable.taxi_marker);
-        mOwnMarkerLayer= new OwnMarkerLayer(mContext, mBarriosLayer,mapView.map(),new ArrayList<OwnMarker>(),otherIcon,Constants.lastLocation,destGeo,mCompass);
+        setOwnMarkerLayer();
         //ConnectionLineLayer
         mConnectionLineLayer=new ConnectionLineLayer2(mapView.map());
         // OtherMarkerLayer
-        mWebSocketConnection=new WebSocketConnection("https://id-ex-theos-taxi-test1.herokuapp.com/", mContext,rvCommsAdapter);
-        mOtherTaxisLayer=new OtherTaxiLayer(mContext, mBarriosLayer,mapView.map(),new ArrayList<TaxiMarker>(),otherIcon,mWebSocketConnection,mConnectionLineLayer, rvCommsAdapter);
+        mWebSocketDriverLocs =new WebSocketDriverLocations("https://id-ex-theos-taxi-test1.herokuapp.com/", mContext,rvCommsAdapter);
+        mWebSocketClientLocs =new WebSocketClientLocations("https://websocket-clients.herokuapp.com/", mContext,rvCommsAdapter);
+        setupOtherMarkerLayer();
         // ADD ALL LAYERS TO MAP
         addMapLayers();
 
@@ -291,47 +274,9 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 });
         }
 
-        //callback every 3000ms
-        //TODO send old locations if callback  fails to execute. prevent from unclicking on other users
-        locationCallback = new LocationCallback() {
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                if (locationResult == null) {
-                    return;
-                }
-                //smoothen transition to new spot
-                Location adjustedLocation = locationResult.getLastLocation();
-//                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-39.2908);
-//                adjustedLocation.setLongitude(adjustedLocation.getLongitude()-96.095);
-                endLocation=adjustedLocation;
-                mCompass.setCurrLocation(endLocation);
-                if (mCurrMapLoc != null && mMarkerLoc != null ) {
-                    startMoveAnim(500);
-                }
-                //emit current position
-                mOwnTaxiObject=new TaxiObject(MiscellaneousUtils.getNumericId(myId),endLocation.getLatitude(),endLocation.getLongitude(),endLocation.getTime(),mCompass.getRotation(),"taxi",destGeo.getLatitude(),destGeo.getLongitude(),1);
-                //this should be different websocket
-                mWebSocketConnection.attemptSend(mOwnTaxiObject.taxiObjectToCsv());
-            }
+        setupLocationCallback();
 
-            ;
-        };
-
-        //filter button
-        filterImage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (!filterOn){
-                    filterOn=true;
-                    mWebSocketConnection.setFilter(true);
-                    filterImage.setImageAlpha(255);
-                }else{
-                    filterOn=false;
-                    mWebSocketConnection.setFilter(false);
-                    filterImage.setImageAlpha(100);
-                }
-            }
-        });
+        setupFilterButton();
 
         //night mode button
         nightModeImage.setOnClickListener(new View.OnClickListener() {
@@ -387,6 +332,90 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
         createNotificationChannel();
 
+    }
+
+    public void setupFilterButton() {
+        //filter button
+        filterImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (!filterOn){
+                    filterOn=true;
+                    mWebSocketDriverLocs.setFilter(true);
+                    filterImage.setImageAlpha(255);
+                }else{
+                    filterOn=false;
+                    mWebSocketDriverLocs.setFilter(false);
+                    filterImage.setImageAlpha(100);
+                }
+            }
+        });
+    }
+
+    public void setupLocationCallback() {
+        //callback every 3000ms
+        //TODO send old locations if callback  fails to execute. prevent from unclicking on other users
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult == null) {
+                    return;
+                }
+                //smoothen transition to new spot
+                Location adjustedLocation = locationResult.getLastLocation();
+//                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-39.2908);
+//                adjustedLocation.setLongitude(adjustedLocation.getLongitude()-96.095);
+                endLocation=adjustedLocation;
+                mCompass.setCurrLocation(endLocation);
+                if (mCurrMapLoc != null && mMarkerLoc != null ) {
+                    startMoveAnim(500);
+                }
+                //emit current position
+                mOwnTaxiObject=new TaxiObject(MiscellaneousUtils.getNumericId(myId),endLocation.getLatitude(),endLocation.getLongitude(),endLocation.getTime(),mCompass.getRotation(),"taxi",destGeo.getLatitude(),destGeo.getLongitude(),1);
+                //this should be different websocket
+                mWebSocketDriverLocs.attemptSend(mOwnTaxiObject.objectToCsv());
+            }
+
+            ;
+        };
+    }
+
+    public void setupOtherMarkerLayer() {
+        mOtherTaxisLayer=new OtherTaxiLayer(mContext, mBarriosLayer,mapView.map(),new ArrayList<TaxiMarker>(), mWebSocketDriverLocs,mConnectionLineLayer, rvCommsAdapter);
+    }
+
+    public void setOwnMarkerLayer() {
+        ownIcon=new VectorMasterDrawable(this,R.drawable.icon_taxi);
+        mOwnMarkerLayer= new OwnMarkerLayer(mContext, mBarriosLayer,mapView.map(),new ArrayList<OwnMarker>(),ownIcon, Constants.lastLocation,destGeo,mCompass);
+    }
+
+    public void addMapDecorations(VectorTileLayer tileLayer) {
+        // Building layer
+        mBuildingLayer=new BuildingLayer(mapView.map(), tileLayer);
+        // Label layer
+        mLabelLayer=new LabelLayer(mapView.map(), tileLayer);
+        // Scale bar
+        mapScaleBar = new DefaultMapScaleBar(mapView.map());
+        mMapScaleBarLayer = new MapScaleBarLayer(mapView.map(), mapScaleBar);
+        mMapScaleBarLayer.getRenderer().setPosition(GLViewport.Position.BOTTOM_LEFT);
+        mMapScaleBarLayer.getRenderer().setOffset(5 * CanvasAdapter.getScale(), 0);
+    }
+
+    public void setupMap() {
+        // Render theme
+        mapView.map().setTheme(new AssetsRenderTheme(getAssets(),"", "vtm/day_mode.xml"));
+        //add set pivot
+        mapView.map().viewport().setMapViewCenter(0.0f, 0.75f);
+        //set important variables
+        mTilt = mapView.map().viewport().getMinTilt();
+        mScale = 1 << 17;
+        mapView.map().setMapPosition(Constants.lastLocation.getLatitude(),Constants.lastLocation.getLongitude(), mScale);
+    }
+
+    public void setupCompass() {
+        mCompass = new Compass(this, mapView.map(), compassImage);
+        mCompass.setEnabled(true);
+        mCompass.setMode(Compass.Mode.C2D);
     }
 
     public void openTest(){

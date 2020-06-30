@@ -7,6 +7,7 @@ import android.util.Log;
 import com.example.android.taxitest.CommunicationsRecyclerView.CommunicationsAdapter;
 import com.example.android.taxitest.Constants;
 import com.example.android.taxitest.MainActivity;
+import com.example.android.taxitest.data.SocketObject;
 import com.example.android.taxitest.data.SqlLittleDB;
 import com.example.android.taxitest.data.TaxiDao;
 import com.example.android.taxitest.data.TaxiObject;
@@ -30,21 +31,21 @@ import java.util.TimerTask;
 import static com.example.android.taxitest.utils.MiscellaneousUtils.locToGeo;
 
 
-public class WebSocketConnection {
+public class WebSocketDriverLocations {
 
     private Socket mSocket;
-    public List<TaxiObject> mNewPositionsList=new ArrayList<TaxiObject>();
-    CommunicationsAdapter commsInfo;
-    boolean filterOn=false;
+    private List<TaxiObject> mNewPositionsList=new ArrayList<TaxiObject>();
+    protected CommunicationsAdapter commsInfo;
+    protected boolean filterOn=false;
     boolean processIsRunning=false;
 
 
-    SqlLittleDB mDb;
+    public SqlLittleDB mDb;
 
 
-    Emitter.Listener onLocationUpdate;
+    public Emitter.Listener onLocationUpdate;
 
-    public WebSocketConnection(String url, Context context,CommunicationsAdapter communicationsAdapter){
+    public WebSocketDriverLocations(String url, Context context, CommunicationsAdapter communicationsAdapter){
         try {
             mSocket = IO.socket(url);
         } catch (URISyntaxException e) {
@@ -122,7 +123,7 @@ public class WebSocketConnection {
         mDataAccumulateTimer.schedule(executeReset,100,3000);
     }
 
-    private void processReceivedData(){
+    public void processReceivedData(){
 
         mDb.taxiDao().runPreOutputTransactions(mNewPositionsList, MiscellaneousUtils.getNumericId(MainActivity.myId));
 
@@ -146,23 +147,23 @@ public class WebSocketConnection {
     }
 
     public interface AnimationDataListener{
-        void onAnimationParametersReceived(List<TaxiObject> baseTaxis, List<TaxiObject> newTaxis);
+        void onAnimationParametersReceived(List<? extends SocketObject> baseTaxis, List<? extends SocketObject> newTaxis);
     }
 
-    AnimationDataListener mAnimationDataListener;
+    protected AnimationDataListener mAnimationDataListener;
 
     public void setAnimationDataListener(AnimationDataListener listener){
         mAnimationDataListener=listener;
     }
 
     public class SocketFilter{
-        double bRight;
-        double mRight;
-        double bLeft;
-        double mLeft;
-        int signRight;
-        int signLeft;
-        List<Integer> exceptions;
+        public double bRight;
+        public double mRight;
+        public double bLeft;
+        public double mLeft;
+        public int signRight;
+        public int signLeft;
+        public List<Integer> exceptions;
 
         public SocketFilter(GeoPoint geo, GeoPoint dest, double phi){
             double tinyCorrection=0.0;

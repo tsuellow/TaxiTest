@@ -10,7 +10,7 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
-@Database(entities = {TaxiObject.class, TaxiOld.class},version = 2,exportSchema = false)
+@Database(entities = {TaxiObject.class, TaxiOld.class, ClientObject.class, ClientOld.class},version = 4,exportSchema = false)
 public abstract class SqlLittleDB extends RoomDatabase {
 
 
@@ -35,5 +35,6 @@ public abstract class SqlLittleDB extends RoomDatabase {
     }
 
     abstract public TaxiDao taxiDao();
+    abstract public ClientDao clientDao();
 
 }

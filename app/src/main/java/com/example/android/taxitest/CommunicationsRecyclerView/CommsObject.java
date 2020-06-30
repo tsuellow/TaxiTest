@@ -1,10 +1,7 @@
 package com.example.android.taxitest.CommunicationsRecyclerView;
 
 import android.app.Dialog;
-import android.app.Notification;
-import android.app.NotificationManager;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
@@ -13,13 +10,9 @@ import android.util.Log;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
 import android.widget.Button;
-import android.widget.Filter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.core.app.NotificationCompat;
-import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -38,13 +31,10 @@ import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 
 public class CommsObject {
 
@@ -85,7 +75,7 @@ public class CommsObject {
     //driver info driverObject from room DB
     String firstName;
     String lastName;
-    String nrPlate;
+    String collar;
     double reputation;
     Date dob;
     String gender;
@@ -295,10 +285,11 @@ public class CommsObject {
 
     public void requestCommData(JSONObject json){
 
-        JsonObjectRequest jsonObjectRequest;
+        JsonObjectRequest jsonObjectRequestDriver;
+        String php="get_driver.php";
 
-        jsonObjectRequest = new JsonObjectRequest
-                (Request.Method.POST, Constants.SERVER_URL + "get_driver.php", json, new Response.Listener<JSONObject>() {
+        jsonObjectRequestDriver = new JsonObjectRequest
+                (Request.Method.POST, Constants.SERVER_URL + php, json, new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
                         try {
@@ -307,7 +298,7 @@ public class CommsObject {
                                 JSONObject data=(JSONObject) response.get("data");
                                 firstName=data.getString("firstName");
                                 lastName=data.getString("lastName");
-                                nrPlate=data.getString("nrPlate");
+                                collar =data.getString("nrPlate");
                                 String dateStr=data.getString("dob");
                                 dob=MiscellaneousUtils.String2Date(dateStr);
                                 String genStr=data.getString("gender");
@@ -339,7 +330,7 @@ public class CommsObject {
 
                     }
                 });
-        MySingleton.getInstance(mContext).addToRequestQueue(jsonObjectRequest);
+        MySingleton.getInstance(mContext).addToRequestQueue(jsonObjectRequestDriver);
     }
 
     //callback for when a new message has arrived

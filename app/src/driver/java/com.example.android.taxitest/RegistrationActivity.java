@@ -35,6 +35,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -87,9 +88,10 @@ public class RegistrationActivity extends AppCompatActivity {
     AutoCompleteTextView gender;
     EditText dob;
     TextView textPhotoFace, textPhotoCar, textWarning;
+    CheckBox sharePhone, agreeToTerms;
 
     ImageView photoFace, photoCar, infoFirst, infoLast, infoPlate, infoDesc;
-    Button register;
+    Button register, readTerms;
     ScrollView svParent;
 
     Date dateOfBirth;
@@ -195,6 +197,14 @@ public class RegistrationActivity extends AppCompatActivity {
 
         });
 
+        readTerms.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Dialog dialog=makeTermsOfUseDialog(RegistrationActivity.this);
+                dialog.show();
+            }
+        });
+
         register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -217,6 +227,9 @@ public class RegistrationActivity extends AppCompatActivity {
         register=(Button) findViewById(R.id.bt_register);
         textPhotoFace=(TextView) findViewById(R.id.tv_face);
         textPhotoCar=(TextView) findViewById(R.id.tv_car);
+        sharePhone=(CheckBox) findViewById(R.id.cb_share_phone);
+        agreeToTerms=(CheckBox) findViewById(R.id.cb_terms);
+        readTerms=(Button) findViewById(R.id.bt_terms);
 
         loFirstName=(TextInputLayout) findViewById(R.id.lo_first_name);
         loGender=(TextInputLayout) findViewById(R.id.lo_gender);
@@ -450,6 +463,14 @@ public class RegistrationActivity extends AppCompatActivity {
         }
     }
 
+    private boolean checkAgreed(){
+        if (!agreeToTerms.isChecked()){
+            agreeToTerms.setTextColor(Color.RED);
+            return false;
+        }
+        return true;
+    }
+
     public boolean checkAllEntries(){
         boolean checkFirst  =checkIsEmpty(firstName,loFirstName);
         boolean checkGender =checkIsEmpty(gender,loGender);
@@ -458,13 +479,15 @@ public class RegistrationActivity extends AppCompatActivity {
         boolean checkPhone =checkPhoneNumber();
         boolean checkFace  =checkPhotos(REQUEST_TAKE_FACE,textPhotoFace);
         boolean checkCar   =checkPhotos(REQUEST_TAKE_CAR,textPhotoCar);
+        boolean checkAgree =checkAgreed();
         return (checkFirst&&
                 checkGender&&
                 checkDob&&
                 checkPlate&&
                 checkPhone&&
                 checkFace&&
-                checkCar   );
+                checkCar&&
+                checkAgree);
     }
 
 
@@ -495,6 +518,7 @@ public class RegistrationActivity extends AppCompatActivity {
             json.put("dob",MiscellaneousUtils.getDateString(dateOfBirth));
             json.put("gender",gender.getText().toString().substring(0,1));
             json.put("phone",phoneStr);
+            json.put("sharePhone",sharePhone.isChecked()?1:0);
             json.put("nrPlate",nrPlate.getText().toString());
             json.put("carDesc",carDescStr);
             json.put("timestamp",MiscellaneousUtils.getDateString(new Date()));
@@ -606,6 +630,35 @@ public class RegistrationActivity extends AppCompatActivity {
                     Intent i = new Intent(RegistrationActivity.this, EntryActivityDriver.class);
                     startActivity(i);
                 }
+                dialog.dismiss();
+            }
+        });
+        return dialog;
+    }
+
+    public Dialog makeTermsOfUseDialog(Context context){
+        final Dialog dialog=new Dialog(context);
+        dialog.setContentView(R.layout.dialog_register);
+        TextView titleView=dialog.findViewById(R.id.tv_title_dialog);
+        TextView textView=dialog.findViewById(R.id.tv_text);
+        ImageView imageView=(ImageView) dialog.findViewById(R.id.iv_check);
+        ProgressBar loadingView=(ProgressBar) dialog.findViewById(R.id.pb_loading);
+        Button closeBtn=dialog.findViewById(R.id.bt_close);
+
+        imageView.setVisibility(View.GONE);
+        loadingView.setVisibility(View.GONE);
+
+        titleView.setText("Terms of Use");
+        textView.setText("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod " +
+                "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis " +
+                "nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis " +
+                "aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat " +
+                "nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui " +
+                "officia deserunt mollit anim id est laborum.");
+
+        closeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
                 dialog.dismiss();
             }
         });

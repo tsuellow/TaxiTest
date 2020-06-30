@@ -30,6 +30,13 @@ public class EntryActivity extends AppCompatActivity {
         justWatch=(Button) findViewById(R.id.watch_only);
         parentLayout=(ConstraintLayout) findViewById(R.id.entry_parent_view);
 
+        setOnClickListeners(searchTaxi,justWatch);
+
+
+
+    }
+
+    public void setOnClickListeners(final Button searchTaxi, final Button justWatch){
         searchTaxi.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -58,7 +65,5 @@ public class EntryActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-
-
     }
 }

@@ -5,7 +5,6 @@ import android.graphics.drawable.Drawable;
 
 import com.example.android.taxitest.Compass;
 import com.example.android.taxitest.MainActivity;
-import com.example.android.taxitest.connection.WebSocketConnection;
 import com.example.android.taxitest.utils.PaintUtils;
 import com.example.android.taxitest.utils.ZoomUtils;
 import com.example.android.taxitest.vectorLayer.BarrioPolygonDrawable;
@@ -204,7 +203,7 @@ public class OwnMarkerLayer extends ItemizedLayer<OwnMarker> implements Map.Upda
 
     private void prepareScaledBitmapArray(VectorMasterDrawable drawable){
         for (int i = 0; i < 100; i++) {
-            scaledGrayedSymbols[i] =  AndroidGraphicsCustom.drawableToBitmap(drawable, 101+i);
+            scaledGrayedSymbols[i] =  AndroidGraphicsCustom.drawableToBitmap(drawable, 41+i);
         }
     }
 

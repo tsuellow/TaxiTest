@@ -5,38 +5,38 @@ import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
-import com.example.android.taxitest.vtmExtension.TaxiMarker;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-
-@JsonPropertyOrder({"taxiId","latitude","longitude","locationTime","rotation","type","destinationLatitude","destinationLongitude","isActive"})
-@Entity(tableName = "taxiBase")
-public class TaxiObject implements SocketObject, Comparable<TaxiObject>{
+@JsonPropertyOrder({"taxiId","latitude","longitude","locationTime","rotation","seats","extra","destinationLatitude","destinationLongitude","isActive"})
+@Entity(tableName = "clientBase")
+public class ClientObject implements SocketObject, Comparable<TaxiObject> {
     @PrimaryKey
     private int taxiId;
     private double latitude;
     private double longitude;
     private long locationTime;
     private float rotation;
-    private String type;
+    private int seats;
+    public String extra;
     private double destinationLatitude;
     private double destinationLongitude;
     private int isActive;
 
-    public TaxiObject(int taxiId, double latitude, double longitude, long locationTime, float rotation, String type, double destinationLatitude, double destinationLongitude, int isActive) {
+    public ClientObject(int taxiId, double latitude, double longitude, long locationTime, float rotation, int seats, String extra, double destinationLatitude, double destinationLongitude, int isActive) {
         this.taxiId = taxiId;
         this.latitude = latitude;
         this.longitude = longitude;
         this.locationTime = locationTime;
         this.rotation = rotation;
-        this.type = type;
+        this.seats = seats;
+        this.extra=extra;
         this.destinationLatitude = destinationLatitude;
         this.destinationLongitude= destinationLongitude;
         this.isActive = isActive;
     }
 
     @Ignore
-    public TaxiObject(){}
+    public ClientObject(){}
 
 //    @Ignore
 //    public TaxiObject(TaxiMarker taxiMarker) {
@@ -54,7 +54,7 @@ public class TaxiObject implements SocketObject, Comparable<TaxiObject>{
     public String objectToCsv(){
         String result=null;
         try{
-            result=""+this.taxiId+"|"+this.latitude+"|"+this.longitude+"|"+this.locationTime+"|"+this.rotation+"|"+this.type+"|"+this.destinationLatitude+"|"+this.destinationLongitude+"|"+this.isActive;
+            result=""+this.taxiId +"|"+this.latitude+"|"+this.longitude+"|"+this.locationTime+"|"+this.rotation+"|"+this.seats+"|"+this.extra+"|"+this.destinationLatitude+"|"+this.destinationLongitude+"|"+this.isActive;
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -103,12 +103,20 @@ public class TaxiObject implements SocketObject, Comparable<TaxiObject>{
         this.rotation = rotation;
     }
 
-    public String getType() {
-        return type;
+    public int getSeats() {
+        return seats;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setSeats(int seats) {
+        this.seats = seats;
+    }
+
+    public String getExtra() {
+        return extra;
+    }
+
+    public void setExtra(String extra) {
+        this.extra = extra;
     }
 
     public double getDestinationLatitude() {

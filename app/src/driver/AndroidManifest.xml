@@ -34,14 +34,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".RegistrationActivity" />
         <activity
-            android:name=".ChooseDestination"
+            android:name=".RegistrationActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.Launcher"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".MainActivity"
+            android:name=".MainActivityDriver"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.Launcher"
             tools:ignore="LockedOrientationActivity" />
