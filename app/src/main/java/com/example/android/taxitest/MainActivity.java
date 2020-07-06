@@ -75,6 +75,7 @@ import org.oscim.scalebar.MapScaleBar;
 import org.oscim.scalebar.MapScaleBarLayer;
 import org.oscim.tiling.source.mapfile.MapFileTileSource;
 import org.oscim.utils.ThreadUtils;
+import org.oscim.utils.animation.Easing;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -118,6 +119,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     MapScaleBar mapScaleBar;
     MapScaleBarLayer mMapScaleBarLayer;
     public Compass mCompass;
+    Compass.Mode defaultMode=Compass.Mode.C2D;
     public MapEventsReceiver mMapEventsReceiver;
     public BarriosLayer mBarriosLayer;
     public OwnMarkerLayer mOwnMarkerLayer;
@@ -157,6 +159,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
     SharedPreferences preferences;
     public static String myId;
+
+    private static final String TAG = "MainActivity";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -205,6 +209,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             public void run() {
                 mDb.taxiDao().clearTaxiBase();
                 mDb.taxiDao().clearTaxiOld();
+                mDb.clientDao().clearTaxiBase();
+                mDb.clientDao().clearTaxiOld();
             }
         });
 
@@ -232,19 +238,21 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         mMapEventsReceiver=new MapEventsReceiver(mapView);
         // BarriosLayer
         mBarriosLayer =new BarriosLayer(mapView.map(), mContext, Constants.barriosFile);
+        //LocConnections
+        mWebSocketDriverLocs =new WebSocketDriverLocations("https://id-ex-theos-taxi-test1.herokuapp.com/", mContext,rvCommsAdapter);
+        mWebSocketClientLocs =new WebSocketClientLocations("https://websocket-clients.herokuapp.com/", mContext,rvCommsAdapter);
+
         // OwnMarkerLayer
         setOwnMarkerLayer();
         //ConnectionLineLayer
         mConnectionLineLayer=new ConnectionLineLayer2(mapView.map());
         // OtherMarkerLayer
-        mWebSocketDriverLocs =new WebSocketDriverLocations("https://id-ex-theos-taxi-test1.herokuapp.com/", mContext,rvCommsAdapter);
-        mWebSocketClientLocs =new WebSocketClientLocations("https://websocket-clients.herokuapp.com/", mContext,rvCommsAdapter);
         setupOtherMarkerLayer();
         // ADD ALL LAYERS TO MAP
         addMapLayers();
 
 
-        mOwnTaxiObject=new TaxiObject(MiscellaneousUtils.getNumericId(myId),0.0,0.0,new Date().getTime(),0.0f,Constants.userType,destGeo.getLatitude(),destGeo.getLongitude(),1);
+        //mOwnTaxiObject=new TaxiObject(MiscellaneousUtils.getNumericId(myId),0.0,0.0,new Date().getTime(),0.0f,Constants.userType,destGeo.getLatitude(),destGeo.getLongitude(),1);
 
         //google api client for location services
         //settings
@@ -407,15 +415,17 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         //add set pivot
         mapView.map().viewport().setMapViewCenter(0.0f, 0.75f);
         //set important variables
-        mTilt = mapView.map().viewport().getMinTilt();
-        mScale = 1 << 17;
+        mTilt = preferences.getFloat("defaultTilt",30.0f);
+        mapView.map().viewport().setTilt(mTilt);
+        mapView.map().viewport().setMaxTilt(57.5f);
+        mScale =(double)preferences.getFloat("defaultScale",1 << 17);
         mapView.map().setMapPosition(Constants.lastLocation.getLatitude(),Constants.lastLocation.getLongitude(), mScale);
     }
 
     public void setupCompass() {
         mCompass = new Compass(this, mapView.map(), compassImage);
         mCompass.setEnabled(true);
-        mCompass.setMode(Compass.Mode.C2D);
+        mCompass.setMode(defaultMode);
     }
 
     public void openTest(){
@@ -500,12 +510,14 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 //                Toast.makeText(mContext,mBarriosLayer.getContainingBarrio(new GeoPoint(13.09,-86.36)).getBarrioName(),Toast.LENGTH_LONG).show();
 //                return true;
 //            }
-            if (g instanceof Gesture.Tap) {
+            if (g instanceof Gesture.DoubleTap) {
+                mTilt = preferences.getFloat("defaultTilt",30.0f);
+                mScale =(double)preferences.getFloat("defaultScale",1 << 17);
+                MapPosition defaultView=new MapPosition(endLocation.getLatitude(),endLocation.getLongitude(),mScale);
+                defaultView.setTilt(mTilt);
+                mapView.map().animator().animateTo(800,defaultView, Easing.Type.SINE_IN);
 
-//                endLocation.setLatitude(p.getLatitude());
-//                endLocation.setLongitude(p.getLongitude());
-//                startMoveAnim(500);
-                //mapView.map().animator().animateTo(new GeoPoint(endLocation.getLatitude(),endLocation.getLongitude()));
+                backToCenterImage.setVisibility(View.INVISIBLE);
                 return true;
             }
             if (g instanceof Gesture.LongPress) {
@@ -534,6 +546,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             }
             if (e==Map.TILT_EVENT){
                 mTilt=mapPosition.getTilt();
+                Log.d(TAG, "tilt: "+mTilt);
             }
         }
     }
@@ -639,7 +652,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 mCurrMapLoc.setLongitude(lonMap);
                 if(millisLeft<=0){
                     mCompass.controlView(true);
-                    mCompass.setMode(Compass.Mode.C2D);
+                    mCompass.setMode(defaultMode);
                 }
             }
             mapView.map().updateMap(true);
@@ -697,6 +710,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             public void run() {
                 mDb.taxiDao().clearTaxiBase();
                 mDb.taxiDao().clearTaxiOld();
+                mDb.clientDao().clearTaxiBase();
+                mDb.clientDao().clearTaxiOld();
             }
         });
     }

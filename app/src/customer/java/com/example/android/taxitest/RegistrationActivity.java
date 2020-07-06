@@ -1,15 +1,11 @@
 package com.example.android.taxitest;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
-import androidx.core.graphics.ColorUtils;
-import androidx.core.text.HtmlCompat;
 
-import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -39,20 +35,13 @@ import android.widget.CheckBox;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.NetworkError;
-import com.android.volley.NoConnectionError;
-import com.android.volley.ParseError;
 import com.android.volley.Request;
 import com.android.volley.Response;
-import com.android.volley.ServerError;
-import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.android.taxitest.connection.MySingleton;
@@ -61,9 +50,7 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.skydoves.balloon.ArrowOrientation;
 import com.skydoves.balloon.Balloon;
 import com.skydoves.balloon.BalloonAnimation;
-import com.skydoves.balloon.TextForm;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -83,14 +70,14 @@ import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 public class RegistrationActivity extends AppCompatActivity {
 
-    EditText firstName, lastName, phoneNr, carDescription, nrPlate;
+    EditText firstName, lastName, phoneNr, priorities, nrPlate;
     TextInputLayout loFirstName, loGender, loDob, loPhone, loNrPlate;
     AutoCompleteTextView gender;
     EditText dob;
-    TextView textPhotoFace, textPhotoCar, textWarning;
+    TextView textPhotoFace, textWarning;
     CheckBox sharePhone, agreeToTerms;
 
-    ImageView photoFace, photoCar, infoFirst, infoLast, infoPlate, infoDesc, infoSharePhone;
+    ImageView photoFace, infoFirst, infoLast, infoPhone, infoPrio, infoSharePhone;
     Button register, readTerms;
     ScrollView svParent;
 
@@ -99,13 +86,14 @@ public class RegistrationActivity extends AppCompatActivity {
 
     int REQUEST_TAKE_FACE=1011;
     int REQUEST_TAKE_CAR=1111;
-    int REQUEST_CODE=222;
+    int REQUEST_CODE=223;
 
     private static final String TAG = "RegistrationActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setTheme(R.style.AppTheme);
         setContentView(R.layout.activity_registration);
         getSupportActionBar().setTitle("Welcome to TaxiTest");
         initViews();
@@ -114,9 +102,9 @@ public class RegistrationActivity extends AppCompatActivity {
 
         buildTooltips(infoFirst,"using your real name will increase\n the trust of your clients",0.9f);
         buildTooltips(infoLast,"adding a last name will increase\n the trust of your clients",0.9f);
-        buildTooltips(infoPlate,"i.e. ES123567 or M891011",0.90f);
-        buildTooltips(infoDesc,"i.e. red KIA or new Corolla silver",0.90f);
-        buildTooltips(infoSharePhone,"optional, your phone will only\n be shared with clients you have\n traveled with",0.90f);
+        buildTooltips(infoPhone,"i.e. 8765-4321 or +1-179-123456",0.90f);
+        buildTooltips(infoPrio,"optional, i.e. speed, price, security\n or that the driver is good looking",0.90f);
+        buildTooltips(infoSharePhone,"optional, your phone will only\n be shared with drivers you have\n traveled with",0.90f);
 
         //gender
         List<String> sexes= Arrays.asList("male","female");
@@ -176,27 +164,6 @@ public class RegistrationActivity extends AppCompatActivity {
 
         });
 
-        //photo car
-        photoCar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    if (checkSelfPermission(CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                        dispatchTakePictureIntent(REQUEST_TAKE_CAR);
-
-                    } else {
-                        String[] permissionRequested = {CAMERA};
-                        ActivityCompat.requestPermissions(RegistrationActivity.this,permissionRequested,REQUEST_CODE);
-                    }
-
-                } else {
-                    dispatchTakePictureIntent(REQUEST_TAKE_CAR);
-                }
-            }
-
-
-        });
 
         readTerms.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -219,15 +186,12 @@ public class RegistrationActivity extends AppCompatActivity {
         firstName=(EditText) findViewById(R.id.et_first_name);
         lastName=(EditText) findViewById(R.id.et_last_name);
         phoneNr=(EditText) findViewById(R.id.et_phone);
-        carDescription=(EditText) findViewById(R.id.et_car_desc);
-        nrPlate=(EditText) findViewById(R.id.et_plate);
+        priorities =(EditText) findViewById(R.id.et_prio);
         dob=(EditText) findViewById(R.id.et_dob);
         gender=(AutoCompleteTextView) findViewById(R.id.actv_gender);
         photoFace=(ImageView) findViewById(R.id.iv_photo_face);
-        photoCar=(ImageView) findViewById(R.id.iv_photo_car);
         register=(Button) findViewById(R.id.bt_register);
         textPhotoFace=(TextView) findViewById(R.id.tv_face);
-        textPhotoCar=(TextView) findViewById(R.id.tv_car);
         sharePhone=(CheckBox) findViewById(R.id.cb_share_phone);
         agreeToTerms=(CheckBox) findViewById(R.id.cb_terms);
         readTerms=(Button) findViewById(R.id.bt_terms);
@@ -236,12 +200,11 @@ public class RegistrationActivity extends AppCompatActivity {
         loGender=(TextInputLayout) findViewById(R.id.lo_gender);
         loDob =(TextInputLayout) findViewById(R.id.lo_dob);
         loPhone=(TextInputLayout) findViewById(R.id.lo_phone);
-        loNrPlate=(TextInputLayout) findViewById(R.id.lo_plate);
 
         infoFirst=(ImageView) findViewById(R.id.iv_info_first_name);
         infoLast=(ImageView) findViewById(R.id.iv_info_last_name);
-        infoPlate=(ImageView) findViewById(R.id.iv_info_nr_plate);
-        infoDesc=(ImageView) findViewById(R.id.iv_info_car_desc);
+        infoPhone =(ImageView) findViewById(R.id.iv_info_nr_plate);
+        infoPrio =(ImageView) findViewById(R.id.iv_info_prio);
         infoSharePhone =(ImageView) findViewById(R.id.iv_info_share_phone);
         textWarning=(TextView) findViewById(R.id.tv_warning);
 
@@ -398,7 +361,7 @@ public class RegistrationActivity extends AppCompatActivity {
     private void setPicture(int code){
         File medium=imageFile(code, Size.MED);
         String clientMedium=medium.getAbsolutePath();
-        ImageView view=code==REQUEST_TAKE_FACE?photoFace:photoCar;
+        ImageView view=photoFace;
         if (medium.exists()) {
             Bitmap bitmap = BitmapFactory.decodeFile(clientMedium);
             view.setImageBitmap(bitmap);
@@ -477,18 +440,14 @@ public class RegistrationActivity extends AppCompatActivity {
         boolean checkFirst  =checkIsEmpty(firstName,loFirstName);
         boolean checkGender =checkIsEmpty(gender,loGender);
         boolean checkDob   =checkIsEmpty(dob,loDob);
-        boolean checkPlate =checkIsEmpty(nrPlate,loNrPlate);
         boolean checkPhone =checkPhoneNumber();
         boolean checkFace  =checkPhotos(REQUEST_TAKE_FACE,textPhotoFace);
-        boolean checkCar   =checkPhotos(REQUEST_TAKE_CAR,textPhotoCar);
         boolean checkAgree =checkAgreed();
         return (checkFirst&&
                 checkGender&&
                 checkDob&&
-                checkPlate&&
                 checkPhone&&
                 checkFace&&
-                checkCar&&
                 checkAgree);
     }
 
@@ -512,7 +471,6 @@ public class RegistrationActivity extends AppCompatActivity {
         try {
             String lastNameStr=firstName.getText()==null?"":lastName.getText().toString();
             String phoneStr=phoneNr.getText()==null?"":MiscellaneousUtils.depuratePhone(phoneNr.getText().toString());
-            String carDescStr=carDescription.getText()==null?"":carDescription.getText().toString();
 
             JSONObject json=new JSONObject();
             json.put("firstName",firstName.getText().toString());
@@ -521,8 +479,7 @@ public class RegistrationActivity extends AppCompatActivity {
             json.put("gender",gender.getText().toString().substring(0,1));
             json.put("phone",phoneStr);
             json.put("sharePhone",sharePhone.isChecked()?1:0);
-            json.put("nrPlate",nrPlate.getText().toString());
-            json.put("carDesc",carDescStr);
+            json.put("extra","");
             json.put("timestamp",MiscellaneousUtils.getDateString(new Date()));
             json.put("photo",mBase64);
             return json;
@@ -543,7 +500,7 @@ public class RegistrationActivity extends AppCompatActivity {
         JsonObjectRequest jsonObjectRequest;
 
         jsonObjectRequest = new JsonObjectRequest
-                (Request.Method.POST, Constants.SERVER_URL + "register_driver.php", backupJson, new Response.Listener<JSONObject>() {
+                (Request.Method.POST, Constants.SERVER_URL + "register_client.php", backupJson, new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
                         try {
@@ -553,15 +510,15 @@ public class RegistrationActivity extends AppCompatActivity {
                                 register.setEnabled(false);
                                 int id=response.getInt("taxiId");
                                 SharedPreferences.Editor editor=preferences.edit();
-                                editor.putString("taxiId",MiscellaneousUtils.getStringId(id));
+                                editor.putString("taxiId",CustomUtils.getOwnStringId(id));
                                 editor.apply();
                                 if (loadingDialog.isShowing())
                                 loadingDialog.dismiss();
-                                Dialog successDialog=makeRegistrationDialog(context,false,false,MiscellaneousUtils.getStringId(id));
+                                Dialog successDialog=makeRegistrationDialog(context,false,false,CustomUtils.getOwnStringId(id));
                                 successDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
                                     @Override
                                     public void onDismiss(DialogInterface dialogInterface) {
-                                        Intent i = new Intent(RegistrationActivity.this, EntryActivityDriver.class);
+                                        Intent i = new Intent(RegistrationActivity.this, EntryActivityCustomer.class);
                                         startActivity(i);
                                     }
                                 });
@@ -629,7 +586,7 @@ public class RegistrationActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if (!loading && !error) {
-                    Intent i = new Intent(RegistrationActivity.this, EntryActivityDriver.class);
+                    Intent i = new Intent(RegistrationActivity.this, EntryActivityCustomer.class);
                     startActivity(i);
                 }
                 dialog.dismiss();

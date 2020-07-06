@@ -68,7 +68,7 @@ public abstract class TaxiDao {
     @Transaction
     public void runPreOutputTransactions(List<TaxiObject> newData, int myId){
         insertNewData(newData);
-        deleteMySelf(myId);
+        //deleteMySelf(myId);
         clearInactiveNewTaxis();
     }
 

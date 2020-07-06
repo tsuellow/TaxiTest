@@ -1,10 +1,11 @@
 package com.example.android.taxitest;
 
+import android.content.Intent;
 import android.location.Location;
-import android.util.Log;
+import android.os.Bundle;
 import android.view.View;
 
-import com.example.android.taxitest.connection.WebSocketDriverLocations;
+import com.example.android.taxitest.data.ClientObject;
 import com.example.android.taxitest.data.TaxiObject;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
 import com.example.android.taxitest.vtmExtension.OtherTaxiLayer;
@@ -15,23 +16,54 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationResult;
 import com.sdsmdg.harjot.vectormaster.VectorMasterDrawable;
 
+import org.oscim.android.theme.AssetsRenderTheme;
+import org.oscim.core.GeoPoint;
+
 import java.util.ArrayList;
 
-import static android.content.ContentValues.TAG;
+public class MainActivityCustomer extends MainActivity {
 
-public class MainActivityDriver extends MainActivity{
-    private static final String TAG = "MainActivityDriver";
+    public static int seatAmount;
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Intent intent=getIntent();
+        if (intent!=null){
+            seatAmount=intent.getIntExtra("SEATS",1);
+        }else {
+            seatAmount=1;
+        }
+    }
+
+    @Override
+    public void setupMap() {
+        // Render theme
+        mapView.map().setTheme(new AssetsRenderTheme(getAssets(),"", "vtm/day_mode.xml"));
+        //add set pivot
+        mapView.map().viewport().setMapViewCenter(0.0f, 0.25f);
+        //set important variables
+        mTilt = mapView.map().viewport().getMinTilt();
+        mScale = 1 << 17;
+        mapView.map().setMapPosition(Constants.lastLocation.getLatitude(),Constants.lastLocation.getLongitude(), mScale);
+    }
+
+    @Override
+    public void setupCompass() {
+        mCompass = new Compass(this, mapView.map(), compassImage);
+        mCompass.setEnabled(true);
+        mCompass.setMode(Compass.Mode.OFF);
+    }
 
     @Override
     public void setupOtherMarkerLayer() {
-        mOtherTaxisLayer=new OtherTaxiLayer(mContext, mBarriosLayer,mapView.map(),new ArrayList<TaxiMarker>(), mWebSocketClientLocs, mConnectionLineLayer, rvCommsAdapter);
+        mOtherTaxisLayer=new OtherTaxiLayer(mContext, mBarriosLayer,mapView.map(),new ArrayList<TaxiMarker>(), mWebSocketDriverLocs, mConnectionLineLayer, rvCommsAdapter);
     }
 
     @Override
     public void setOwnMarkerLayer() {
-        ownIcon=new VectorMasterDrawable(this,R.drawable.icon_taxi);
+        ownIcon=new VectorMasterDrawable(this,R.drawable.icon_client);
         mOwnMarkerLayer= new OwnMarkerLayer(mContext, mBarriosLayer,mapView.map(),new ArrayList<OwnMarker>(),ownIcon, Constants.lastLocation,destGeo,mCompass);
-        mWebSocketDriverLocs.mSocket.connect();
+        mWebSocketClientLocs.mSocket.connect();
 
     }
 
@@ -55,32 +87,12 @@ public class MainActivityDriver extends MainActivity{
                     startMoveAnim(500);
                 }
                 //emit current position
-                mOwnTaxiObject=new TaxiObject(MiscellaneousUtils.getNumericId(myId),endLocation.getLatitude(),endLocation.getLongitude(),endLocation.getTime(),mCompass.getRotation(),"t",destGeo.getLatitude(),destGeo.getLongitude(),1);
+                mOwnTaxiObject=new ClientObject(MiscellaneousUtils.getNumericId(myId),endLocation.getLatitude(),endLocation.getLongitude(),endLocation.getTime(),mCompass.getRotation(),seatAmount,"",destGeo.getLatitude(),destGeo.getLongitude(),1);
                 //this should be different websocket
-                mWebSocketDriverLocs.attemptSend(mOwnTaxiObject.objectToCsv());
-                Log.d(TAG, "onLocationResult: "+mOwnTaxiObject.objectToCsv());
+                mWebSocketClientLocs.attemptSend(mOwnTaxiObject.objectToCsv());
             }
 
             ;
         };
-    }
-
-    @Override
-    public void setupFilterButton() {
-        //filter button
-        filterImage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (!filterOn){
-                    filterOn=true;
-                    mWebSocketClientLocs.setFilter(true);
-                    filterImage.setImageAlpha(255);
-                }else{
-                    filterOn=false;
-                    mWebSocketClientLocs.setFilter(false);
-                    filterImage.setImageAlpha(100);
-                }
-            }
-        });
     }
 }

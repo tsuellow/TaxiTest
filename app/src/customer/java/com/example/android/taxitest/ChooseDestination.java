@@ -273,9 +273,10 @@ public class ChooseDestination extends AppCompatActivity {
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        Intent intent = new Intent(ChooseDestination.this, MainActivity.class);
+                        Intent intent = new Intent(ChooseDestination.this, MainActivityCustomer.class);
                         intent.putExtra("DEST_LAT",destGeo.getLatitude());
                         intent.putExtra("DEST_LON",destGeo.getLongitude());
+                        intent.putExtra("SEATS",seatAmount);
                         startActivity(intent);
                     }
                 },300);

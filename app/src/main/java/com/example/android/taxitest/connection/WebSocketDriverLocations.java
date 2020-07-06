@@ -28,12 +28,15 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static android.content.ContentValues.TAG;
 import static com.example.android.taxitest.utils.MiscellaneousUtils.locToGeo;
 
 
 public class WebSocketDriverLocations {
 
-    private Socket mSocket;
+    private static final String TAG = "WebSocketDriverLocation";
+
+    public Socket mSocket;
     private List<TaxiObject> mNewPositionsList=new ArrayList<TaxiObject>();
     protected CommunicationsAdapter commsInfo;
     protected boolean filterOn=false;
@@ -95,6 +98,7 @@ public class WebSocketDriverLocations {
 
     public void attemptSend(String locationObject){
         mSocket.emit("location update", locationObject);
+        Log.d(TAG, "attemptSend: worked"+mSocket.toString());
 
     }
 

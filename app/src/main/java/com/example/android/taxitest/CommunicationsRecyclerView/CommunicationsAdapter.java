@@ -25,6 +25,7 @@ import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.android.taxitest.CustomUtils;
 import com.example.android.taxitest.MainActivity;
 import com.example.android.taxitest.R;
 import com.example.android.taxitest.RecordButtonUtils.RecordButton;
@@ -125,7 +126,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
                 int index=mComms.indexOf(comm);
                 //send cancellation msj
                 if (comm.mMsjStatus!=CommsObject.OBSERVING){
-                    MessageObject msj=new MessageObject(MiscellaneousUtils.getStringId(taxiId),CommsObject.REJECTED);
+                    MessageObject msj=new MessageObject(CustomUtils.getOtherStringId(taxiId),CommsObject.REJECTED);
                     attemptSendMsj(msj);
                 }
                 if (comm.isPlaying){
@@ -226,16 +227,16 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
         holder.destination.setText(comm.taxiMarker.barrio);
         holder.destination.setTextColor(comm.taxiMarker.color);
         holder.destColor.setCardBackgroundColor(comm.taxiMarker.color);
-        holder.recordButton.setCommId(MiscellaneousUtils.getStringId(taxiId));
+        holder.recordButton.setCommId(CustomUtils.getOtherStringId(taxiId));
 
         comm.setDataUpdateListener(new CommsObject.DataUpdateListener() {
             @Override
             public void onDataUpdateReceived() {
-                holder.name.setText(comm.firstName);
-                holder.photo.setImageBitmap(comm.photo);
+                holder.name.setText(comm.commCardData.title);
+                holder.photo.setImageBitmap(comm.commCardData.photo);
                 holder.loadingFace.setVisibility(View.GONE);
-                holder.numberPlate.setText(comm.collar);
-                double rounded = Math. round(comm.reputation * 100.0) / 100.0;
+                holder.numberPlate.setText(comm.commCardData.collar);
+                double rounded = Math. round(comm.commCardData.reputation * 100.0) / 100.0;
                 holder.reputation.setText(String.valueOf(rounded));
             }
         });
@@ -298,7 +299,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
             @Override
             public void onRecordingStarted() {
                 isRecording=true;
-                whoIsRecording=MiscellaneousUtils.getStringId(taxiId);
+                whoIsRecording=CustomUtils.getOtherStringId(taxiId);
                 attemptSendAck(new AcknowledgementObject(comm, CommsObject.RECORDING_STARTED,"rec"));
                 holder.descriptionText.setTextColor(ContextCompat.getColor(mContext,R.color.colorBlue));
                 holder.descriptionPointer.setTextColor(ContextCompat.getColor(mContext,R.color.colorBlue));

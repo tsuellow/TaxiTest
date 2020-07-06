@@ -3,6 +3,7 @@ package com.example.android.taxitest.CommunicationsRecyclerView;
 import android.util.Log;
 
 import com.example.android.taxitest.Constants;
+import com.example.android.taxitest.CustomUtils;
 import com.example.android.taxitest.MainActivity;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
 
@@ -23,7 +24,7 @@ public class AcknowledgementObject {
 
     public AcknowledgementObject(CommsObject comm, int ackCode, String msgId) {
         sendingId = MainActivity.myId;
-        receivingId = MiscellaneousUtils.getStringId(comm.taxiMarker.taxiObject.getTaxiId());
+        receivingId = CustomUtils.getOtherStringId(comm.taxiMarker.taxiObject.getTaxiId());
         this.ackCode = ackCode;
         this.msgId=msgId;
         timestamp=new Date().getTime();

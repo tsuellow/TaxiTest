@@ -48,7 +48,7 @@ public class EntryActivity extends AppCompatActivity {
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        Intent intent = new Intent(EntryActivity.this, ChooseDestination.class);
+                        Intent intent = new Intent(EntryActivity.this, MainActivity.class);
                         startActivity(intent);
                     }
                 },300);

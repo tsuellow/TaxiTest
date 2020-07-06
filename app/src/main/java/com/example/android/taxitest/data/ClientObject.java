@@ -9,7 +9,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonPropertyOrder({"taxiId","latitude","longitude","locationTime","rotation","seats","extra","destinationLatitude","destinationLongitude","isActive"})
 @Entity(tableName = "clientBase")
-public class ClientObject implements SocketObject, Comparable<TaxiObject> {
+public class ClientObject implements SocketObject, Comparable<ClientObject> {
+
     @PrimaryKey
     private int taxiId;
     private double latitude;
@@ -17,7 +18,7 @@ public class ClientObject implements SocketObject, Comparable<TaxiObject> {
     private long locationTime;
     private float rotation;
     private int seats;
-    public String extra;
+    private String extra;
     private double destinationLatitude;
     private double destinationLongitude;
     private int isActive;
@@ -144,7 +145,7 @@ public class ClientObject implements SocketObject, Comparable<TaxiObject> {
     }
 
     @Override
-    public int compareTo(@NonNull TaxiObject taxiObject) {
-        return Integer.compare(this.getTaxiId(),taxiObject.getTaxiId());
+    public int compareTo(@NonNull ClientObject clientObject) {
+        return Integer.compare(this.getTaxiId(),clientObject.getTaxiId());
     }
 }

@@ -68,7 +68,7 @@ public abstract class ClientDao {
     @Transaction
     public void runPreOutputTransactions(List<ClientObject> newData, int myId){
         insertNewData(newData);
-        deleteMySelf(myId);
+        //deleteMySelf(myId);
         clearInactiveNewTaxis();
     }
 

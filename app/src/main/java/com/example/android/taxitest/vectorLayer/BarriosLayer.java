@@ -23,7 +23,7 @@ import java.util.List;
 public class BarriosLayer extends VectorLayer {
     Context mContext;
     int mResource;
-    BarrioPolygonDrawable noBarrioSelected;
+    BarrioPolygonDrawable noBarrioSelected, noDestinationSelected;
 
     private List<BarrioPolygonDrawable> fullDrawables=new ArrayList<>();
 
@@ -47,11 +47,14 @@ public class BarriosLayer extends VectorLayer {
         entireCountry.add(new GeoPoint(15.3,-82.0));
         entireCountry.add(new GeoPoint(10.5,-82.0));
         entireCountry.add(new GeoPoint(10.5,-89.0));
+        List<GeoPoint> nowhere=new ArrayList<>();
+        nowhere.add(new GeoPoint(0.1,0.1));
+        nowhere.add(new GeoPoint(0.1,-0.1));
+        nowhere.add(new GeoPoint(-0.1,-0.1));
+        nowhere.add(new GeoPoint(-0.1,0.1));
         noBarrioSelected=new BarrioPolygonDrawable(entireCountry,BarrioPolygonDrawable.sb.build(),"outside of city",-1);
+        noDestinationSelected=new BarrioPolygonDrawable(nowhere,BarrioPolygonDrawable.sb.fillColor(Color.WHITE).build(), "empty",-2);
     }
-
-
-
 
 
     public void addBarrio(BarrioPolygonDrawable drawable){
@@ -60,21 +63,6 @@ public class BarriosLayer extends VectorLayer {
     }
 
 
-
-
-    public synchronized String containsBarrio(float x, float y) {
-        GeoPoint geoPoint = mMap.viewport().fromScreenPoint(x, y);
-        Point point = new GeomBuilder().point(geoPoint.getLongitude(), geoPoint.getLatitude()).toPoint();
-        for (Drawable drawable : tmpDrawables) {
-            if (drawable.getGeometry().contains(point)) {
-                if (drawable.getClass() == BarrioPolygonDrawable.class) {
-                    return ((BarrioPolygonDrawable) drawable).getBarrioName();
-                }
-            }
-        }
-        return "outside of city";
-    }
-
     public synchronized BarrioPolygonDrawable getContainingBarrio(GeoPoint geoPoint){
         Point point = new GeomBuilder().point(geoPoint.getLongitude(), geoPoint.getLatitude()).toPoint();
         for (BarrioPolygonDrawable drawable : fullDrawables) {
@@ -82,6 +70,11 @@ public class BarriosLayer extends VectorLayer {
                 return drawable;
             }
         }
+        //if dest is default 0.0 , 0.0 if means no destination was selected i.e. taxi is empty
+        if (geoPoint.equals(new GeoPoint(0.0,0.0))){
+            return noDestinationSelected;
+        }
+        // if user clicks somewhere else in map
         return noBarrioSelected;
     }
 
@@ -99,7 +92,7 @@ public class BarriosLayer extends VectorLayer {
                 Toast.makeText(mContext, "ID \n" + p, Toast.LENGTH_SHORT).show();
                 return true;
             }
-//            if (g instanceof Gesture.TripleTap) {
+//            if (g instanceof Gesture.DoubleTap) {
 //                GeoPoint p = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
 //                Toast.makeText(mContext, "Map triple tap\n" + p, Toast.LENGTH_SHORT).show();
 //                return true;

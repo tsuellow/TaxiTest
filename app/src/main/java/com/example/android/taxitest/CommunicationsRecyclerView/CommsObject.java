@@ -21,6 +21,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.android.taxitest.Constants;
+import com.example.android.taxitest.CustomUtils;
 import com.example.android.taxitest.MainActivity;
 import com.example.android.taxitest.R;
 import com.example.android.taxitest.connection.MySingleton;
@@ -73,13 +74,33 @@ public class CommsObject {
     }
 
     //driver info driverObject from room DB
-    String firstName;
-    String lastName;
-    String collar;
-    double reputation;
-    Date dob;
-    String gender;
-    Bitmap photo;
+    public CardData commCardData;
+    public void setCommCardData(CardData cardData){
+        commCardData=cardData;
+    }
+    public class CardData{
+        public String collar;
+        public String title;
+
+        public String firstName;
+        public String lastName;
+        public String extra;
+        public double reputation;
+        public Date dob;
+        public String gender;
+        public Bitmap photo;
+
+        public CardData(String title, String collar, String firstName, String lastName, double reputation, Date dob, String gender, Bitmap photo) {
+            this.title=title;
+            this.collar = collar;
+            this.firstName = firstName;
+            this.lastName = lastName;
+            this.reputation = reputation;
+            this.dob = dob;
+            this.gender = gender;
+            this.photo = photo;
+        }
+    }
 
     //list of individual communications
 
@@ -275,7 +296,7 @@ public class CommsObject {
         try {
             JSONObject json=new JSONObject();
             json.put("taxiId" ,taxiMarker.taxiObject.getTaxiId());
-            requestCommData(json);
+            requestCommData(json, this);
         }catch (JSONException e){
             e.printStackTrace();
         }
@@ -283,30 +304,19 @@ public class CommsObject {
     }
 
 
-    public void requestCommData(JSONObject json){
+    public void requestCommData(JSONObject json, final CommsObject commsObject){
 
         JsonObjectRequest jsonObjectRequestDriver;
-        String php="get_driver.php";
 
         jsonObjectRequestDriver = new JsonObjectRequest
-                (Request.Method.POST, Constants.SERVER_URL + php, json, new Response.Listener<JSONObject>() {
+                (Request.Method.POST, Constants.SERVER_URL + CustomUtils.phpFile, json, new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
                         try {
                             String res = response.getString("response");
                             if (res.equals("OK")) {
                                 JSONObject data=(JSONObject) response.get("data");
-                                firstName=data.getString("firstName");
-                                lastName=data.getString("lastName");
-                                collar =data.getString("nrPlate");
-                                String dateStr=data.getString("dob");
-                                dob=MiscellaneousUtils.String2Date(dateStr);
-                                String genStr=data.getString("gender");
-                                gender= genStr.equals("m") ?"male":"female";
-                                reputation=data.getDouble("repAvg");
-                                String base64=data.getString("photo");
-                                byte[] biteOutput = Base64.decode(base64, 0);
-                                photo = BitmapFactory.decodeByteArray(biteOutput, 0, biteOutput.length);
+                                CustomUtils.interpretJson(data,commsObject);
                                 dataUpdateListener.onDataUpdateReceived();
 
 
