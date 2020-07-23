@@ -12,6 +12,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -38,6 +40,7 @@ import com.github.nkzawa.socketio.client.Socket;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 import org.oscim.utils.ThreadUtils;
 
@@ -51,11 +54,11 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
 
     private static final String LOG_TAG = "AudioRecordTest";
 
-    private List<CommsObject> mComms;
+    public List<CommsObject> mComms;
     private Context mContext;
     ConnectionLineLayer2 connectionLines;
     public List<MessageObject> newIncomingComms=new ArrayList<>();
-
+    RecyclerView mRecyclerView;
     public static SoundPool soundPool = null;
     public static int soundMsjArrived,soundCanceled,soundAck;
 
@@ -91,6 +94,13 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
 
     }
 
+    @Override
+    public void onAttachedToRecyclerView(@NotNull RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+
+        mRecyclerView = recyclerView;
+    }
+
     public void setConnectionLines(ConnectionLineLayer2 connectionLines){
         this.connectionLines=connectionLines;
     }
@@ -119,6 +129,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
     }
 
     public synchronized void cancelById(int taxiId){
+        Log.d("testes", "cancelById: is happening");
         Iterator<CommsObject> i = mComms.iterator();
         while (i.hasNext()) {
             CommsObject comm = i.next();
@@ -138,6 +149,45 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
                 break;
             }
         }
+    }
+
+    public void cancelByIdWithAnim(int taxiId) {
+        Log.d("commies", "cancelByIdWithAnim: "+taxiId);
+        CommsObject comm=mComms.get(getCommIndex(taxiId));
+        int index=mComms.indexOf(comm);
+        Animation anim = AnimationUtils.loadAnimation(mContext,
+                android.R.anim.slide_out_right);
+        anim.setDuration(300);
+        View itemView=mRecyclerView.getLayoutManager().findViewByPosition(index);
+        if (itemView!=null)
+        itemView.startAnimation(anim);
+
+        if (comm.mMsjStatus!=CommsObject.OBSERVING){
+            MessageObject msj=new MessageObject(CustomUtils.getOtherStringId(taxiId),CommsObject.REJECTED);
+            attemptSendMsj(msj);
+        }
+        if (comm.isPlaying){
+            comm.stopPlaying();
+        }
+
+        anim.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                int index=mComms.indexOf(comm);
+                mComms.remove(comm);
+                notifyItemRemoved(index);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
     }
 
     public int getCommIndex(int taxiId){
@@ -358,11 +408,11 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
                         //send acceptance
                         MetaMessageObject metaMsjAccept=new MetaMessageObject(CommsObject.ACCEPTED,null,currComm);
                         currComm.setAccepted(true);
-                        commAcceptedListener.onCommAccepted(currComm);
                         currComm.addAtTopOfMsjList(metaMsjAccept);
                         MessageObject msjAccept=metaMsjAccept.getMsjObject();
                         attemptSendMsj(msjAccept);
                         connectionLines.playCommAnim(taxiId);
+                        commAcceptedListener.onCommAccepted(currComm);
                         break;
                     case  CommsObject.BT_ACCEPTED:
                         //paint btn black
@@ -542,6 +592,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
                     MessageObject msj=MessageObject.readIntoMsj(jsonObject);
                     int id = MiscellaneousUtils.getNumericId(msj.getSendingId());
                     if (getCommIndex(id)==-1){//comm is new incoming
+                        Log.d("testes","new msj inv "+msj.getIntentCode());
                         newIncomingComms.add(msj);
                         messageInvitationListener.onInvitationReceived(msj);
                     }else{//comm is already there

@@ -106,6 +106,7 @@ public class RegistrationActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setTheme(R.style.AppTheme);
         setContentView(R.layout.activity_registration);
         getSupportActionBar().setTitle("Welcome to TaxiTest");
         initViews();
@@ -553,11 +554,11 @@ public class RegistrationActivity extends AppCompatActivity {
                                 register.setEnabled(false);
                                 int id=response.getInt("taxiId");
                                 SharedPreferences.Editor editor=preferences.edit();
-                                editor.putString("taxiId",MiscellaneousUtils.getStringId(id));
+                                editor.putString("taxiId",CustomUtils.getOwnStringId(id));
                                 editor.apply();
                                 if (loadingDialog.isShowing())
                                 loadingDialog.dismiss();
-                                Dialog successDialog=makeRegistrationDialog(context,false,false,MiscellaneousUtils.getStringId(id));
+                                Dialog successDialog=makeRegistrationDialog(context,false,false,CustomUtils.getOwnStringId(id));
                                 successDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
                                     @Override
                                     public void onDismiss(DialogInterface dialogInterface) {

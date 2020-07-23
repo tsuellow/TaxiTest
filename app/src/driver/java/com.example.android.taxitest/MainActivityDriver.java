@@ -1,9 +1,16 @@
 package com.example.android.taxitest;
 
+import android.content.Intent;
 import android.location.Location;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
+import com.example.android.taxitest.CommunicationsRecyclerView.CommsObject;
+import com.example.android.taxitest.CommunicationsRecyclerView.CommunicationsAdapter;
 import com.example.android.taxitest.connection.WebSocketDriverLocations;
 import com.example.android.taxitest.data.TaxiObject;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
@@ -23,8 +30,26 @@ public class MainActivityDriver extends MainActivity{
     private static final String TAG = "MainActivityDriver";
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        rvCommsAdapter.setCommAcceptedListener(new CommunicationsAdapter.CommAcceptedListener() {
+            @Override
+            public void onCommAccepted(CommsObject comm) {
+
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        showChangeDestDialog(comm.taxiMarker.destGeoPoint,true);
+                    }
+                });
+
+            }
+        });
+    }
+
+    @Override
     public void setupOtherMarkerLayer() {
-        mOtherTaxisLayer=new OtherTaxiLayer(mContext, mBarriosLayer,mapView.map(),new ArrayList<TaxiMarker>(), mWebSocketClientLocs, mConnectionLineLayer, rvCommsAdapter);
+        mOtherTaxisLayer=new OtherClientsLayer(mContext, mBarriosLayer,mapView.map(),new ArrayList<TaxiMarker>(), mWebSocketClientLocs, mConnectionLineLayer, rvCommsAdapter);
     }
 
     @Override
@@ -82,5 +107,23 @@ public class MainActivityDriver extends MainActivity{
                 }
             }
         });
+    }
+
+    @Override
+    public void exitSearch() {
+        Intent intent = new Intent(MainActivityDriver.this, EntryActivityDriver.class);
+        finish();
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+    }
+
+    @Override
+    public void doOnDestroy() {
+        setIsActive(0);
+        mOwnTaxiObject=new TaxiObject(MiscellaneousUtils.getNumericId(myId),endLocation.getLatitude(),
+                endLocation.getLongitude(),endLocation.getTime(),mCompass.getRotation(),"t",
+                destGeo.getLatitude(),destGeo.getLongitude(),isActive);
+        mWebSocketDriverLocs.attemptSend(mOwnTaxiObject.objectToCsv());
+        super.doOnDestroy();
     }
 }

@@ -4,12 +4,14 @@ import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 
+import com.example.android.taxitest.AppExecutors;
 import com.example.android.taxitest.CommunicationsRecyclerView.CommunicationsAdapter;
 import com.example.android.taxitest.Constants;
 import com.example.android.taxitest.MainActivity;
 import com.example.android.taxitest.data.SocketObject;
 import com.example.android.taxitest.data.SqlLittleDB;
 import com.example.android.taxitest.data.TaxiDao;
+import com.example.android.taxitest.data.TaxiNew;
 import com.example.android.taxitest.data.TaxiObject;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
 import com.fasterxml.jackson.databind.ObjectReader;
@@ -37,11 +39,11 @@ public class WebSocketDriverLocations {
     private static final String TAG = "WebSocketDriverLocation";
 
     public Socket mSocket;
-    private List<TaxiObject> mNewPositionsList=new ArrayList<TaxiObject>();
+    private List<TaxiNew> mNewPositionsList=new ArrayList<TaxiNew>();
     protected CommunicationsAdapter commsInfo;
     protected boolean filterOn=false;
     boolean processIsRunning=false;
-
+    boolean isFirstTime=true;
 
     public SqlLittleDB mDb;
 
@@ -64,6 +66,7 @@ public class WebSocketDriverLocations {
     }
 
     public void disconnectSocket(){
+        mDataAccumulateTimer.cancel();
         mSocket.off("location update",onLocationUpdate);
         mSocket.disconnect();
     }
@@ -77,16 +80,18 @@ public class WebSocketDriverLocations {
     }
 
     private CsvMapper mapper=new CsvMapper();
-    private CsvSchema schema = mapper.schemaFor(TaxiObject.class).withColumnSeparator('|');
-    private ObjectReader r=mapper.readerFor(TaxiObject.class).with(schema);
+    private CsvSchema schema = mapper.schemaFor(TaxiNew.class).withColumnSeparator('|');
+    private ObjectReader r=mapper.readerFor(TaxiNew.class).with(schema);
 
+    int msjs=0;
     public void initializeSocketListener(){  //add target object itemizedlayer
         onLocationUpdate=new Emitter.Listener() {
             @Override
             public void call(Object... args) {
                 final String csvString=(String) args[0];
+                msjs++;
                 try{
-                    TaxiObject taxiObject=r.readValue(csvString);
+                    TaxiNew taxiObject=r.readValue(csvString);
                     addOrReset(false,taxiObject);
                 }catch(Exception e){
                     e.printStackTrace();
@@ -102,10 +107,22 @@ public class WebSocketDriverLocations {
 
     }
 
-    public synchronized void addOrReset(boolean reset, TaxiObject taxiObject){
+    public synchronized void addOrReset(boolean reset, TaxiNew taxiObject){
+        if (isFirstTime){
+            mDb.taxiDao().clearTaxiBase();
+            mDb.taxiDao().clearTaxiOld();
+            mDb.taxiDao().clearTaxiNew();
+            mDb.clientDao().clearTaxiBase();
+            mDb.clientDao().clearTaxiOld();
+            mDb.clientDao().clearTaxiNew();
+            isFirstTime=false;
+        }
         setProcessIsRunning(true);
         if (reset){
             processReceivedData();
+            Log.d("timing",mNewPositionsList.size()+" arrived taxis");
+            Log.d("timing",msjs+" arrived msjs");
+            msjs=0;
             mNewPositionsList.clear();
         }else{
             mNewPositionsList.add(taxiObject);
@@ -124,26 +141,25 @@ public class WebSocketDriverLocations {
     ExecuteReset executeReset=new ExecuteReset();
 
     public void startAccumulationTimer(){
+
         mDataAccumulateTimer.schedule(executeReset,100,3000);
     }
 
     public void processReceivedData(){
+        mDb.taxiDao().runNewPreOutputTransactions(mNewPositionsList,filterOn,commsInfo.getCommIds());
+//        mDb.taxiDao().runPreOutputTransactions(mNewPositionsList, MiscellaneousUtils.getNumericId(MainActivity.myId));
 
-        mDb.taxiDao().runPreOutputTransactions(mNewPositionsList, MiscellaneousUtils.getNumericId(MainActivity.myId));
-
-        if (filterOn) {
-            //this applies a filter to the data coming through the websocket and leaves only relevant
-            // taxis in the view plus the ones with which communications are already underway
-            SocketFilter sf = new SocketFilter(locToGeo(MainActivity.mMarkerLoc), MainActivity.destGeo, 45.0);
-            mDb.taxiDao().applyDirectionalFilter(sf.bLeft, sf.mLeft, sf.bRight, sf.mRight, sf.signLeft, sf.signRight, commsInfo.getCommIds());
-        }
+//        if (filterOn) {
+//            SocketFilter sf = new SocketFilter(locToGeo(MainActivity.mMarkerLoc), MainActivity.destGeo, 45.0);
+//            mDb.taxiDao().applyDirectionalFilter(sf.bLeft, sf.mLeft, sf.bRight, sf.mRight, sf.signLeft, sf.signRight, commsInfo.getCommIds());
+//        }
 
         //output received data
         final List<TaxiObject> baseArray=mDb.taxiDao().getMatchingTaxiBase();
         final List<TaxiObject> newArray=mDb.taxiDao().getNewTaxis();
 
-        Log.d("taxis in base",baseArray.size()+"");
-        Log.d("taxis in new",newArray.size()+"");
+        Log.d("timing",baseArray.size()+" base taxis");
+        Log.d("timing",newArray.size()+" new taxis");
 
         mAnimationDataListener.onAnimationParametersReceived(baseArray,newArray);
 
@@ -158,49 +174,6 @@ public class WebSocketDriverLocations {
 
     public void setAnimationDataListener(AnimationDataListener listener){
         mAnimationDataListener=listener;
-    }
-
-    public class SocketFilter{
-        public double bRight;
-        public double mRight;
-        public double bLeft;
-        public double mLeft;
-        public int signRight;
-        public int signLeft;
-        public List<Integer> exceptions;
-
-        public SocketFilter(GeoPoint geo, GeoPoint dest, double phi){
-            double tinyCorrection=0.0;
-            if (dest.getLongitude()-geo.getLongitude()==0.0)
-                tinyCorrection=1E-11;
-
-            double slope=(dest.getLatitude()-geo.getLatitude())/(dest.getLongitude()-geo.getLongitude()+tinyCorrection);
-            double theta=Math.toDegrees(Math.atan(slope));
-            Log.d("filterS theta",""+theta);
-
-
-            mLeft=Math.tan(Math.toRadians(theta+phi/2));
-            mRight=Math.tan(Math.toRadians(theta-phi/2));
-            Log.d("filterS slopeR",""+mRight);
-            Log.d("filterS slopeL",""+mLeft);
-
-            bLeft=geo.getLatitude()-mLeft*geo.getLongitude();
-            bRight=geo.getLatitude()-mRight*geo.getLongitude();
-
-            if (theta<90-phi/2 || theta>270+phi/2){
-                signLeft= TaxiDao.BELOW;
-                signRight=TaxiDao.ABOVE;
-            }else if (theta>90-phi/2 && theta<90+phi/2){
-                signLeft=TaxiDao.ABOVE;
-                signRight=TaxiDao.ABOVE;
-            }else if (theta>90+phi/2 && theta<270-phi/2){
-                signLeft=TaxiDao.ABOVE;
-                signRight=TaxiDao.BELOW;
-            }else{
-                signLeft=TaxiDao.BELOW;
-                signRight=TaxiDao.BELOW;
-            }
-        }
     }
 
     public void setFilter(boolean set){

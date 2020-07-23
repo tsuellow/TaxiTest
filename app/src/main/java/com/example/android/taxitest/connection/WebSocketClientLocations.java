@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.example.android.taxitest.CommunicationsRecyclerView.CommunicationsAdapter;
 import com.example.android.taxitest.MainActivity;
+import com.example.android.taxitest.data.ClientNew;
 import com.example.android.taxitest.data.ClientObject;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
 import com.fasterxml.jackson.databind.ObjectReader;
@@ -22,7 +23,7 @@ import static com.example.android.taxitest.utils.MiscellaneousUtils.locToGeo;
 
 public class WebSocketClientLocations extends WebSocketDriverLocations {
 
-    public List<ClientObject> mNewPositionsList=new ArrayList<ClientObject>();
+    public List<ClientNew> mNewPositionsList=new ArrayList<ClientNew>();
 
     public WebSocketClientLocations(String url, Context context, CommunicationsAdapter communicationsAdapter) {
         super(url, context, communicationsAdapter);
@@ -35,7 +36,7 @@ public class WebSocketClientLocations extends WebSocketDriverLocations {
             public void call(Object... args) {
                 final String csvString=(String) args[0];
                 try{
-                    ClientObject clientObject=r.readValue(csvString);
+                    ClientNew clientObject=r.readValue(csvString);
                     addOrReset(false,clientObject);
                 }catch(Exception e){
                     e.printStackTrace();
@@ -48,7 +49,7 @@ public class WebSocketClientLocations extends WebSocketDriverLocations {
     private class ExecuteReset extends TimerTask {
         @Override
         public void run() {
-            addOrReset(true, (ClientObject) null);
+            addOrReset(true, (ClientNew) null);
         }
     };
 
@@ -57,15 +58,15 @@ public class WebSocketClientLocations extends WebSocketDriverLocations {
 
 
     private CsvMapper mapper=new CsvMapper();
-    private CsvSchema schema = mapper.schemaFor(ClientObject.class).withColumnSeparator('|');
-    private ObjectReader r=mapper.readerFor(ClientObject.class).with(schema);
+    private CsvSchema schema = mapper.schemaFor(ClientNew.class).withColumnSeparator('|');
+    private ObjectReader r=mapper.readerFor(ClientNew.class).with(schema);
 
     @Override
     public void startAccumulationTimer() {
         mDataAccumulateTimer.schedule(executeReset,100,5000);
     }
 
-    public synchronized void addOrReset(boolean reset, ClientObject clientObject) {
+    public synchronized void addOrReset(boolean reset, ClientNew clientObject) {
         setProcessIsRunning(true);
         if (reset){
             processReceivedData();
@@ -77,14 +78,7 @@ public class WebSocketClientLocations extends WebSocketDriverLocations {
 
     @Override
     public void processReceivedData() {
-        mDb.clientDao().runPreOutputTransactions(mNewPositionsList, MiscellaneousUtils.getNumericId(MainActivity.myId));
-
-        if (filterOn) {
-            //this applies a filter to the data coming through the websocket and leaves only relevant
-            // taxis in the view plus the ones with which communications are already underway
-            SocketFilter sf = new SocketFilter(locToGeo(MainActivity.mMarkerLoc), MainActivity.destGeo, 45.0);
-            mDb.taxiDao().applyDirectionalFilter(sf.bLeft, sf.mLeft, sf.bRight, sf.mRight, sf.signLeft, sf.signRight, commsInfo.getCommIds());
-        }
+        mDb.clientDao().runNewPreOutputTransactions(mNewPositionsList,filterOn,commsInfo.getCommIds());
 
         //output received data
         final List<ClientObject> baseArray=mDb.clientDao().getMatchingTaxiBase();

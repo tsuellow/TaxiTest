@@ -14,7 +14,9 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
+import com.example.android.taxitest.EntryActivityCustomer;
 import com.example.android.taxitest.MainActivity;
+import com.example.android.taxitest.MainActivityCustomer;
 import com.example.android.taxitest.R;
 
 import org.oscim.core.GeoPoint;
@@ -105,6 +107,40 @@ public class MiscellaneousUtils {
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         assert mNotificationManager != null;
         mNotificationManager.notify(1, mBuilder.build());
+    }
+
+    public static void showExitNotification(Context context,String title, String text) {
+
+        NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(context, MainActivity.NOTIFICATION_CHANNEL_ID)
+                        .setSmallIcon(R.drawable.ic_notification)
+                        .setContentTitle(title)
+                        .setContentText(text)
+                        .setStyle(new NotificationCompat.BigTextStyle()
+                                .bigText(text));
+
+        mBuilder.setDefaults(Notification.DEFAULT_SOUND);
+        mBuilder.setAutoCancel(true);
+
+        Intent closeIntent = new Intent((MainActivityCustomer)context, EntryActivityCustomer.class);
+        ((MainActivityCustomer)context).finish();
+        closeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent piClose = PendingIntent.getActivity(context, 0, closeIntent, 0);
+        mBuilder.addAction(0,"exit app",piClose);
+
+        Intent goToAppIntent = context.getPackageManager()
+                .getLaunchIntentForPackage(context.getPackageName())
+                .setPackage(null)
+                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+
+        PendingIntent piGoToApp = PendingIntent.getActivity(context, 0, goToAppIntent, 0);
+        mBuilder.addAction(0,"open app",piGoToApp);
+        mBuilder.setContentIntent(piGoToApp);
+
+        NotificationManager mNotificationManager =
+                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        assert mNotificationManager != null;
+        mNotificationManager.notify(2, mBuilder.build());
     }
 
     public static String convertTime(long time){

@@ -56,7 +56,7 @@ public class MainActivityCustomer extends MainActivity {
 
     @Override
     public void setupOtherMarkerLayer() {
-        mOtherTaxisLayer=new OtherTaxiLayer(mContext, mBarriosLayer,mapView.map(),new ArrayList<TaxiMarker>(), mWebSocketDriverLocs, mConnectionLineLayer, rvCommsAdapter);
+        mOtherTaxisLayer=new OtherDriversLayer(this, mBarriosLayer,mapView.map(),new ArrayList<TaxiMarker>(), mWebSocketDriverLocs, mConnectionLineLayer, rvCommsAdapter);
     }
 
     @Override
@@ -87,12 +87,32 @@ public class MainActivityCustomer extends MainActivity {
                     startMoveAnim(500);
                 }
                 //emit current position
-                mOwnTaxiObject=new ClientObject(MiscellaneousUtils.getNumericId(myId),endLocation.getLatitude(),endLocation.getLongitude(),endLocation.getTime(),mCompass.getRotation(),seatAmount,"",destGeo.getLatitude(),destGeo.getLongitude(),1);
+                mOwnTaxiObject=new ClientObject(MiscellaneousUtils.getNumericId(myId),endLocation.getLatitude(),
+                        endLocation.getLongitude(),endLocation.getTime(),mCompass.getRotation(),seatAmount,"",
+                        destGeo.getLatitude(),destGeo.getLongitude(),isActive);
                 //this should be different websocket
                 mWebSocketClientLocs.attemptSend(mOwnTaxiObject.objectToCsv());
             }
 
             ;
         };
+    }
+
+    @Override
+    public void doOnDestroy() {
+        setIsActive(0);
+        mOwnTaxiObject=new ClientObject(MiscellaneousUtils.getNumericId(myId),endLocation.getLatitude(),
+                endLocation.getLongitude(),endLocation.getTime(),mCompass.getRotation(),seatAmount,"",
+                destGeo.getLatitude(),destGeo.getLongitude(),isActive);
+        mWebSocketClientLocs.attemptSend(mOwnTaxiObject.objectToCsv());
+        super.doOnDestroy();
+    }
+
+    @Override
+    public void exitSearch() {
+        Intent intent = new Intent(MainActivityCustomer.this, EntryActivityCustomer.class);
+        finish();
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
     }
 }

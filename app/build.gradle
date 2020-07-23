@@ -33,6 +33,7 @@ android {
 
 dependencies {
     implementation 'androidx.appcompat:appcompat'
+    implementation 'androidx.navigation:navigation-ui:2.3.0'
 
     //vtm dep
     def vtm_version = "0.13.0"

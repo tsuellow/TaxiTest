@@ -59,6 +59,8 @@ public class TaxiMarker implements MarkerInterface, Comparable<TaxiMarker> {
 
     public void setPurposeTaxiObject(SocketObject purposeTaxiObject) {
         this.purposeTaxiObject = purposeTaxiObject;
+        if (movementListener!=null)
+        movementListener.onMarkerMoved(purposeTaxiObject);
     }
 
     public void setIsClicked(boolean clicked){
@@ -129,5 +131,15 @@ public class TaxiMarker implements MarkerInterface, Comparable<TaxiMarker> {
         this.setLongitude(this.taxiObject.getLongitude()+lonShift);
         this.setRotation(this.taxiObject.getRotation()+rotShift);
 
+    }
+
+    public interface MovementListener{
+        void onMarkerMoved(SocketObject newPoint);
+    }
+
+    MovementListener movementListener;
+
+    public void setMovementListener(MovementListener movementListener){
+        this.movementListener=movementListener;
     }
 }

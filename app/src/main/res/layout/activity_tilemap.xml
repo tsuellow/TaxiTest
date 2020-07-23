@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/mainView"
     android:theme="@style/AppTheme.Launcher"
     android:layout_width="fill_parent"
@@ -19,63 +20,167 @@
 
         <include layout="@layout/communucation_container" />
 
-        <ImageView
-            android:id="@+id/compass"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginTop="6dp"
-            android:layout_marginStart="6dp"
-            android:layout_gravity="start"
-            android:src="@drawable/compass" />
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-        <ImageView
-            android:id="@+id/barrios"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginTop="6dp"
-            android:layout_marginStart="6dp"
-            android:layout_gravity="start"
-            android:src="@drawable/barrios_icon" />
+            <ImageView
+                android:id="@+id/compass"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="6dp"
+                android:layout_marginStart="6dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                android:src="@drawable/compass" />
 
-        <ImageView
-            android:id="@+id/moon"
-            android:layout_width="34dp"
-            android:layout_height="34dp"
-            android:layout_marginTop="4dp"
-            android:layout_marginStart="9dp"
-            android:layout_gravity="start"
-            android:src="@drawable/moon" />
+            <ImageView
+                android:id="@+id/barrios"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="6dp"
+                android:layout_marginStart="6dp"
+                app:layout_constraintTop_toBottomOf="@id/compass"
+                app:layout_constraintStart_toStartOf="parent"
+                android:src="@drawable/barrios_icon" />
 
-        <ImageView
-            android:id="@+id/filter"
-            android:layout_width="32dp"
-            android:layout_height="30dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginStart="9dp"
-            android:layout_gravity="start"
-            android:src="@drawable/filter" />
+            <ImageView
+                android:id="@+id/moon"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginStart="9dp"
+                app:layout_constraintTop_toBottomOf="@id/barrios"
+                app:layout_constraintStart_toStartOf="parent"
+                android:src="@drawable/moon" />
 
-        <ImageView
-            android:id="@+id/back_to_center"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginStart="6dp"
-            android:layout_gravity="start"
-            android:src="@drawable/back_to_center_anim"/>
+            <ImageView
+                android:id="@+id/filter"
+                android:layout_width="32dp"
+                android:layout_height="30dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="9dp"
+                app:layout_constraintTop_toBottomOf="@id/moon"
+                app:layout_constraintStart_toStartOf="parent"
+                android:src="@drawable/filter" />
+
+            <ImageView
+                android:id="@+id/back_to_center"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="6dp"
+                app:layout_constraintTop_toBottomOf="@id/filter"
+                app:layout_constraintStart_toStartOf="parent"
+                android:src="@drawable/back_to_center_anim"/>
+
+            <ImageView
+                android:id="@+id/settings"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="6dp"
+                android:padding="6dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:src="@drawable/menu_dots"/>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:id="@+id/ll_destination"
+                android:layout_marginTop="4dp"
+                android:animateLayoutChanges="true"
+                app:layout_constraintLeft_toRightOf="@id/compass"
+                app:layout_constraintRight_toLeftOf="@id/settings"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Destination: "
+                    android:textColor="@android:color/black"
+                    android:shadowColor="@android:color/white"
+                    android:shadowRadius="2"
+                    android:shadowDx="1"
+                    android:shadowDy="1"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/tv_destination"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/colorRed"
+                    android:shadowColor="@android:color/black"
+                    android:shadowRadius="2"
+                    android:shadowDx="2"
+                    android:shadowDy="2"
+                    android:text="barrio name"
+                    android:textSize="13sp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:animateLayoutChanges="true"
+                app:layout_constraintLeft_toRightOf="@id/compass"
+                app:layout_constraintRight_toLeftOf="@id/settings"
+                app:layout_constraintTop_toBottomOf="@id/ll_destination">
+
+                <TextView
+                    android:id="@+id/tv_status_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@android:color/black"
+                    android:shadowColor="@android:color/white"
+                    android:shadowRadius="1"
+                    android:shadowDx="1"
+                    android:shadowDy="1"
+                    android:text="Status: "
+                    android:textSize="13sp" />
+
+                <ImageView
+                    android:layout_width="10dp"
+                    android:layout_height="10dp"
+                    android:src="@drawable/location_dot"
+                    android:tint="@color/colorGreen"
+                    android:shadowColor="@android:color/white"
+                    android:shadowRadius="1"
+                    android:shadowDx="1"
+                    android:shadowDy="1" />
+
+                <TextView
+                    android:id="@+id/tv_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/colorGreen"
+                    android:shadowColor="@android:color/white"
+                    android:shadowRadius="1"
+                    android:shadowDx="1"
+                    android:shadowDy="1"
+                    android:text=" Searching"
+                    android:textSize="13sp" />
+
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
 
     </LinearLayout>
 
     <ImageView
-        android:id="@+id/settings"
-        android:layout_width="42dp"
-        android:layout_height="42dp"
+        android:id="@+id/exit"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
+        android:padding="6dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
-        android:src="@drawable/settings"/>
+        android:src="@drawable/exit"/>
 
 
 

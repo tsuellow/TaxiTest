@@ -44,7 +44,7 @@
                 <ImageView
                     android:id="@+id/iv_photo"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:scaleType="centerCrop"
                     android:src="@drawable/clooney" />
 
@@ -65,15 +65,15 @@
         </androidx.cardview.widget.CardView>
 
 
-
         <LinearLayout
+            android:id="@+id/ll_one"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
             android:layout_marginStart="6dp"
+            android:layout_toStartOf="@+id/button_msg"
             android:layout_toEndOf="@+id/cv_border_color"
             android:layout_weight="1"
-            android:id="@+id/ll_one"
             android:orientation="vertical"
             android:padding="4dp">
 
@@ -82,6 +82,7 @@
                 android:layout_height="wrap_content"
                 android:animateLayoutChanges="true"
                 android:orientation="horizontal">
+
                 <TextView
                     android:id="@+id/tv_name"
                     android:layout_width="wrap_content"
@@ -91,23 +92,22 @@
                     android:textSize="14sp" />
 
 
-
                 <ImageView
+                    android:id="@+id/iv_rep"
                     android:layout_width="14dp"
                     android:layout_height="14dp"
-                    android:id="@+id/iv_rep"
-                    android:src="@drawable/star"
-                    android:layout_marginStart="6dp"
-                    android:tint="@color/colorDeselected"
                     android:layout_gravity="bottom"
-                    android:layout_marginBottom="2dp"/>
+                    android:layout_marginStart="6dp"
+                    android:layout_marginBottom="2dp"
+                    android:src="@drawable/star"
+                    android:tint="@color/colorDeselected" />
 
                 <TextView
                     android:id="@+id/tv_rep"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="4.0"
                     android:layout_marginStart="2dp"
+                    android:text="4.0"
                     android:textColor="#000"
                     android:textSize="12sp" />
 
@@ -118,12 +118,12 @@
                 android:id="@+id/tv_destination"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/colorRed"
                 android:shadowColor="@android:color/black"
-                android:shadowRadius="1"
                 android:shadowDx="1"
                 android:shadowDy="1"
+                android:shadowRadius="1"
                 android:text="barrio name"
+                android:textColor="@color/colorRed"
                 android:textSize="10sp" />
 
         </LinearLayout>
@@ -146,6 +146,7 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:id="@+id/button_msg"
             android:orientation="horizontal"
             android:layout_centerVertical="true"
             android:layout_toLeftOf="@+id/dynamic_btn_container"

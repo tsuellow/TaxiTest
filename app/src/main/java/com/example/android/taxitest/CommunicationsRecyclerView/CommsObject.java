@@ -133,7 +133,7 @@ public class CommsObject {
         if (!msj.isOutgoing && msj.getMsjObject().getIntentCode()!=REJECTED){
             CommunicationsAdapter.soundPool.play(CommunicationsAdapter.soundMsjArrived,1,1,0,0,1);
             if (!MainActivity.getIsActivityInForeground())
-            MiscellaneousUtils.showNotification(mContext,"You have been contacted!", "A client has sent you a message on TaxiTest recently");
+            MiscellaneousUtils.showNotification(mContext,"You have been contacted!", "Someone has sent you a message on TaxiTest recently");
         }
 
         if (msjUpdateListener!=null) {
@@ -315,11 +315,13 @@ public class CommsObject {
                         try {
                             String res = response.getString("response");
                             if (res.equals("OK")) {
-                                JSONObject data=(JSONObject) response.get("data");
-                                CustomUtils.interpretJson(data,commsObject);
-                                dataUpdateListener.onDataUpdateReceived();
-
-
+                                try{
+                                    JSONObject data=(JSONObject) response.get("data");
+                                    CustomUtils.interpretJson(data,commsObject);
+                                    dataUpdateListener.onDataUpdateReceived();
+                                }catch (Exception e){
+                                    Log.d("commsobject", "recibimos paja");
+                                }
                                 //change comms strings and photo
                             }else{
                                 //error on server side fix

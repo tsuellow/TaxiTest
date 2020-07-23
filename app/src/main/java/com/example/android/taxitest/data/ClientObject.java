@@ -97,7 +97,8 @@ public class ClientObject implements SocketObject, Comparable<ClientObject> {
     }
 
     public float getRotation() {
-        return rotation;
+        //return rotation;
+        return 0.0f;
     }
 
     public void setRotation(float rotation) {

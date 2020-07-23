@@ -1,10 +1,13 @@
 package com.example.android.taxitest;
 
 import android.Manifest;
+
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -15,22 +18,32 @@ import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.os.Handler;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
+import androidx.activity.OnBackPressedDispatcher;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat;
 
+import com.example.android.taxitest.CommunicationsRecyclerView.CommsObject;
 import com.example.android.taxitest.CommunicationsRecyclerView.CommunicationsAdapter;
 import com.example.android.taxitest.CommunicationsRecyclerView.SmoothLinearLayoutManager;
 import com.example.android.taxitest.connection.WebSocketClientLocations;
@@ -105,6 +118,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     ImageView nightModeImage;
     ImageView filterImage;
     ImageView settings;
+    ImageView exit;
+    public TextView destination;
 
     //websocket connection
     WebSocketDriverLocations mWebSocketDriverLocs;
@@ -133,7 +148,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
     //recycler view and co
     RecyclerView rvCommunications;
-    CommunicationsAdapter rvCommsAdapter;
+    public CommunicationsAdapter rvCommsAdapter;
 
     //other helper and component variables
     public Context mContext;
@@ -150,17 +165,20 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     boolean filterOn= false;
     public static final String NOTIFICATION_CHANNEL_ID="999";
     //helper locations
-    public static Location mMarkerLoc;
+    public static Location mMarkerLoc=new Location("");
     Location endLocation=new Location("");
     Location mCurrMapLoc =new Location("");
     //TODO fix redundancy of destGeo and location in OwnTaxiLayer
-    public static GeoPoint destGeo;
+
     public static boolean isActivityInForeground;
 
     SharedPreferences preferences;
     public static String myId;
+    public static GeoPoint destGeo=new GeoPoint(0,0);
+    public static int isActive=1;
 
     private static final String TAG = "MainActivity";
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -172,13 +190,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         preferences= PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         myId=preferences.getString("taxiId","t0");
 
-        //get destination from intent
-        Intent intent=getIntent();
-        if (intent!=null){
-            destGeo=new GeoPoint(intent.getDoubleExtra("DEST_LAT",0.0), intent.getDoubleExtra("DEST_LON",0.0));
-        }else {
-            destGeo = new GeoPoint(0.0, 0.0);
-        }
+
 
         //set content view assets and multiple components
         setContentView(R.layout.activity_tilemap);
@@ -192,6 +204,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         filterImage.setImageAlpha(100);
         mapView = (MapView) findViewById(R.id.mapView);
         rvCommunications = (RecyclerView) findViewById(R.id.rv_comms);
+        destination=(TextView) findViewById(R.id.tv_destination);
+        exit=(ImageView) findViewById(R.id.exit);
 
         //set context
         mContext = getApplicationContext();
@@ -250,6 +264,16 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         setupOtherMarkerLayer();
         // ADD ALL LAYERS TO MAP
         addMapLayers();
+
+        //get destination from intent
+        Intent intent=getIntent();
+        if (intent!=null){
+            setDestGeo(new GeoPoint(intent.getDoubleExtra("DEST_LAT",0.0), intent.getDoubleExtra("DEST_LON",0.0)));
+        }else {
+            setDestGeo(new GeoPoint(0.0, 0.0));
+        }
+        //taxi is active by default
+        isActive=1;
 
 
         //mOwnTaxiObject=new TaxiObject(MiscellaneousUtils.getNumericId(myId),0.0,0.0,new Date().getTime(),0.0f,Constants.userType,destGeo.getLatitude(),destGeo.getLongitude(),1);
@@ -338,8 +362,109 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             }
         });
 
+        exit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (rvCommsAdapter.getItemCount()==0){
+                    exitSearch();
+                }else{
+                    showSimpleDialog("Sure you want to exit?","Exiting will automatically cancel your open communications.",20);
+                }
+
+            }
+        });
+
         createNotificationChannel();
 
+    }
+
+    @Override
+    public void onBackPressed() {
+        //super.onBackPressed();
+        if (rvCommsAdapter.getItemCount()==0){
+            exitSearch();
+        }else{
+            showSimpleDialog("Sure you want to exit?","Exiting will automatically cancel your open communications.",20);
+        }
+    }
+
+    public void exitSearch(){
+        Intent intent = new Intent(MainActivity.this, EntryActivity.class);
+        finish();
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+    }
+
+    public void showSimpleDialog(String titleText, String introText, int timer){
+
+        final Dialog dialog=new Dialog(this);
+        dialog.setContentView(R.layout.dialog_yes_no);
+        TextView title=dialog.findViewById(R.id.tv_title_dialog);
+        TextView intro=dialog.findViewById(R.id.tv_text_intro);
+        TextView countdown=dialog.findViewById(R.id.tv_countdown);
+        Button yesBtn=dialog.findViewById(R.id.bt_accept);
+        Button noBtn=dialog.findViewById(R.id.bt_cancel);
+        LinearLayout auto=(LinearLayout) dialog.findViewById(R.id.ll_auto_accept);
+
+        title.setText(titleText);
+        intro.setText(introText);
+
+        final CountDownTimer countdownTimer=new CountDownTimer(timer*1000, 1000) {
+            public void onTick(long millisUntilFinished) {
+                int secsLeft=(int)millisUntilFinished/1000;
+                countdown.setText(""+secsLeft);
+
+            }
+            public void onFinish() {
+                //send cancellation msg
+                exitSearch();
+                //close dialog
+                dialog.dismiss();
+            }
+        };
+
+        yesBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                exitSearch();
+                //close dialog
+                countdownTimer.cancel();
+                dialog.dismiss();
+            }
+        });
+
+        noBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                countdownTimer.cancel();
+                dialog.dismiss();
+            }
+        });
+
+        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                countdownTimer.cancel();
+            }
+        });
+
+        if (timer!=0){
+            countdownTimer.start();
+        }else{
+            auto.setVisibility(View.GONE);
+        }
+        dialog.show();
+    }
+
+    public void setDestGeo(GeoPoint geo){
+        destGeo=geo;
+        destination.setText(mBarriosLayer.getContainingBarrio(geo).getBarrioName());
+        destination.setTextColor(mBarriosLayer.getContainingBarrio(geo).getStyle().fillColor);
+        mOwnMarkerLayer.setDest(geo);
+    }
+
+    public static void setIsActive(int code){
+        isActive=code;
     }
 
     public void setupFilterButton() {
@@ -379,7 +504,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                     startMoveAnim(500);
                 }
                 //emit current position
-                mOwnTaxiObject=new TaxiObject(MiscellaneousUtils.getNumericId(myId),endLocation.getLatitude(),endLocation.getLongitude(),endLocation.getTime(),mCompass.getRotation(),"taxi",destGeo.getLatitude(),destGeo.getLongitude(),1);
+                mOwnTaxiObject=new TaxiObject(MiscellaneousUtils.getNumericId(myId),endLocation.getLatitude(),endLocation.getLongitude(),endLocation.getTime(),
+                        mCompass.getRotation(),"taxi",destGeo.getLatitude(),destGeo.getLongitude(),isActive);
                 //this should be different websocket
                 mWebSocketDriverLocs.attemptSend(mOwnTaxiObject.objectToCsv());
             }
@@ -511,18 +637,12 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 //                return true;
 //            }
             if (g instanceof Gesture.DoubleTap) {
-                mTilt = preferences.getFloat("defaultTilt",30.0f);
-                mScale =(double)preferences.getFloat("defaultScale",1 << 17);
-                MapPosition defaultView=new MapPosition(endLocation.getLatitude(),endLocation.getLongitude(),mScale);
-                defaultView.setTilt(mTilt);
-                mapView.map().animator().animateTo(800,defaultView, Easing.Type.SINE_IN);
-
-                backToCenterImage.setVisibility(View.INVISIBLE);
+                resetDefaultView();
                 return true;
             }
             if (g instanceof Gesture.LongPress) {
                 GeoPoint p = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
-                mOwnMarkerLayer.setDest(p);
+                showChangeDestDialog(p,false);
                 return true;
             }
             return false;
@@ -549,6 +669,90 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 Log.d(TAG, "tilt: "+mTilt);
             }
         }
+    }
+
+    public void resetDefaultView() {
+        wasMoved=true;
+        mCompass.controlView(false);
+
+        mTilt = preferences.getFloat("defaultTilt",30.0f);
+        mScale =(double)preferences.getFloat("defaultScale",1 << 17);
+        double tinyCorrection=1E-5;
+        double lat=endLocation.getLatitude()+tinyCorrection;
+        MapPosition defaultView=new MapPosition(lat,endLocation.getLongitude(),mScale);
+        defaultView.setTilt(mTilt);
+        defaultView.setBearing(-mCompass.getRotation());
+        mapView.map().animator().animateTo(800,defaultView, Easing.Type.SINE_IN);
+        //reset normal values after animation is done
+        mapView.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                wasMoved=false;
+                mCompass.controlView(true);
+            }
+        },800);
+        backToCenterImage.setVisibility(View.INVISIBLE);
+    }
+
+    public void showChangeDestDialog(GeoPoint destGeo, boolean autoAccept){
+        final Dialog dialog=new Dialog(MainActivity.this);
+        dialog.setContentView(R.layout.dialog_reset_dest);
+        TextView intro=dialog.findViewById(R.id.tv_text_intro);
+        TextView barrio=dialog.findViewById(R.id.tv_text_barrio);
+        TextView countdown=dialog.findViewById(R.id.tv_countdown);
+        Button closeBtn=dialog.findViewById(R.id.bt_close);
+        Button acceptBtn=dialog.findViewById(R.id.bt_accept);
+        LinearLayout auto=(LinearLayout) dialog.findViewById(R.id.ll_auto_accept);
+
+        barrio.setText(mBarriosLayer.getContainingBarrio(destGeo).getBarrioName());
+        barrio.setTextColor(mBarriosLayer.getContainingBarrio(destGeo).getStyle().fillColor);
+
+        final CountDownTimer countdownTimer=new CountDownTimer(10000, 1000) {
+            public void onTick(long millisUntilFinished) {
+                int secsLeft=(int)millisUntilFinished/1000;
+                countdown.setText(""+secsLeft);
+
+            }
+            public void onFinish() {
+                setDestGeo(destGeo);
+                dialog.dismiss();
+            }
+        };
+
+        if (autoAccept){
+            intro.setText("match your destination with your latest client:");
+            auto.setVisibility(View.VISIBLE);
+            countdownTimer.start();
+
+        }else{
+            intro.setText("change your destination to:");
+            auto.setVisibility(View.GONE);
+        }
+
+        closeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                countdownTimer.cancel();
+                dialog.dismiss();
+            }
+        });
+
+        acceptBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                countdownTimer.cancel();
+                setDestGeo(destGeo);
+                dialog.dismiss();
+            }
+        });
+        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                countdownTimer.cancel();
+            }
+        });
+
+        dialog.show();
     }
 
     //BACK-TO-CENTER FUNCTIONALITY FRAMEWORK
@@ -696,31 +900,44 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
     @Override
     protected void onDestroy() {
+        doOnDestroy();
         super.onDestroy();
-        Log.d("cache deletion","success");
+
+    }
+
+    public void  doOnDestroy(){
+        //delete old stuff
         try {
             trimCache(mContext);
         } catch (Exception e) {
             e.printStackTrace();
             Log.d("cache deletion","failed");
         }
-
+        //clear DBs
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
                 mDb.taxiDao().clearTaxiBase();
                 mDb.taxiDao().clearTaxiOld();
+                mDb.taxiDao().clearTaxiNew();
                 mDb.clientDao().clearTaxiBase();
                 mDb.clientDao().clearTaxiOld();
+                mDb.clientDao().clearTaxiNew();
             }
         });
+        //disconnect sockets
+        rvCommsAdapter.disconnectSocket();
+        mWebSocketClientLocs.disconnectSocket();
+        mWebSocketDriverLocs.disconnectSocket();
+        Log.d(TAG, "doOnDestroy: was executed");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         mapView.onResume();
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             //what to do if permissions are not granted
             return;
         }
@@ -786,7 +1003,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
         @Override
         public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-            mOtherTaxisLayer.doUnClick(rvCommsAdapter.getItemList().get(viewHolder.getAdapterPosition()).taxiMarker);
+            mOtherTaxisLayer.doUnClick(rvCommsAdapter.getItemList().get(viewHolder.getAdapterPosition()).taxiMarker,false);
         }
     };
 

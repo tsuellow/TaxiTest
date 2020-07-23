@@ -125,7 +125,6 @@ public class OwnMarkerLayer extends ItemizedLayer<OwnMarker> implements Map.Upda
             mItemList.get(0).destGeoPoint = dest;
             moveMarker(mItemList.get(0).geoPoint);
         }
-        MainActivity.destGeo=dest;
     }
 
 
@@ -202,7 +201,7 @@ public class OwnMarkerLayer extends ItemizedLayer<OwnMarker> implements Map.Upda
 
 
     private void prepareScaledBitmapArray(VectorMasterDrawable drawable){
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 40; i++) {
             scaledGrayedSymbols[i] =  AndroidGraphicsCustom.drawableToBitmap(drawable, 41+i);
         }
     }

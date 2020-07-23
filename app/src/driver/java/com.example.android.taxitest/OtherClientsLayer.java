@@ -34,10 +34,11 @@ public class OtherClientsLayer extends OtherTaxiLayer {
     List<DrawableBitmapCorrespondence> bitmapReferenceList= new ArrayList<>();
 
     public OtherClientsLayer(Context context, BarriosLayer barriosLayer, Map map, List<TaxiMarker> list,
-                             VectorMasterDrawable defaultDrawable, WebSocketDriverLocations webSocketConnection,
+                             WebSocketDriverLocations webSocketConnection,
                              ConnectionLineLayer2 connectionLineLayer, CommunicationsAdapter commsAdapter) {
         super(context, barriosLayer, map, list, webSocketConnection, connectionLineLayer, commsAdapter);
         isBillboard=true;
+        placement=MarkerSymbol.HotspotPlace.BOTTOM_CENTER;
     }
 
 
@@ -63,7 +64,7 @@ public class OtherClientsLayer extends OtherTaxiLayer {
         if (!taxiMarker.getIsClicked()) {
             for (DrawableBitmapCorrespondence item : bitmapReferenceList) {
                 if (barrio.getBarrioId() == item.barrioId && seats==item.seats) {
-                    return new MarkerSymbol(item.barrioBitmap, MarkerSymbol.HotspotPlace.BOTTOM_CENTER,isBillboard);
+                    return new MarkerSymbol(item.barrioBitmap, placement,isBillboard);
                 }
             }
             Log.d("referenceList",""+bitmapReferenceList.size());
@@ -74,7 +75,7 @@ public class OtherClientsLayer extends OtherTaxiLayer {
         if (!taxiMarker.getIsClicked()) {
             bitmapReferenceList.add(new DrawableBitmapCorrespondence(barrio.getBarrioId(), color, seats, drawable, bitmap));
         }
-        return new MarkerSymbol(bitmap, MarkerSymbol.HotspotPlace.BOTTOM_CENTER,isBillboard);
+        return new MarkerSymbol(bitmap, placement,isBillboard);
     }
 
 
@@ -165,4 +166,6 @@ public class OtherClientsLayer extends OtherTaxiLayer {
             }, 100);
         }
     }
+
+
 }

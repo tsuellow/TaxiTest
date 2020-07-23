@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory;
 import android.util.Base64;
 
 import com.example.android.taxitest.CommunicationsRecyclerView.CommsObject;
+import com.example.android.taxitest.data.ClientObject;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
 
 import org.json.JSONException;
@@ -14,13 +15,13 @@ import java.util.Date;
 
 public class CustomUtils {
 
-    public static final String phpFile="get_driver.php";
+    public static final String phpFile="get_client.php";
 
     public static void interpretJson(JSONObject data, CommsObject comm){
         try {
             String firstName = data.getString("firstName");
             String lastName = data.getString("lastName");
-            String collar = data.getString("nrPlate");
+            String collar = ((ClientObject)comm.taxiMarker.taxiObject).getSeats()+" pers.";
             String dateStr = data.getString("dob");
             Date dob = MiscellaneousUtils.String2Date(dateStr);
             String genStr = data.getString("gender");

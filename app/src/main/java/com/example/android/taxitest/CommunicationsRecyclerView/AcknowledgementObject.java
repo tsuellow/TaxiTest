@@ -36,6 +36,7 @@ public class AcknowledgementObject {
         this.msgId = msj.getMsgId();
         this.ackCode = ackCode;
         this.timestamp = new Date().getTime();
+        Log.d("msjissue", "AcknowledgementObject: "+msj.getSendingId()+msj.getReceivingId());
     }
 
     public static AcknowledgementObject readIntoAck(JSONObject jsonObject){

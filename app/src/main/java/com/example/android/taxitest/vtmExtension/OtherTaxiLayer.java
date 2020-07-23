@@ -13,6 +13,7 @@ import com.example.android.taxitest.CommunicationsRecyclerView.CommsObject;
 import com.example.android.taxitest.CommunicationsRecyclerView.CommunicationsAdapter;
 import com.example.android.taxitest.CommunicationsRecyclerView.MessageObject;
 import com.example.android.taxitest.CommunicationsRecyclerView.MetaMessageObject;
+import com.example.android.taxitest.CustomUtils;
 import com.example.android.taxitest.R;
 import com.example.android.taxitest.connection.WebSocketDriverLocations;
 import com.example.android.taxitest.data.SocketObject;
@@ -48,6 +49,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
     public BarriosLayer barriosLayer;
     public Context context;
     public boolean isBillboard;
+    public MarkerSymbol.HotspotPlace placement;
 
     public List<DrawableBitmapCorrespondence> bitmapReferenceList= new ArrayList<>();
 
@@ -59,7 +61,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
     public Bitmap[] appearDisappearAnim = new Bitmap[40];
     private WebSocketDriverLocations mWebSocketConnection;
     private ConnectionLineLayer2 mConnectionLines;
-    private CommunicationsAdapter mCommunicationsAdapter;
+    public CommunicationsAdapter mCommunicationsAdapter;
 
 
 
@@ -87,6 +89,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
 
         prepareScaleAndAppearanceTransitions();
         isBillboard=false;
+        placement=MarkerSymbol.HotspotPlace.CENTER;
     }
 
     public void loadVectorDrawable(){
@@ -97,37 +100,26 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
 
     boolean hasPayload=false;
     public void initializeCommsInvitationsProcessor(){
-        mCommunicationsAdapter.setMessageInvitationListener(new CommunicationsAdapter.MessageInvitationListener() {
-            @Override
-            public void onInvitationReceived(MessageObject msj) {
-                final MessageObject msj1=msj;
-                int id= MiscellaneousUtils.getNumericId(msj.getSendingId());
-                final TaxiMarker tm=findTaxi(id);
-                Log.d("socketTest","incomming id"+tm.taxiObject.getTaxiId());
-                if (msj.getIntentCode()==CommsObject.REQUEST_SENT) { //only mind new, not jet initialized invitations
-                    if (tm != null) {
-                        //normally when a new message is received from a taxi with which no comm is established yet we simply do as if we were clicking it and adding the msj
-                        new Handler(Looper.getMainLooper()).post(new Runnable() {
-                            @Override
-                            public void run() {
-                                CommsObject comm = doClick(tm);
-                                //you need to do the following as both the msj and the ack arrive/are sent before the commsObject exists properly
-                                MetaMessageObject metaMsj=new MetaMessageObject(msj1, comm);
-                                metaMsj.addAckAtTopOfList(new AcknowledgementObject(msj1,CommsObject.RECEIVED));
-                                comm.addAtTopOfMsjList(metaMsj);
-                            }
-                        });
+        setMsgInvitationListener();
+        setMsgCancellationListener();
+        setCommAcceptedListener();
+    }
 
-                    } else {
-                        //if a taxi is not visible because it was filtered out we first have to make it appear
-                        hasPayload = true;
-                        if (!mWebSocketConnection.getProcessIsRunning()) {
-                            mWebSocketConnection.startAccumulationTimer();
-                        }
+    public void setCommAcceptedListener() {
+        mCommunicationsAdapter.setCommAcceptedListener(new CommunicationsAdapter.CommAcceptedListener() {
+            @Override
+            public void onCommAccepted(CommsObject comm) {
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(context,comm.commCardData.firstName+" just accepted your offer", Toast.LENGTH_LONG).show();
                     }
-                }
+                });
             }
         });
+    }
+
+    public void setMsgCancellationListener() {
         mCommunicationsAdapter.setMessageCancellationListener(new CommunicationsAdapter.MessageCancellationListener() {
             @Override
             public void onCancellationReceived(MessageObject msj) {
@@ -139,37 +131,65 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                         @Override
                         public void run() {
                             Toast.makeText(context,tm.taxiObject.getTaxiId()+" te mando a la verga",Toast.LENGTH_LONG).show();
-                            doUnClick(tm);
+                            doUnClick(tm,true);
                         }
                     });
 
                 }
             }
         });
-        mCommunicationsAdapter.setCommAcceptedListener(new CommunicationsAdapter.CommAcceptedListener() {
+    }
+
+    public void setMsgInvitationListener() {
+        mCommunicationsAdapter.setMessageInvitationListener(new CommunicationsAdapter.MessageInvitationListener() {
             @Override
-            public void onCommAccepted(CommsObject comm) {
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(context,"comm was just accepted", Toast.LENGTH_LONG).show();
+            public void onInvitationReceived(MessageObject msj) {
+                final MessageObject msj1=msj;
+                int id= MiscellaneousUtils.getNumericId(msj.getSendingId());
+                final TaxiMarker tm=findTaxi(id);
+
+                if (msj.getIntentCode()== CommsObject.REQUEST_SENT) { //only mind new, not jet initialized invitations
+                    if (findTaxi(id) != null) {
+                        //normally when a new message is received from a taxi with which no comm is established yet we simply do as if we were clicking it and adding the msj
+                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+                                CommsObject comm = doClick(tm);
+                                //you need to do the following as both the msj and the ack arrive/are sent before the commsObject exists properly
+                                MetaMessageObject metaMsj=new MetaMessageObject(msj1, comm);
+                                metaMsj.addAckAtTopOfList(new AcknowledgementObject(msj1,CommsObject.RECEIVED));
+                                comm.addAtTopOfMsjList(metaMsj);
+                            }
+                        });
+                        Log.d("testes", "taxci is there");
+                    } else {
+                        //if a taxi is not visible because it was filtered out we first have to make it appear
+                        Log.d("testes", "taxci is not there");
+                        hasPayload = true;
+                        if (!mWebSocketConnection.getProcessIsRunning()) {
+                            mWebSocketConnection.startAccumulationTimer();
+                        }
                     }
-                });
+                }
             }
         });
     }
 
     private void runPostAnimationTasks(){
+        Log.d("testes", "has no payload");
         if (hasPayload){
+            Log.d("testes", "has payload");
             Iterator<MessageObject> i = mCommunicationsAdapter.newIncomingComms.iterator();
             while (i.hasNext()) {
                 MessageObject msj = i.next();
                 int id= MiscellaneousUtils.getNumericId(msj.getSendingId());
                 TaxiMarker tm=findTaxi(id);
+                Log.d("testes", "runPostAnimationTasks: "+MiscellaneousUtils.getNumericId(msj.getSendingId()));
                 if (tm!=null){
                     if (!tm.getIsClicked()) {
                         //when this is the first message we receive from this taxi, we first click the taxi and then add the msg
                         CommsObject comm=doClick(tm);
+                        Log.d("testes", "entered if "+MiscellaneousUtils.getNumericId(msj.getSendingId()));
                         comm.addAtTopOfMsjList(new MetaMessageObject(msj,comm));
                     }else{
                         //if taxi was already clicked we just find the relevant comm and add the msj
@@ -242,6 +262,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                 //NEW DELETE MAYBE
                 mConnectionLines.resetStyle();
                 //set off animation process
+
                 setOffAnimation(18);
             }
         });
@@ -260,11 +281,15 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
         return comm;
     }
 
-    public void doUnClick(TaxiMarker item){
+    public void doUnClick(TaxiMarker item, boolean animate){
         item.setIsClicked(false);
         //mConnectionLines.removeLine(item.taxiObject.getTaxiId());
         mConnectionLines.remove(item.taxiObject.getTaxiId());
-        mCommunicationsAdapter.cancelById(item.taxiObject.getTaxiId());
+        if (animate){
+            mCommunicationsAdapter.cancelByIdWithAnim(item.taxiObject.getTaxiId());
+        }else{
+            mCommunicationsAdapter.cancelById(item.taxiObject.getTaxiId());
+        }
         CommunicationsAdapter.soundPool.play(CommunicationsAdapter.soundCanceled,1,1,0,0,1);
         item.setRotatedSymbol(fetchBitmap(item));
         update();
@@ -275,7 +300,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
         @Override
         public boolean onItemSingleTapUp(int index, TaxiMarker item) {
             if (item.getIsClicked()){
-                doUnClick(item);
+                doUnClick(item,true);
             }else{
                 doClick(item);
             }
@@ -307,7 +332,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
 
     //adds a new taxi to the layer
     public void addTaxi(TaxiMarker item) {
-        MarkerSymbol symbol = new MarkerSymbol(appearDisappearAnim[0], MarkerSymbol.HotspotPlace.CENTER, isBillboard);
+        MarkerSymbol symbol = new MarkerSymbol(appearDisappearAnim[0], placement, isBillboard);
         item.setRotatedSymbol(symbol);
         mItemList.add(item);
         populate();
@@ -343,7 +368,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
         if (!taxiMarker.getIsClicked()) {
             for (DrawableBitmapCorrespondence item : bitmapReferenceList) {
                 if (barrio.getBarrioId() == item.barrioId) {
-                    return new MarkerSymbol(item.barrioBitmap, MarkerSymbol.HotspotPlace.CENTER,isBillboard);
+                    return new MarkerSymbol(item.barrioBitmap, placement,isBillboard);
                 }
             }
             Log.d("referenceList",""+bitmapReferenceList.size());
@@ -354,7 +379,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
         if (!taxiMarker.getIsClicked()) {
             bitmapReferenceList.add(new DrawableBitmapCorrespondence(barrio.getBarrioId(), color, drawable, bitmap));
         }
-        return new MarkerSymbol(bitmap, MarkerSymbol.HotspotPlace.CENTER,isBillboard);
+        return new MarkerSymbol(bitmap, placement,isBillboard);
     }
 
     // modifies drawable according to destination colors
@@ -405,11 +430,11 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                         }else if (marker.getPurpose()== TaxiMarker.Purpose.APPEAR){
                             //play appear animation
                             Bitmap appearDisappear=getAppearDisappearFrame(a,frames,true);
-                            MarkerSymbol symbol=new MarkerSymbol(appearDisappear, MarkerSymbol.HotspotPlace.CENTER,isBillboard);
+                            MarkerSymbol symbol=new MarkerSymbol(appearDisappear, placement,isBillboard);
                             marker.setRotatedSymbol(symbol);
                         }else{
                             //play disappear animation
-                            marker.setRotatedSymbol(new MarkerSymbol(getAppearDisappearFrame(a,frames,false), MarkerSymbol.HotspotPlace.CENTER,isBillboard));
+                            marker.setRotatedSymbol(new MarkerSymbol(getAppearDisappearFrame(a,frames,false), placement,isBillboard));
                         }
                     }
                     mConnectionLines.updateLines();
@@ -428,7 +453,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                     TaxiMarker m = i.next();
                     if (m.getPurpose() == TaxiMarker.Purpose.DISAPPEAR) {
                         if(m.isClicked){
-                            doUnClick(m);
+                            doUnClick(m,true);
                         }
                         i.remove();
                     }else if (m.getPurpose() == TaxiMarker.Purpose.APPEAR){
@@ -474,7 +499,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
         int currSize=getDrawableIndex(zoom);
         Bitmap otherSymbol = scaledGrayedSymbols[currSize];
         for (TaxiMarker otherTaxiMarker : mItemList ) {
-            otherTaxiMarker.setRotatedSymbol(new MarkerSymbol(otherSymbol, MarkerSymbol.HotspotPlace.CENTER, isBillboard));
+            otherTaxiMarker.setRotatedSymbol(new MarkerSymbol(otherSymbol, placement, isBillboard));
             if (zoom!=mZoom2){
                 return;
             }
@@ -509,8 +534,6 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
         return bitmap;
     }
 
-
-
     public double mZoom;
     public synchronized void zoomAdjust(final double zoom){
         if (zoom!=mZoom) {
@@ -538,6 +561,16 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                     }
                 }
             }, 100);
+        }
+    }
+
+    public void clearComms(int exception){
+        for (int i=0;i<mCommunicationsAdapter.getItemCount();i++){
+            if (mCommunicationsAdapter.mComms.get(i).taxiMarker.taxiObject.getTaxiId()!=exception){
+                if (mCommunicationsAdapter.mComms.get(i).taxiMarker!=null){
+                    doUnClick(mCommunicationsAdapter.mComms.get(i).taxiMarker,true);
+                }
+            }
         }
     }
 
