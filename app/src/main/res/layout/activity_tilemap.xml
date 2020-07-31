@@ -145,12 +145,9 @@
                 <ImageView
                     android:layout_width="10dp"
                     android:layout_height="10dp"
+                    android:id="@+id/iv_status"
                     android:src="@drawable/location_dot"
-                    android:tint="@color/colorGreen"
-                    android:shadowColor="@android:color/white"
-                    android:shadowRadius="1"
-                    android:shadowDx="1"
-                    android:shadowDy="1" />
+                    android:tint="@color/colorGreen"/>
 
                 <TextView
                     android:id="@+id/tv_status"

@@ -78,7 +78,7 @@ public class OtherDriversLayer extends OtherTaxiLayer {
                                 }
                             }
                         });
-                        MainActivityCustomer.setIsActive(2);
+                        ((MainActivityCustomer)context).setIsActive(2,context);
                         Log.d("commies", "run: "+mSelectedComm.taxiMarker.taxiObject.getTaxiId()+"   "+(mSelectedComm==null));
                         clearComms(mSelectedComm.taxiMarker.taxiObject.getTaxiId());
                     }
@@ -103,10 +103,15 @@ public class OtherDriversLayer extends OtherTaxiLayer {
 
     }
 
+    public CountDownTimer genericCountdownTimer;
     public void showEndSearchDialog(CommsObject comm, String titleText, String contextText){
-        if (!MainActivity.getIsActivityInForeground())
+        //make notification if not in foreground
+        if (!MainActivity.getIsActivityInForeground()){
+            Intent closeIntent = new Intent((MainActivityCustomer)context, EntryActivityCustomer.class);
+            closeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             MiscellaneousUtils.showExitNotification(context,"Has your taxi arrived?", "If you are already on your way you can" +
-                    " close the app, otherwise open it to continue your search. \nIf you ignore this notification your search will end automatically in a few minutes");
+                    " close the app, otherwise open it to continue your search. \nIf you ignore this notification your search will end automatically in a few minutes",closeIntent);
+        }
 
         final Dialog dialog=new Dialog((MainActivityCustomer)context);
         dialog.setContentView(R.layout.dialog_end_search);
@@ -135,7 +140,7 @@ public class OtherDriversLayer extends OtherTaxiLayer {
             plate.setText("plate: "+comm.commCardData.collar);
         }
 
-        final CountDownTimer countdownTimer=new CountDownTimer(60000, 1000) {
+        genericCountdownTimer=new CountDownTimer(60000, 1000) {
             public void onTick(long millisUntilFinished) {
                 int secsLeft=(int)millisUntilFinished/1000;
                 countdown.setText(""+secsLeft);
@@ -144,13 +149,12 @@ public class OtherDriversLayer extends OtherTaxiLayer {
             public void onFinish() {
                 //send cancellation msg
                 if (comm!=null)
-                mCommunicationsAdapter.cancelById(comm.taxiMarker.taxiObject.getTaxiId());
-                //create new activity
-                Intent intent = new Intent((MainActivityCustomer)context, EntryActivityCustomer.class);
-                ((MainActivityCustomer)context).finish();
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                context.startActivity(intent);
+                    mCommunicationsAdapter.cancelById(comm.taxiMarker.taxiObject.getTaxiId());
+                //exit to entry
+                ((MainActivityCustomer)context).exitSearch();
                 //close dialog
+                genericCountdownTimer.cancel();
+                if (dialog.isShowing())
                 dialog.dismiss();
             }
         };
@@ -161,13 +165,10 @@ public class OtherDriversLayer extends OtherTaxiLayer {
                 //send cancellation msg
                 if (comm!=null)
                     mCommunicationsAdapter.cancelById(comm.taxiMarker.taxiObject.getTaxiId());
-                //create new activity
-                Intent intent = new Intent((MainActivityCustomer)context, EntryActivityCustomer.class);
-                ((MainActivityCustomer)context).finish();
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                context.startActivity(intent);
+                //exit to entry
+                ((MainActivityCustomer)context).exitSearch();
                 //close dialog
-                countdownTimer.cancel();
+                genericCountdownTimer.cancel();
                 dialog.dismiss();
             }
         });
@@ -175,8 +176,9 @@ public class OtherDriversLayer extends OtherTaxiLayer {
         continueBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                MainActivityCustomer.setIsActive(1);
-                countdownTimer.cancel();
+                if (mSelectedComm==null)
+                    ((MainActivityCustomer)context).setIsActive(1,context);
+                genericCountdownTimer.cancel();
                 dialog.dismiss();
             }
         });
@@ -184,10 +186,10 @@ public class OtherDriversLayer extends OtherTaxiLayer {
         dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialog) {
-                countdownTimer.cancel();
+                genericCountdownTimer.cancel();
             }
         });
-        countdownTimer.start();
+        genericCountdownTimer.start();
         dialog.show();
     }
 }

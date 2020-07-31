@@ -120,6 +120,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     ImageView settings;
     ImageView exit;
     public TextView destination;
+    static TextView status;
+    static ImageView statusDot;
 
     //websocket connection
     WebSocketDriverLocations mWebSocketDriverLocs;
@@ -205,6 +207,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         mapView = (MapView) findViewById(R.id.mapView);
         rvCommunications = (RecyclerView) findViewById(R.id.rv_comms);
         destination=(TextView) findViewById(R.id.tv_destination);
+        status=(TextView) findViewById(R.id.tv_status);
+        statusDot=(ImageView) findViewById(R.id.iv_status);
         exit=(ImageView) findViewById(R.id.exit);
 
         //set context
@@ -272,8 +276,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         }else {
             setDestGeo(new GeoPoint(0.0, 0.0));
         }
-        //taxi is active by default
-        isActive=1;
+        //taxi is inactive by default
+        setIsActive(0,mContext);
 
 
         //mOwnTaxiObject=new TaxiObject(MiscellaneousUtils.getNumericId(myId),0.0,0.0,new Date().getTime(),0.0f,Constants.userType,destGeo.getLatitude(),destGeo.getLongitude(),1);
@@ -463,8 +467,25 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         mOwnMarkerLayer.setDest(geo);
     }
 
-    public static void setIsActive(int code){
+    public void setIsActive(int code, Context context){
+        Log.d(TAG, "setIsActive: is executed"+code);
         isActive=code;
+        switch (code){
+            case 1:
+                status.setText(" Searching");
+                status.setTextColor(ContextCompat.getColor(context,R.color.colorGreen));
+                statusDot.setColorFilter(ContextCompat.getColor(context, R.color.colorGreen), android.graphics.PorterDuff.Mode.SRC_IN);
+                break;
+            case 2:
+                status.setText(" Awaiting");
+                status.setTextColor(ContextCompat.getColor(context,R.color.colorBlue));
+                statusDot.setColorFilter(ContextCompat.getColor(context, R.color.colorBlue), android.graphics.PorterDuff.Mode.SRC_IN);
+                break;
+            default:
+                status.setText(" Inactive");
+                status.setTextColor(ContextCompat.getColor(context,R.color.colorRed));
+                statusDot.setColorFilter(ContextCompat.getColor(context, R.color.colorRed), android.graphics.PorterDuff.Mode.SRC_IN);
+        }
     }
 
     public void setupFilterButton() {
@@ -485,6 +506,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         });
     }
 
+    public boolean isFirstLocationFix=true;
     public void setupLocationCallback() {
         //callback every 3000ms
         //TODO send old locations if callback  fails to execute. prevent from unclicking on other users
@@ -493,6 +515,10 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             public void onLocationResult(LocationResult locationResult) {
                 if (locationResult == null) {
                     return;
+                }
+                if (isFirstLocationFix){
+                    setIsActive(1,mContext);
+                    isFirstLocationFix=false;
                 }
                 //smoothen transition to new spot
                 Location adjustedLocation = locationResult.getLastLocation();
@@ -508,6 +534,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                         mCompass.getRotation(),"taxi",destGeo.getLatitude(),destGeo.getLongitude(),isActive);
                 //this should be different websocket
                 mWebSocketDriverLocs.attemptSend(mOwnTaxiObject.objectToCsv());
+                //setIsActive(1,mContext);
             }
 
             ;

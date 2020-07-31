@@ -14,9 +14,9 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
-import com.example.android.taxitest.EntryActivityCustomer;
+
 import com.example.android.taxitest.MainActivity;
-import com.example.android.taxitest.MainActivityCustomer;
+
 import com.example.android.taxitest.R;
 
 import org.oscim.core.GeoPoint;
@@ -109,7 +109,7 @@ public class MiscellaneousUtils {
         mNotificationManager.notify(1, mBuilder.build());
     }
 
-    public static void showExitNotification(Context context,String title, String text) {
+    public static void showExitNotification(Context context,String title, String text, Intent closeIntent) {
 
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(context, MainActivity.NOTIFICATION_CHANNEL_ID)
@@ -122,9 +122,6 @@ public class MiscellaneousUtils {
         mBuilder.setDefaults(Notification.DEFAULT_SOUND);
         mBuilder.setAutoCancel(true);
 
-        Intent closeIntent = new Intent((MainActivityCustomer)context, EntryActivityCustomer.class);
-        ((MainActivityCustomer)context).finish();
-        closeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent piClose = PendingIntent.getActivity(context, 0, closeIntent, 0);
         mBuilder.addAction(0,"exit app",piClose);
 

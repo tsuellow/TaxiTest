@@ -70,6 +70,10 @@ public class MainActivityDriver extends MainActivity{
                 if (locationResult == null) {
                     return;
                 }
+                if (isFirstLocationFix){
+                    setIsActive(1,mContext);
+                    isFirstLocationFix=false;
+                }
                 //smoothen transition to new spot
                 Location adjustedLocation = locationResult.getLastLocation();
 //                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-39.2908);
@@ -119,7 +123,7 @@ public class MainActivityDriver extends MainActivity{
 
     @Override
     public void doOnDestroy() {
-        setIsActive(0);
+        setIsActive(0,mContext);
         mOwnTaxiObject=new TaxiObject(MiscellaneousUtils.getNumericId(myId),endLocation.getLatitude(),
                 endLocation.getLongitude(),endLocation.getTime(),mCompass.getRotation(),"t",
                 destGeo.getLatitude(),destGeo.getLongitude(),isActive);

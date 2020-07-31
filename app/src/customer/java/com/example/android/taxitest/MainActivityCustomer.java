@@ -77,6 +77,10 @@ public class MainActivityCustomer extends MainActivity {
                 if (locationResult == null) {
                     return;
                 }
+                if (isFirstLocationFix){
+                    setIsActive(1,mContext);
+                    isFirstLocationFix=false;
+                }
                 //smoothen transition to new spot
                 Location adjustedLocation = locationResult.getLastLocation();
 //                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-39.2908);
@@ -100,11 +104,14 @@ public class MainActivityCustomer extends MainActivity {
 
     @Override
     public void doOnDestroy() {
-        setIsActive(0);
+        setIsActive(0,mContext);
         mOwnTaxiObject=new ClientObject(MiscellaneousUtils.getNumericId(myId),endLocation.getLatitude(),
                 endLocation.getLongitude(),endLocation.getTime(),mCompass.getRotation(),seatAmount,"",
                 destGeo.getLatitude(),destGeo.getLongitude(),isActive);
         mWebSocketClientLocs.attemptSend(mOwnTaxiObject.objectToCsv());
+        //kill timer that might have survived
+        if (((OtherDriversLayer)mOtherTaxisLayer).genericCountdownTimer!=null)
+            ((OtherDriversLayer)mOtherTaxisLayer).genericCountdownTimer.cancel();
         super.doOnDestroy();
     }
 
