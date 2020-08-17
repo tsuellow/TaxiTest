@@ -116,10 +116,10 @@ public class MainActivityCustomer extends MainActivity {
     }
 
     @Override
-    public void exitSearch() {
+    public Intent getCloseIntent() {
         Intent intent = new Intent(MainActivityCustomer.this, EntryActivityCustomer.class);
         finish();
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
+        return intent;
     }
 }

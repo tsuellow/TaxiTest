@@ -31,7 +31,8 @@ public class OwnMarkerLayer extends ItemizedLayer<OwnMarker> implements Map.Upda
     private VectorMasterDrawable drawable;
     private BarriosLayer barriosLayer;
     private Context context;
-    private int destId;
+    private static int destId;
+    private static int isActive=1;
 
 
     //helper vars
@@ -127,6 +128,11 @@ public class OwnMarkerLayer extends ItemizedLayer<OwnMarker> implements Map.Upda
         }
     }
 
+    public void setIsActive(int code){
+        isActive=code;
+        mItemList.get(0).setRotatedMarker(new MarkerSymbol(fetchBitmap(mItemList.get(0).destGeoPoint,false), MarkerSymbol.HotspotPlace.CENTER,false),mCompass.getRotation());
+    }
+
 
     //checks if bitmap for geopoint already exists else it calculates a new one
     public Bitmap fetchBitmap(GeoPoint geoPoint, boolean isClicked) {
@@ -163,9 +169,14 @@ public class OwnMarkerLayer extends ItemizedLayer<OwnMarker> implements Map.Upda
         VectorMasterDrawable result = new VectorMasterDrawable(context,drawable.getResID());
         PathModel pathModelArrow=result.getPathModelByName("arrow");
         PathModel pathModelCircle=result.getPathModelByName("circle");
+        if (isActive==1){
+            pathModelArrow.setFillAlpha(1.0f);
+            pathModelCircle.setFillAlpha(1.0f);
+        }else {
+            pathModelArrow.setFillAlpha(0.2f);
+            pathModelCircle.setFillAlpha(0.2f);
+        }
         pathModelArrow.setFillColor(color);
-        pathModelArrow.setFillAlpha(1.0f);
-        pathModelArrow.setStrokeAlpha(1.0f);
         pathModelCircle.setStrokeColor(PaintUtils.getSaturation(color));
         pathModelCircle.setStrokeAlpha(1.0f);
         if (isClicked){

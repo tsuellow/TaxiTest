@@ -1,5 +1,6 @@
 package com.example.android.taxitest;
 
+import android.app.Dialog;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
@@ -7,7 +8,11 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.cardview.widget.CardView;
 
 import com.example.android.taxitest.CommunicationsRecyclerView.CommsObject;
 import com.example.android.taxitest.CommunicationsRecyclerView.CommunicationsAdapter;
@@ -21,6 +26,9 @@ import com.example.android.taxitest.vtmExtension.TaxiMarker;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationResult;
 import com.sdsmdg.harjot.vectormaster.VectorMasterDrawable;
+
+import org.oscim.core.GeoPoint;
+import org.oscim.layers.marker.ItemizedLayer;
 
 import java.util.ArrayList;
 
@@ -43,6 +51,19 @@ public class MainActivityDriver extends MainActivity{
                     }
                 });
 
+            }
+        });
+
+        mOwnMarkerLayer.setOnItemGestureListener(new ItemizedLayer.OnItemGestureListener<OwnMarker>() {
+            @Override
+            public boolean onItemSingleTapUp(int index, OwnMarker item) {
+                showOwnDialog();
+                return true;
+            }
+
+            @Override
+            public boolean onItemLongPress(int index, OwnMarker item) {
+                return false;
             }
         });
     }
@@ -113,12 +134,49 @@ public class MainActivityDriver extends MainActivity{
         });
     }
 
+
+
+    public void showOwnDialog(){
+        final Dialog dialog=new Dialog(this);
+        dialog.setContentView(R.layout.dialog_own_status);
+        TextView title=dialog.findViewById(R.id.tv_title_dialog);
+        Button emptyBtn=dialog.findViewById(R.id.bt_taxi_empty);
+        Button fullBtn=dialog.findViewById(R.id.bt_taxi_full);
+        Button closeBtn=dialog.findViewById(R.id.bt_close);
+
+
+        emptyBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                setDestGeo(new GeoPoint(0.0,0.0));
+                dialog.dismiss();
+            }
+        });
+
+        fullBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                setIsActive(2,mContext);
+                dialog.dismiss();
+            }
+        });
+
+        closeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.dismiss();
+            }
+        });
+
+        dialog.show();
+
+    }
+
     @Override
-    public void exitSearch() {
+    public Intent getCloseIntent() {
         Intent intent = new Intent(MainActivityDriver.this, EntryActivityDriver.class);
-        finish();
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
+        return intent;
     }
 
     @Override

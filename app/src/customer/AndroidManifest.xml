@@ -47,6 +47,8 @@
             android:theme="@style/AppTheme.Launcher"
             tools:ignore="LockedOrientationActivity">
         </activity>
+        <activity
+            android:name=".PastTripsActivity"/>
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="@string/file_provider"

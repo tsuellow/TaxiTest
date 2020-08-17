@@ -102,7 +102,7 @@ public class Compass extends Layer implements SensorEventListener, Map.UpdateLis
     public void onMapEvent(Event e, MapPosition mapPosition) {
         if (!mControlOrientation) {
             float rotation = -mapPosition.bearing;
-            adjustArrow(mCurMapRotation, rotation);
+            adjustArrow(mCurMapRotation, rotation,100);
             mCurMapRotation=rotation;
         }
 
@@ -143,7 +143,7 @@ public class Compass extends Layer implements SensorEventListener, Map.UpdateLis
         if (mMode != Mode.OFF) {
             boolean redraw = false;
             if (Math.abs(rotationMap-mCurMapRotation) > 0.01) {
-                adjustArrow(mCurMapRotation, rotationMap);
+                adjustArrow(mCurMapRotation, rotationMap,100);
                 mMap.viewport().setRotation(-rotationMap);
                 redraw = true;
             }
@@ -255,7 +255,7 @@ public class Compass extends Layer implements SensorEventListener, Map.UpdateLis
         mSensorManager.unregisterListener(this);
     }
 
-    public void adjustArrow(float prev, float cur) {
+    public void adjustArrow(float prev, float cur, long dur) {
         Animation an = new RotateAnimation(-prev,
                 -cur,
                 Animation.RELATIVE_TO_SELF,
@@ -263,10 +263,9 @@ public class Compass extends Layer implements SensorEventListener, Map.UpdateLis
                 Animation.RELATIVE_TO_SELF,
                 0.5f);
 
-        an.setDuration(100);
+        an.setDuration(dur);
         an.setRepeatCount(0);
         an.setFillAfter(true);
-        Log.d("compass", "prev:"+prev+"cur:"+cur);
 
         mArrowView.startAnimation(an);
     }
@@ -312,6 +311,7 @@ public class Compass extends Layer implements SensorEventListener, Map.UpdateLis
         rotationMap = mCurMapRotation + changeMap;
         rotationMap = (float) FastMath.clampDegree(rotationMap);
 
+        Log.d("compass", "prev:"+rotation);
 //        float tilt = mRotationV[1];
 //
 //        mCurTilt = mCurTilt + 0.2f * (tilt - mCurTilt);
@@ -320,7 +320,7 @@ public class Compass extends Layer implements SensorEventListener, Map.UpdateLis
             boolean redraw = false;
 
             if (Math.abs(changeMap) > 0.01) {
-                adjustArrow(mCurMapRotation, rotationMap);
+                adjustArrow(mCurMapRotation, rotationMap,100);
 
                 mMap.viewport().setRotation(-rotationMap);
                 //mMap.viewport().setMapViewCenter(0.75f);

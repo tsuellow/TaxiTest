@@ -158,7 +158,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     public VectorMasterDrawable otherIcon, ownIcon;
     float mTilt;
     double mScale;
-    SocketObject mOwnTaxiObject;
+    public SocketObject mOwnTaxiObject;
     AnimatedVectorDrawableCompat advCompat;
     AnimatedVectorDrawable adv;
     boolean wasMoved=false;
@@ -177,7 +177,9 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     SharedPreferences preferences;
     public static String myId;
     public static GeoPoint destGeo=new GeoPoint(0,0);
-    public static int isActive=1;
+    public static int isActive=0;
+
+    NotificationManager mNotificationManager;
 
     private static final String TAG = "MainActivity";
 
@@ -212,7 +214,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         exit=(ImageView) findViewById(R.id.exit);
 
         //set context
-        mContext = getApplicationContext();
+        mContext = this;
 
         // check permissions CONSIDER MOVING
         ActivityCompat.requestPermissions(MainActivity.this, new String[]{READ_EXTERNAL_STORAGE,ACCESS_FINE_LOCATION, WRITE_EXTERNAL_STORAGE, RECORD_AUDIO},111);
@@ -311,6 +313,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         }
 
         setupLocationCallback();
+        requestLocationUpdates();
 
         setupFilterButton();
 
@@ -359,6 +362,28 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
         prepareBackToCenterAnim();
 
+        compassImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (defaultMode==Compass.Mode.OFF){
+                    defaultMode= Compass.Mode.C2D;
+                    mCompass.setMode(defaultMode);
+                    compassImage.setImageAlpha(255);
+                }else{
+                    defaultMode= Compass.Mode.OFF;
+                    mCompass.setMode(defaultMode);
+                    MapPosition target=mapView.map().getMapPosition();
+                    mCompass.adjustArrow(mCompass.getMapRotation(),0.0f,800);
+                    target.setBearing(0.0f);
+                    double tinyCorrection=1E-5;
+                    target.setPosition(target.getLatitude(),target.getLongitude()+tinyCorrection);
+                    mapView.map().animator().animateTo(800,target, Easing.Type.SINE_IN);
+                    mCompass.setMapRotation(0.0f);
+                    compassImage.setImageAlpha(100);
+                }
+            }
+        });
+
         settings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -378,8 +403,12 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             }
         });
 
-        createNotificationChannel();
 
+
+        mNotificationManager =
+                (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+        assert mNotificationManager != null;
+        createNotificationChannel();
     }
 
     @Override
@@ -393,10 +422,15 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     }
 
     public void exitSearch(){
+        Intent intent = getCloseIntent();
+        startActivity(intent);
+    }
+
+    public Intent getCloseIntent(){
         Intent intent = new Intent(MainActivity.this, EntryActivity.class);
         finish();
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
+        return intent;
     }
 
     public void showSimpleDialog(String titleText, String introText, int timer){
@@ -465,11 +499,13 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         destination.setText(mBarriosLayer.getContainingBarrio(geo).getBarrioName());
         destination.setTextColor(mBarriosLayer.getContainingBarrio(geo).getStyle().fillColor);
         mOwnMarkerLayer.setDest(geo);
+        setIsActive(1,mContext);
     }
 
     public void setIsActive(int code, Context context){
         Log.d(TAG, "setIsActive: is executed"+code);
         isActive=code;
+        mOwnMarkerLayer.setIsActive(code);
         switch (code){
             case 1:
                 status.setText(" Searching");
@@ -532,9 +568,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 //emit current position
                 mOwnTaxiObject=new TaxiObject(MiscellaneousUtils.getNumericId(myId),endLocation.getLatitude(),endLocation.getLongitude(),endLocation.getTime(),
                         mCompass.getRotation(),"taxi",destGeo.getLatitude(),destGeo.getLongitude(),isActive);
-                //this should be different websocket
                 mWebSocketDriverLocs.attemptSend(mOwnTaxiObject.objectToCsv());
-                //setIsActive(1,mContext);
             }
 
             ;
@@ -583,7 +617,9 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
     public void openTest(){
         //TODO decide what goes in the settings
-        Toast.makeText(mContext,"do something",Toast.LENGTH_SHORT).show();
+        //Toast.makeText(mContext,"do something",Toast.LENGTH_SHORT).show();
+        Intent i=new Intent(this,PastTripsActivity.class);
+        startActivity(i);
     }
 
     private void setIconColors(int color){
@@ -911,6 +947,15 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         mState = ANIM_NONE;
     }
 
+    public void requestLocationUpdates(){
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            //what to do if permissions are not granted
+            return;
+        }
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
+    }
+
     //LIFECYCLE METHODS TO BE OVERRIDDEN
     @Override
     protected void onStart() {
@@ -952,10 +997,19 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 mDb.clientDao().clearTaxiNew();
             }
         });
+        //disconnect location updates
+        fusedLocationProviderClient.removeLocationUpdates(locationCallback);
         //disconnect sockets
         rvCommsAdapter.disconnectSocket();
         mWebSocketClientLocs.disconnectSocket();
         mWebSocketDriverLocs.disconnectSocket();
+        //if exists cancel idle countdownTimer
+        if (idleCountdownTimer!=null){
+            idleCountdownTimer.cancel();
+        }
+        //get rid of all app related notifications
+        mNotificationManager.cancel(1);
+        mNotificationManager.cancel(2);
         Log.d(TAG, "doOnDestroy: was executed");
     }
 
@@ -963,22 +1017,47 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     protected void onResume() {
         super.onResume();
         mapView.onResume();
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            //what to do if permissions are not granted
-            return;
-        }
-        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
         isActivityInForeground=true;
+        if (idleCountdownTimer!=null){
+            idleCountdownTimer.cancel();
+            idleCountdownTimer=null;
+            mNotificationManager.cancel(2);
+            mNotificationManager.cancel(1);
+        }
+        if (shouldCloseActivity)
+            exitSearch();
     }
 
+    public boolean shouldCloseActivity=false;
+    public  CountDownTimer idleCountdownTimer;
+    public void initializeIdleCountdownTimer(){
+        idleCountdownTimer=new CountDownTimer(180000,60000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                Log.d(TAG, "onTick: "+millisUntilFinished);
+                if (((int)(millisUntilFinished/60000))==1){
+                    Intent closeIntent = getCloseIntent();
+                    MiscellaneousUtils.showExitNotification(mContext,"Are you still using the app?","The app will automatically close unless you return to it",closeIntent);
+                }
+            }
+
+            @Override
+            public void onFinish() {
+                doOnDestroy();
+                shouldCloseActivity=true;
+            }
+        };
+    }
     @Override
     protected void onPause() {
         mapView.onPause();
         super.onPause();
         //do we really need this?
-        fusedLocationProviderClient.removeLocationUpdates(locationCallback);
+        //fusedLocationProviderClient.removeLocationUpdates(locationCallback);
         isActivityInForeground=false;
+        initializeIdleCountdownTimer();
+        idleCountdownTimer.start();
+        Log.d(TAG, "onPause: countdown started");
     }
 
     //GOOGLE API FUSED LOCATION CONNECTION METHODS TO BE OVERRIDDEN
@@ -1045,9 +1124,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             channel.setDescription(description);
             // Register the channel with the system; you can't change the importance
             // or other notification behaviors after this
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            assert notificationManager != null;
-            notificationManager.createNotificationChannel(channel);
+            mNotificationManager.createNotificationChannel(channel);
         }
     }
 

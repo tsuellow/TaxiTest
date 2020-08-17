@@ -6,9 +6,11 @@ import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.util.Log;
 
+import com.example.android.taxitest.CommunicationsRecyclerView.CommsObject;
 import com.example.android.taxitest.CommunicationsRecyclerView.CommunicationsAdapter;
 import com.example.android.taxitest.connection.WebSocketDriverLocations;
 import com.example.android.taxitest.data.ClientObject;
+import com.example.android.taxitest.data.CommRecordObject;
 import com.example.android.taxitest.utils.PaintUtils;
 import com.example.android.taxitest.utils.ZoomUtils;
 import com.example.android.taxitest.vectorLayer.BarrioPolygonDrawable;
@@ -166,6 +168,5 @@ public class OtherClientsLayer extends OtherTaxiLayer {
             }, 100);
         }
     }
-
 
 }

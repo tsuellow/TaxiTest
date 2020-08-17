@@ -20,8 +20,10 @@ public class CurvedTextView  extends View {
     int offset;
 
     public void setText(String text){
-        plate=text;
-        invalidate();
+        if (text!=null){
+            plate=text;
+            invalidate();
+        }
     }
 
     public CurvedTextView(Context context, AttributeSet attrs) {

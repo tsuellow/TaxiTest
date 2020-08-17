@@ -23,6 +23,7 @@ import org.oscim.core.GeoPoint;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.text.Format;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -155,6 +156,15 @@ public class MiscellaneousUtils {
         return dateString;
     }
 
+    public static String getDateStringPast(Date date){
+        String dateString=null;
+        if(date!=null){
+            SimpleDateFormat sdf = new SimpleDateFormat("dd MMM - h:mm a");
+            dateString= sdf.format(date);
+        }
+        return dateString;
+    }
+
     public static Date String2Date(String dateStr){
         SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
         Date date = null;
@@ -220,6 +230,32 @@ public class MiscellaneousUtils {
         }
         return depPhone;
 
+    }
+
+    public static File makeFile(Context context, String dir, String filename){
+        File dirFile=new File(context.getExternalFilesDir(null),dir);
+        if (!dirFile.exists()){
+            dirFile.mkdirs();
+        }
+        return new File(dirFile,filename);
+    }
+
+    public static File makeAudioFile(Context context, String commId, String senderId){
+        return makeFile(context,commId+"/audio",senderId+"_"+(new Date().getTime())+".aac");
+    }
+
+    public static void saveBitmapToFile(File file, Bitmap bitmap){
+        try{
+            if (file.exists()){
+                file.delete();
+            }
+            FileOutputStream fileOut = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fileOut);
+            fileOut.flush();
+            fileOut.close();
+        }catch (Exception e){
+            Log.d("saveBitmapToFile", "saveBitmapToFile: failed");
+        }
     }
 
 }

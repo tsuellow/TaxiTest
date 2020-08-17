@@ -15,7 +15,9 @@ import android.widget.Toast;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.appcompat.widget.AppCompatImageView;
 
+import com.example.android.taxitest.MainActivity;
 import com.example.android.taxitest.R;
+import com.example.android.taxitest.utils.MiscellaneousUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -139,8 +141,8 @@ public class RecordButton extends AppCompatImageView implements View.OnTouchList
         if (isRecording){
             stopRecording();
         }
-        String fileName=getContext().getExternalCacheDir().getAbsolutePath()+"/"+ commId +"_"+new Date().getTime()+".aac";
-        file=new File(fileName);
+        //String fileName=getContext().getExternalCacheDir().getAbsolutePath()+"/"+ commId +"_"+new Date().getTime()+".aac";
+        file= MiscellaneousUtils.makeAudioFile(getContext(),commId, MainActivity.myId);
         recorder = new MediaRecorder();
         recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         recorder.setOutputFormat(MediaRecorder.OutputFormat.AAC_ADTS);
@@ -148,7 +150,7 @@ public class RecordButton extends AppCompatImageView implements View.OnTouchList
         recorder.setAudioSamplingRate(8000);
         recorder.setAudioChannels(1);
         recorder.setAudioEncodingBitRate(12000);
-        recorder.setOutputFile(fileName);
+        recorder.setOutputFile(file.getAbsolutePath());
         try {
             recorder.prepare();
         } catch (IOException e) {

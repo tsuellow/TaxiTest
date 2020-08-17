@@ -8,6 +8,7 @@ import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.android.taxitest.AppExecutors;
 import com.example.android.taxitest.CommunicationsRecyclerView.AcknowledgementObject;
 import com.example.android.taxitest.CommunicationsRecyclerView.CommsObject;
 import com.example.android.taxitest.CommunicationsRecyclerView.CommunicationsAdapter;
@@ -16,7 +17,9 @@ import com.example.android.taxitest.CommunicationsRecyclerView.MetaMessageObject
 import com.example.android.taxitest.CustomUtils;
 import com.example.android.taxitest.R;
 import com.example.android.taxitest.connection.WebSocketDriverLocations;
+import com.example.android.taxitest.data.CommRecordObject;
 import com.example.android.taxitest.data.SocketObject;
+import com.example.android.taxitest.data.SqlLittleDB;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
 import com.example.android.taxitest.utils.PaintUtils;
 import com.example.android.taxitest.utils.ZoomUtils;
@@ -48,6 +51,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
     public VectorMasterDrawable drawable;
     public BarriosLayer barriosLayer;
     public Context context;
+    public SqlLittleDB mDb;
     public boolean isBillboard;
     public MarkerSymbol.HotspotPlace placement;
 
@@ -90,6 +94,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
         prepareScaleAndAppearanceTransitions();
         isBillboard=false;
         placement=MarkerSymbol.HotspotPlace.CENTER;
+        mDb=SqlLittleDB.getInstance(context);
     }
 
     public void loadVectorDrawable(){
@@ -270,10 +275,10 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
 
     public CommsObject doClick(TaxiMarker item){
         item.setIsClicked(true);
-        item.setRotatedSymbol(fetchBitmap(item));
+        item.setRotatedSymbol(fetchBitmap(item));//repaint marker
         CommsObject comm=new CommsObject(item,context);
-        mCommunicationsAdapter.addItem(comm);
-        mConnectionLines.addLine(item);
+        mCommunicationsAdapter.addItem(comm);//add to comms
+        mConnectionLines.addLine(item);//add line
 
         update();
         mMap.updateMap(true);

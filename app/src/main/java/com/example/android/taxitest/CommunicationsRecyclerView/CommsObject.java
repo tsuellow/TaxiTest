@@ -20,11 +20,17 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.example.android.taxitest.AppExecutors;
 import com.example.android.taxitest.Constants;
 import com.example.android.taxitest.CustomUtils;
 import com.example.android.taxitest.MainActivity;
 import com.example.android.taxitest.R;
 import com.example.android.taxitest.connection.MySingleton;
+import com.example.android.taxitest.data.ClientObject;
+import com.example.android.taxitest.data.CommRecordObject;
+import com.example.android.taxitest.data.CommsDao;
+import com.example.android.taxitest.data.SqlLittleDB;
+import com.example.android.taxitest.data.TaxiObject;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
 import com.example.android.taxitest.vtmExtension.TaxiMarker;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
@@ -62,12 +68,15 @@ public class CommsObject {
     public static final int RECORDING_STARTED=-1;
     public static final int RECORDING_STOPPED=-2;
 
-    Context mContext;
+    public Context mContext;
+    public String commId;
     String mLatestMsjId;
     int mMsjStatus=OBSERVING;
     public TaxiMarker taxiMarker;
     private List<MetaMessageObject> msjList=new ArrayList<>();
     boolean accepted=false;
+
+    public static SqlLittleDB mDb;
 
     public List<MetaMessageObject> getMsjList() {
         return msjList;
@@ -102,12 +111,33 @@ public class CommsObject {
         }
     }
 
+    public static void initializeCommsDbAccess(Context context){
+        mDb=SqlLittleDB.getInstance(context);
+    }
+
     //list of individual communications
 
     public CommsObject(TaxiMarker taxiMarker, Context context) {
         this.taxiMarker=taxiMarker;
+        commId=CustomUtils.getOtherStringId(taxiMarker.taxiObject.getTaxiId())+"_"+(new Date().getTime());
         mContext=context;
+        archiveComm();
         sendDataRequest();
+    }
+
+    public void archiveComm(){
+        CommRecordObject commRec;
+        if (taxiMarker.taxiObject instanceof ClientObject){
+            commRec=new CommRecordObject(this,(TaxiObject) ((MainActivity)mContext).mOwnTaxiObject,mContext);
+        }else {
+            commRec=new CommRecordObject(this,(ClientObject) ((MainActivity)mContext).mOwnTaxiObject,mContext);
+        }
+        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                mDb.commsDao().insertComm(commRec);
+            }
+        });
     }
 
     public MetaMessageObject getTopOfList(){
@@ -135,11 +165,27 @@ public class CommsObject {
             if (!MainActivity.getIsActivityInForeground())
             MiscellaneousUtils.showNotification(mContext,"You have been contacted!", "Someone has sent you a message on TaxiTest recently");
         }
+        //change comm status
+        if (msjList.size()==1){
+            updateCommStatus(CommRecordObject.CONTACTED);
+        }
+
 
         if (msjUpdateListener!=null) {
             Log.d("socketTest","msjStatus:"+mMsjStatus);
             msjUpdateListener.onMsjUpdateReceived(mMsjStatus);
         }
+    }
+
+    public void updateCommStatus(int status){
+        Log.d("status7","msjStatus:"+status);
+        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                mDb.commsDao().updateStatus(commId,status);
+            }
+
+        });
     }
 
     public MetaMessageObject getNextUnplayedMsj(){
@@ -182,6 +228,7 @@ public class CommsObject {
     }
 
     public void setAccepted(boolean accepted) {
+        updateCommStatus(CommRecordObject.ACCEPTED);
         this.accepted = accepted;
     }
 
@@ -318,6 +365,7 @@ public class CommsObject {
                                 try{
                                     JSONObject data=(JSONObject) response.get("data");
                                     CustomUtils.interpretJson(data,commsObject);
+                                    updateCommRec();//insert received data into db
                                     dataUpdateListener.onDataUpdateReceived();
                                 }catch (Exception e){
                                     Log.d("commsobject", "recibimos paja");
@@ -343,6 +391,15 @@ public class CommsObject {
                     }
                 });
         MySingleton.getInstance(mContext).addToRequestQueue(jsonObjectRequestDriver);
+    }
+
+    public void updateCommRec(){
+        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                mDb.commsDao().updatePersonalData(commId,commCardData.firstName,commCardData.lastName,commCardData.gender,commCardData.dob.getTime(),commCardData.collar,commCardData.reputation);
+            }
+        });
     }
 
     //callback for when a new message has arrived

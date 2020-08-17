@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:card_view="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:theme="@style/Theme.MaterialComponents.Light"
+    android:clipToPadding="false"
+    android:clipChildren="false"
+    >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:id="@+id/rl_container"
+        android:layout_margin="4dp"
+        android:background="@drawable/rounded_background"
+        android:clipToPadding="false"
+        android:clipChildren="false"
+        >
+        <androidx.cardview.widget.CardView
+            xmlns:card_view="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/cv_border_color"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginStart="3dp"
+            android:layout_marginTop="3dp"
+            android:elevation="0dp"
+            card_view:cardCornerRadius="32dp"
+            card_view:cardBackgroundColor="#000">
+
+            <androidx.cardview.widget.CardView
+                xmlns:card_view="http://schemas.android.com/apk/res-auto"
+                android:id="@+id/roundCardView"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_marginStart="2dp"
+                android:layout_marginTop="2dp"
+                android:elevation="0dp"
+                card_view:cardCornerRadius="30dp"
+                card_view:cardBackgroundColor="#000">
+
+                <ImageView
+                    android:id="@+id/iv_photo"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/clooney" />
+
+                <com.example.android.taxitest.utils.CurvedTextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:id="@+id/ct_collar"/>
+
+            </androidx.cardview.widget.CardView>
+
+        </androidx.cardview.widget.CardView>
+
+
+        <LinearLayout
+            android:id="@+id/ll_one"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginStart="6dp"
+            android:layout_toStartOf="@+id/bt_info"
+            android:layout_toEndOf="@+id/cv_border_color"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:padding="4dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:animateLayoutChanges="true"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tv_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Fulanito"
+                    android:textColor="#000"
+                    android:textSize="14sp" />
+
+
+                <ImageView
+                    android:id="@+id/iv_rep"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_gravity="bottom"
+                    android:layout_marginStart="6dp"
+                    android:layout_marginBottom="2dp"
+                    android:src="@drawable/star"
+                    android:tint="@color/colorDeselected" />
+
+                <TextView
+                    android:id="@+id/tv_rep"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="2dp"
+                    android:text="4.0"
+                    android:textColor="#000"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="10sp"
+                    android:text="from: " />
+                <TextView
+                    android:id="@+id/tv_origin"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:shadowColor="@android:color/black"
+                    android:shadowDx="1"
+                    android:shadowDy="1"
+                    android:shadowRadius="1"
+                    android:text="barrio name"
+                    android:textColor="@color/colorRed"
+                    android:textSize="10sp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="10sp"
+                    android:text="to: " />
+                <TextView
+                    android:id="@+id/tv_destination"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:shadowColor="@android:color/black"
+                    android:shadowDx="1"
+                    android:shadowDy="1"
+                    android:shadowRadius="1"
+                    android:text="barrio name"
+                    android:textColor="@color/colorBlue"
+                    android:textSize="10sp" />
+
+            </LinearLayout>
+
+
+        </LinearLayout>
+
+
+
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="2dp"
+            android:layout_marginEnd="4dp"
+            android:layout_marginTop="13dp"
+            android:layout_toStartOf="@id/bt_profile"
+            android:id="@+id/bt_info"
+            android:tint="@color/colorDeselected"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/info"/>
+
+
+
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:layout_centerVertical="true"
+            android:layout_alignParentEnd="true"
+            android:id="@+id/bt_profile"
+            app:backgroundTint="@android:color/black"
+            android:src="@drawable/profile"
+            app:tint="@null"
+            android:scaleType="fitXY"
+            app:borderWidth="0dp"
+            app:elevation="1dp"
+            app:fabCustomSize="40dp" />
+
+
+
+
+
+
+        <ImageButton
+            android:layout_width="40dp"
+            android:layout_height="20dp"
+            android:paddingTop="5dp"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp"
+            android:scaleType="fitXY"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentBottom="true"
+            android:tint="@color/colorSelected"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/three_dots"
+            android:id="@+id/bt_comm_history" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="4dp"
+            android:layout_marginStart="10dp"
+            android:layout_toEndOf="@id/cv_border_color"
+            android:orientation="horizontal">
+
+
+            <TextView
+                android:id="@+id/tv_status_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:textAlignment="center"
+                android:text="accepted"
+                android:textColor="@color/colorDeselected"
+                android:textSize="10sp" />
+
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="4dp"
+            android:layout_toStartOf="@id/bt_profile"
+            android:orientation="horizontal">
+
+
+            <TextView
+                android:id="@+id/tv_date_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:textAlignment="center"
+                android:text="17 mar - 10:32 am"
+                android:textColor="@color/colorDeselected"
+                android:textSize="10sp" />
+
+        </LinearLayout>
+    </RelativeLayout>
+
+</LinearLayout>

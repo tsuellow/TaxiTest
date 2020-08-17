@@ -11,6 +11,7 @@ import com.example.android.taxitest.utils.MiscellaneousUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.Date;
 
 public class CustomUtils {
@@ -31,6 +32,9 @@ public class CustomUtils {
             byte[] biteOutput = Base64.decode(base64, 0);
             Bitmap photo = BitmapFactory.decodeByteArray(biteOutput, 0, biteOutput.length);
             comm.setCommCardData(comm.new CardData(firstName,collar,firstName,lastName,reputation,dob,gender,photo));
+            //save thumb to gallery
+            File thumbFile=MiscellaneousUtils.makeFile(comm.mContext,"thumbs",getOtherStringId(comm.taxiMarker.taxiObject.getTaxiId())+".jpg");
+            MiscellaneousUtils.saveBitmapToFile(thumbFile,photo);
         }catch (JSONException e){
             e.printStackTrace();
         }

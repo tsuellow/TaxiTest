@@ -67,6 +67,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
         mContext=context;
         mComms=new ArrayList<CommsObject>();
         connectionLines=connectionLineLayer;
+        CommsObject.initializeCommsDbAccess(mContext);
 
         //socket code placeholder
         try {

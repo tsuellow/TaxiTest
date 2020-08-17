@@ -2,9 +2,12 @@ package com.example.android.taxitest.CommunicationsRecyclerView;
 
 import android.util.Log;
 
+import com.example.android.taxitest.AppExecutors;
 import com.example.android.taxitest.Constants;
 import com.example.android.taxitest.CustomUtils;
 import com.example.android.taxitest.MainActivity;
+import com.example.android.taxitest.data.MsjRecordObject;
+import com.example.android.taxitest.utils.MiscellaneousUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -13,12 +16,12 @@ import java.util.Date;
 import java.util.List;
 
 public class MetaMessageObject{
-    boolean isOutgoing;
-    boolean wasPlayed=false;
-    MessageObject msjObject;
-    File audioFile;
-    List<AcknowledgementObject> ackList=new ArrayList<>();
-    CommsObject comm;
+    public boolean isOutgoing;
+    public boolean wasPlayed=false;
+    public MessageObject msjObject;
+    public File audioFile;
+    public List<AcknowledgementObject> ackList=new ArrayList<>();
+    public CommsObject comm;
 
     public boolean isWasPlayed() {
         return wasPlayed;
@@ -53,7 +56,7 @@ public class MetaMessageObject{
         Log.d("socketTest",msjObject.getMsgId()+"__2");
         if (msjObject.getAudioBytes()!=null) {
             try {
-                audioFile = new File(comm.mContext.getExternalCacheDir(), "/" + msjObject.msgId + ".aac");
+                audioFile = MiscellaneousUtils.makeAudioFile(comm.mContext,comm.commId,msjObject.sendingId);
                 Log.d("socketTest",audioFile.getAbsolutePath());
                 FileOutputStream fos = new FileOutputStream(audioFile);
                 fos.write(msjObject.getAudioBytes());
@@ -67,6 +70,7 @@ public class MetaMessageObject{
             audioFile = null;
             wasPlayed=true;
         }
+        archiveMsj();
     }
 
     public MetaMessageObject(int intendCode, File audioFile, CommsObject comm) {
@@ -75,6 +79,7 @@ public class MetaMessageObject{
         this.comm=comm;
         this.msjObject = new MessageObject(MainActivity.myId, CustomUtils.getOtherStringId(comm.taxiMarker.taxiObject.getTaxiId()),intendCode,audioFile,new Date().getTime());
         this.audioFile = audioFile;
+        archiveMsj();
     }
 
     public List<AcknowledgementObject> getAckList() {
@@ -83,6 +88,7 @@ public class MetaMessageObject{
 
     public void addAckAtTopOfList(AcknowledgementObject ack){
         ackList.add(0,ack);
+        updateMsj(ack);//archive ack
         if (ack.getMsgId().equals(comm.mLatestMsjId) && isOutgoing) {
             comm.ackUpdateListener.onAckUpdateReceived(ack);
         }
@@ -102,5 +108,67 @@ public class MetaMessageObject{
         return topAck;
     }
 
+    public void archiveMsj(){
+        Log.d("msjRec", "archiveMsj: success");
+        MsjRecordObject msjRec=new MsjRecordObject(this);
+        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                CommsObject.mDb.commsDao().insertMsj(msjRec);
+            }
+        });
+    }
 
+    public void updateMsj(AcknowledgementObject ack){
+        switch (ack.getAckCode()){
+            case CommsObject.RECEIVED:
+               updateReceived(ack);
+               break;
+            case CommsObject.PLAYED:
+                updatePlayed(ack);
+                break;
+            case CommsObject.HEARD:
+                updateHeard(ack);
+                break;
+            case CommsObject.FAILED:
+                updateMsjStatus(ack,MsjRecordObject.FAILED);
+                break;
+        }
+        Log.d("msjRec", "archiveMsj: "+ack.getAckCode());
+    }
+
+
+
+    private void updateReceived(AcknowledgementObject ack){
+        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                CommsObject.mDb.commsDao().updateReceived(ack.msgId,ack.timestamp);
+            }
+        });
+    }
+    private void updatePlayed(AcknowledgementObject ack){
+        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                CommsObject.mDb.commsDao().updatePlayed(ack.msgId,ack.timestamp);
+            }
+        });
+    }
+    private void updateHeard(AcknowledgementObject ack){
+        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                CommsObject.mDb.commsDao().updateHeard(ack.msgId,ack.timestamp);
+            }
+        });
+    }
+    private void updateMsjStatus(AcknowledgementObject ack, int status){
+        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                CommsObject.mDb.commsDao().updateMsjStatus(ack.msgId,status);
+            }
+        });
+    }
 }
