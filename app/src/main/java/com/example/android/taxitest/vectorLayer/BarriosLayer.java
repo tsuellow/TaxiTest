@@ -52,7 +52,7 @@ public class BarriosLayer extends VectorLayer {
         nowhere.add(new GeoPoint(-0.1,0.1));
         nowhere.add(new GeoPoint(-0.1,-0.1));
         nowhere.add(new GeoPoint(0.1,-0.1));
-        noBarrioSelected=new BarrioPolygonDrawable(entireCountry,BarrioPolygonDrawable.sb.build(),"outside of city",-1);
+        noBarrioSelected=new BarrioPolygonDrawable(entireCountry,BarrioPolygonDrawable.sb.fillColor(Color.BLACK).build(),"outside of city",-1);
         noDestinationSelected=new BarrioPolygonDrawable(nowhere,BarrioPolygonDrawable.sb.fillColor(Color.WHITE).build(), "empty",-2);
     }
 

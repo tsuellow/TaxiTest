@@ -77,10 +77,10 @@ public class BasicMapFragment extends Fragment implements GoogleApiClient.Connec
     private LabelLayer mLabelLayer;
     private MapScaleBar mapScaleBar;
     private MapScaleBarLayer mMapScaleBarLayer;
-    private Compass mCompass;
+    public Compass mCompass;
     MapEventsReceiver mMapEventsReceiver;
-    BarriosLayer mBarriosLayer;
-    OwnMarkerLayer mOwnMarkerLayer;
+    public BarriosLayer mBarriosLayer;
+    public OwnMarkerLayer mOwnMarkerLayer;
     ItemizedLayer<MarkerItem> customItemLayer;
 
     VectorMasterDrawable ownIcon;
@@ -98,6 +98,8 @@ public class BasicMapFragment extends Fragment implements GoogleApiClient.Connec
     private  GeoPoint destGeo;
     float mTilt;
     double mScale;
+    double mZoom;
+    float mPivot;
 
     boolean wasMoved=false;
     private static final String TAG = "BasicMapFragment";
@@ -118,7 +120,7 @@ public class BasicMapFragment extends Fragment implements GoogleApiClient.Connec
         //initialize map
         mTileSource = new MapFileTileSource();
         //copyFileToExternalStorage(R.raw.result);//put in async task
-        File file=new File(getContext().getExternalFilesDir(null), Constants.MAP_FILE);
+        File file=new File(requireContext().getExternalFilesDir(null), Constants.MAP_FILE);
         String mapPath = file.getAbsolutePath();
         if (!mTileSource.setMapFile(mapPath)) {
             //Toast.makeText(mContext,"could not read map",Toast.LENGTH_LONG).show();
@@ -127,9 +129,9 @@ public class BasicMapFragment extends Fragment implements GoogleApiClient.Connec
         // Vector layer
         VectorTileLayer tileLayer = mapView.map().setBaseMap(mTileSource);
         // Render theme
-        mapView.map().setTheme(new AssetsRenderTheme(Objects.requireNonNull(getContext()).getAssets(),"", "vtm/day_mode.xml"));
+        mapView.map().setTheme(new AssetsRenderTheme(requireContext().getAssets(),"", "vtm/day_mode.xml"));
         //add set pivot
-        mapView.map().viewport().setMapViewCenter(0.0f, 0.0f);
+        setPivot(0.0f);
         //set important variables
         mTilt = mapView.map().viewport().getMinTilt();
         mScale = 1 << 14;
@@ -153,11 +155,10 @@ public class BasicMapFragment extends Fragment implements GoogleApiClient.Connec
         // BarriosLayer
         mBarriosLayer =new BarriosLayer(mapView.map(), getContext(), Constants.barriosFile);
         // OwnMarkerLayer
-        ownIcon=new VectorMasterDrawable(getContext(),R.drawable.location_dot);
-        mOwnMarkerLayer= new OwnMarkerLayer(getContext(), mBarriosLayer,mapView.map(),new ArrayList<OwnMarker>(),ownIcon,Constants.lastLocation, new GeoPoint(13.0923151,-86.3609919),mCompass);
+        setOwnIcon();
+        setOwnMarkerLayer();
         //set customLayer
-        Bitmap exampleBitmap= AndroidGraphicsCustom.drawableToBitmap(getContext().getResources().getDrawable(R.drawable.location_pin,null),100);
-        customItemLayer=new ItemizedLayer<MarkerItem>(mapView.map(), new MarkerSymbol(exampleBitmap,MarkerSymbol.HotspotPlace.BOTTOM_CENTER,true));
+        setCustomLayer();
         // MapEventsReceiver
         setMapEventsReceiver(mapView);
 
@@ -180,7 +181,7 @@ public class BasicMapFragment extends Fragment implements GoogleApiClient.Connec
         //last known location
         if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ) {
             fusedLocationProviderClient.getLastLocation()
-                    .addOnSuccessListener(Objects.requireNonNull(getActivity()), new OnSuccessListener<Location>() {
+                    .addOnSuccessListener(requireActivity(), new OnSuccessListener<Location>() {
                         @Override
                         public void onSuccess(Location location) {
                             // Got last known location. In some rare situations this can be null.
@@ -230,6 +231,40 @@ public class BasicMapFragment extends Fragment implements GoogleApiClient.Connec
         doBeforeInflation();
 
         return rootView;
+    }
+
+    public void setOwnMarkerLayer() {
+        mOwnMarkerLayer= new OwnMarkerLayer(getContext(), mBarriosLayer,mapView.map(),new ArrayList<OwnMarker>(),ownIcon, Constants.lastLocation, new GeoPoint(0,0),mCompass);
+    }
+
+    public void setPivot(float pivot) {
+        mPivot=pivot;
+        mapView.map().viewport().setMapViewCenter(0.0f, pivot);
+        mapView.map().render();
+        mapView.map().updateMap();
+    }
+
+    public void setTilt(float tilt) {
+        mTilt=tilt;
+        mapView.map().viewport().setTilt(tilt);
+        mapView.map().updateMap();
+        mapView.map().render();
+    }
+
+    public void setZoom(double zoom) {
+        mZoom=zoom;
+        mScale=Math.pow(2, zoom);
+        mapView.map().viewport().setMapPosition(mapView.map().getMapPosition().setScale(mScale));
+        mapView.map().updateMap();
+    }
+
+    public void setOwnIcon() {
+        ownIcon=new VectorMasterDrawable(getContext(),R.drawable.location_dot);
+    }
+
+    public void setCustomLayer() {
+        Bitmap exampleBitmap= AndroidGraphicsCustom.drawableToBitmap(getContext().getResources().getDrawable(R.drawable.location_pin,null),100);
+        customItemLayer=new ItemizedLayer<MarkerItem>(mapView.map(), new MarkerSymbol(exampleBitmap,MarkerSymbol.HotspotPlace.BOTTOM_CENTER,true));
     }
 
     public void doBeforeInflation(){
@@ -379,8 +414,8 @@ public class BasicMapFragment extends Fragment implements GoogleApiClient.Connec
     public void onResume() {
         super.onResume();
         mapView.onResume();
-        if (ActivityCompat.checkSelfPermission(Objects.requireNonNull(getContext()), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             //what to do if permissions are not granted
             return;
         }

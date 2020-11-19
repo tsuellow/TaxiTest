@@ -70,23 +70,22 @@ import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 public class RegistrationActivity extends AppCompatActivity {
 
-    EditText firstName, lastName, phoneNr, priorities, nrPlate;
-    TextInputLayout loFirstName, loGender, loDob, loPhone, loNrPlate;
-    AutoCompleteTextView gender;
-    EditText dob;
+    public EditText firstName, lastName, phoneNr, priorities, dob;
+    TextInputLayout loFirstName, loGender, loDob, loPhone;
+    public AutoCompleteTextView gender;
     TextView textPhotoFace, textWarning;
-    CheckBox sharePhone, agreeToTerms;
+    public CheckBox sharePhone, agreeToTerms;
 
-    ImageView photoFace, infoFirst, infoLast, infoPhone, infoPrio, infoSharePhone;
-    Button register, readTerms;
+    public ImageView photoFace, infoFirst, infoLast, infoPhone, infoPrio, infoSharePhone;
+    public Button register, readTerms;
     ScrollView svParent;
 
     Date dateOfBirth;
-    SharedPreferences preferences;
+    public SharedPreferences preferences;
 
-    int REQUEST_TAKE_FACE=1011;
-    int REQUEST_TAKE_CAR=1111;
-    int REQUEST_CODE=223;
+    public int REQUEST_TAKE_FACE=1011;
+    public int REQUEST_TAKE_CAR=1111;
+    public int REQUEST_CODE=223;
 
     private static final String TAG = "RegistrationActivity";
 
@@ -303,7 +302,7 @@ public class RegistrationActivity extends AppCompatActivity {
 
     }
 
-    private File imageFile(int requestType, Size size){
+    public File imageFile(int requestType, Size size){
         String name=requestType==REQUEST_TAKE_FACE?"face":"car";
         name=size==Size.FULL?name+"_full":size==Size.MED?name+"_med":name+"_thumb";
         File photoFile;
@@ -457,7 +456,7 @@ public class RegistrationActivity extends AppCompatActivity {
         if (checkAllEntries()){
             JSONObject json=writeJson();
             if (json!=null){
-                registerUser(json,RegistrationActivity.this);
+                registerUser(json,this);
                 //send json
             }
         }else{
@@ -512,6 +511,7 @@ public class RegistrationActivity extends AppCompatActivity {
                                 SharedPreferences.Editor editor=preferences.edit();
                                 editor.putString("taxiId",CustomUtils.getOwnStringId(id));
                                 editor.apply();
+                                savePrefs();
                                 if (loadingDialog.isShowing())
                                 loadingDialog.dismiss();
                                 Dialog successDialog=makeRegistrationDialog(context,false,false,CustomUtils.getOwnStringId(id));
@@ -547,6 +547,20 @@ public class RegistrationActivity extends AppCompatActivity {
                     }
                 });
         MySingleton.getInstance(context).addToRequestQueue(jsonObjectRequest);
+    }
+
+    public void  savePrefs(){
+        SharedPreferences.Editor editor=preferences.edit();
+        editor.putString("firstname",firstName.getText().toString());
+        editor.putString("lastname",lastName.getText().toString());
+        editor.putString("gender",gender.getText().toString().contentEquals("male")?"m":"f");
+        editor.putString("phone",phoneNr.getText()==null?"":MiscellaneousUtils.depuratePhone(phoneNr.getText().toString()));
+        editor.putString("prio",priorities.getText().toString());
+        editor.putString("photofacepath",imageFile(REQUEST_TAKE_FACE,Size.MED).getAbsolutePath());
+        editor.putLong("dob",dateOfBirth.getTime());
+        editor.putBoolean("sharephone",sharePhone.isChecked());
+        editor.putBoolean("agreetoterms",agreeToTerms.isChecked());
+        editor.apply();
     }
 
 

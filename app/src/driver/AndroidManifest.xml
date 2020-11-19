@@ -47,6 +47,15 @@
         <activity
             android:name=".PastTripsActivity"
             android:theme="@style/AppTheme.NoActionBar"/>
+        <activity
+            android:name=".SettingsActivity"
+            android:launchMode="singleTask"
+            tools:ignore="LockedOrientationActivity"/>
+        <activity
+            android:name=".ModifyProfileActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme"
+            tools:ignore="LockedOrientationActivity" />
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="@string/file_provider"

@@ -86,10 +86,10 @@
                 android:layout_height="wrap_content"
                 android:text="Fulanito Perez"
                 android:textColor="#000"
-                android:textSize="14sp" />
+                android:textSize="16sp" />
 
             <TextView
-                android:id="@+id/tv_age_gender"
+                android:id="@+id/tv_age_gender_id"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="42 (m) / ID: t2100"
@@ -101,7 +101,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="plate: ES12345"
-                android:textSize="10sp" />
+                android:textSize="12sp" />
 
         </LinearLayout>
 
@@ -123,7 +123,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="13sp"
+                android:textSize="14sp"
                 android:text="date: " />
 
             <TextView
@@ -132,7 +132,7 @@
                 android:layout_height="wrap_content"
                 android:text="20 Aug 2020 - 3:14 pm"
                 android:textColor="@color/colorSelected"
-                android:textSize="13sp" />
+                android:textSize="14sp" />
 
 
         </LinearLayout>
@@ -146,7 +146,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="13sp"
+                android:textSize="14sp"
                 android:text="from: " />
 
             <TextView
@@ -159,11 +159,11 @@
                 android:shadowRadius="1"
                 android:text="barrio name"
                 android:textColor="@color/colorBlue"
-                android:textSize="13sp" />
+                android:textSize="14sp" />
 
             <ImageButton
-                android:layout_width="17dp"
-                android:layout_height="17dp"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:layout_marginStart="6dp"
                 android:scaleType="centerInside"
                 android:id="@+id/iv_pin_from"
@@ -182,7 +182,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="13sp"
+                android:textSize="14sp"
                 android:text="to: " />
 
             <TextView
@@ -195,11 +195,11 @@
                 android:shadowRadius="1"
                 android:text="barrio name"
                 android:textColor="@color/colorBlue"
-                android:textSize="13sp" />
+                android:textSize="14sp" />
 
             <ImageButton
-                android:layout_width="17dp"
-                android:layout_height="17dp"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:layout_marginStart="6dp"
                 android:scaleType="centerInside"
                 android:id="@+id/iv_pin_to"
@@ -217,7 +217,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="13sp"
+                android:textSize="14sp"
                 android:text="passengers: " />
 
             <TextView
@@ -226,7 +226,7 @@
                 android:layout_height="wrap_content"
                 android:text="3 persons"
                 android:textColor="@color/colorSelected"
-                android:textSize="13sp" />
+                android:textSize="14sp" />
 
         </LinearLayout>
 
@@ -239,7 +239,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="13sp"
+                android:textSize="14sp"
                 android:text="status: " />
 
             <TextView
@@ -248,7 +248,7 @@
                 android:layout_height="wrap_content"
                 android:text="Accepted"
                 android:textColor="@color/colorSelected"
-                android:textSize="13sp" />
+                android:textSize="14sp" />
 
         </LinearLayout>
 
@@ -280,7 +280,7 @@
 
 
         <Button
-            android:id="@+id/bt_continue"
+            android:id="@+id/bt_dialog_close"
             android:layout_width="wrap_content"
             android:layout_height="40dp"
             android:padding="8dp"

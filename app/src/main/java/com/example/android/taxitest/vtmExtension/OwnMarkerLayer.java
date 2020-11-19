@@ -30,7 +30,7 @@ public class OwnMarkerLayer extends ItemizedLayer<OwnMarker> implements Map.Upda
     private Compass mCompass;
     private VectorMasterDrawable drawable;
     private BarriosLayer barriosLayer;
-    private Context context;
+    public Context context;
     private static int destId;
     private static int isActive=1;
 
@@ -115,8 +115,8 @@ public class OwnMarkerLayer extends ItemizedLayer<OwnMarker> implements Map.Upda
     public void moveMarker(GeoPoint point){
         mItemList.get(0).setGeoPoint(point);
         if(!checkDest(mItemList.get(0).destGeoPoint)){
-            mItemList.get(0).setRotatedMarker(new MarkerSymbol(fetchBitmap(mItemList.get(0).destGeoPoint,false), MarkerSymbol.HotspotPlace.CENTER,false),mCompass.getRotation());
-            prepareScaledBitmapArray(fetchDrawable(mItemList.get(0).destGeoPoint,false));
+            mItemList.get(0).setRotatedMarker(new MarkerSymbol(fetchBitmap(mItemList.get(0).destGeoPoint,isActive==1), MarkerSymbol.HotspotPlace.CENTER,false),mCompass.getRotation());
+            prepareScaledBitmapArray(fetchDrawable(mItemList.get(0).destGeoPoint,isActive==1));
         }
         populate();
     }
@@ -130,28 +130,29 @@ public class OwnMarkerLayer extends ItemizedLayer<OwnMarker> implements Map.Upda
 
     public void setIsActive(int code){
         isActive=code;
-        mItemList.get(0).setRotatedMarker(new MarkerSymbol(fetchBitmap(mItemList.get(0).destGeoPoint,false), MarkerSymbol.HotspotPlace.CENTER,false),mCompass.getRotation());
+        mItemList.get(0).setRotatedMarker(new MarkerSymbol(fetchBitmap(mItemList.get(0).destGeoPoint,isActive == 1), MarkerSymbol.HotspotPlace.CENTER,false),mCompass.getRotation());
+        prepareScaledBitmapArray(fetchDrawable(mItemList.get(0).destGeoPoint,isActive==1));
     }
 
 
     //checks if bitmap for geopoint already exists else it calculates a new one
-    public Bitmap fetchBitmap(GeoPoint geoPoint, boolean isClicked) {
-        VectorMasterDrawable drawable = fetchDrawable(geoPoint,isClicked);
+    public Bitmap fetchBitmap(GeoPoint geoPoint, boolean isSolid) {
+        VectorMasterDrawable drawable = fetchDrawable(geoPoint,isSolid);
         Bitmap bitmap = AndroidGraphicsCustom.drawableToBitmap(drawable, ZoomUtils.getDrawableSize(mMap.getMapPosition().getZoom()));
         return bitmap;
     }
 
-    public Bitmap fetchBitmap(GeoPoint geoPoint, boolean isClicked, double zoom) {
-        VectorMasterDrawable drawable = fetchDrawable(geoPoint,isClicked);
+    public Bitmap fetchBitmap(GeoPoint geoPoint, boolean isSolid, double zoom) {
+        VectorMasterDrawable drawable = fetchDrawable(geoPoint,isSolid);
         Bitmap bitmap = AndroidGraphicsCustom.drawableToBitmap(drawable, ZoomUtils.getDrawableSize(zoom));
         return bitmap;
     }
 
-    public VectorMasterDrawable fetchDrawable(GeoPoint geoPoint, boolean isClicked){
+    public VectorMasterDrawable fetchDrawable(GeoPoint geoPoint, boolean isSolid){
         BarrioPolygonDrawable barrio = barriosLayer.getContainingBarrio(geoPoint);
         this.destId=barrio.getBarrioId();
         int color = barrio.getStyle().fillColor;
-        VectorMasterDrawable drawable = modifyDrawable(color, isClicked);
+        VectorMasterDrawable drawable = modifyDrawable(color, isSolid);
         return drawable;
     }
 
@@ -165,11 +166,11 @@ public class OwnMarkerLayer extends ItemizedLayer<OwnMarker> implements Map.Upda
     }
 
     // modifies drawable according to destination colors
-    public VectorMasterDrawable modifyDrawable(int color, boolean isClicked) {
+    public VectorMasterDrawable modifyDrawable(int color, boolean isSolid) {
         VectorMasterDrawable result = new VectorMasterDrawable(context,drawable.getResID());
         PathModel pathModelArrow=result.getPathModelByName("arrow");
         PathModel pathModelCircle=result.getPathModelByName("circle");
-        if (isActive==1){
+        if (isSolid){
             pathModelArrow.setFillAlpha(1.0f);
             pathModelCircle.setFillAlpha(1.0f);
         }else {
@@ -179,9 +180,7 @@ public class OwnMarkerLayer extends ItemizedLayer<OwnMarker> implements Map.Upda
         pathModelArrow.setFillColor(color);
         pathModelCircle.setStrokeColor(PaintUtils.getSaturation(color));
         pathModelCircle.setStrokeAlpha(1.0f);
-        if (isClicked){
-            pathModelArrow.setStrokeWidth(2.0f);
-        }
+
         return result;
     }
 

@@ -1,6 +1,7 @@
 package com.example.android.taxitest;
 
 import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
@@ -13,6 +14,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 
 import com.example.android.taxitest.CommunicationsRecyclerView.CommsObject;
 import com.example.android.taxitest.CommunicationsRecyclerView.CommunicationsAdapter;
@@ -39,7 +41,9 @@ public class MainActivityDriver extends MainActivity{
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        defaultPivot=0.75f;
         super.onCreate(savedInstanceState);
+
         rvCommsAdapter.setCommAcceptedListener(new CommunicationsAdapter.CommAcceptedListener() {
             @Override
             public void onCommAccepted(CommsObject comm) {
@@ -149,6 +153,7 @@ public class MainActivityDriver extends MainActivity{
             @Override
             public void onClick(View view) {
                 setDestGeo(new GeoPoint(0.0,0.0));
+                setFilter(false);
                 dialog.dismiss();
             }
         });
@@ -170,6 +175,25 @@ public class MainActivityDriver extends MainActivity{
 
         dialog.show();
 
+    }
+
+    public void setStatusText(int code, Context context){
+        switch (code){
+            case 1:
+                status.setText(" Searching");
+                status.setTextColor(ContextCompat.getColor(context,R.color.colorGreen));
+                statusDot.setColorFilter(ContextCompat.getColor(context, R.color.colorGreen), android.graphics.PorterDuff.Mode.SRC_IN);
+                break;
+            case 2:
+                status.setText(" Taxi full");
+                status.setTextColor(ContextCompat.getColor(context,R.color.colorBlue));
+                statusDot.setColorFilter(ContextCompat.getColor(context, R.color.colorBlue), android.graphics.PorterDuff.Mode.SRC_IN);
+                break;
+            default:
+                status.setText(" Inactive");
+                status.setTextColor(ContextCompat.getColor(context,R.color.colorRed));
+                statusDot.setColorFilter(ContextCompat.getColor(context, R.color.colorRed), android.graphics.PorterDuff.Mode.SRC_IN);
+        }
     }
 
     @Override

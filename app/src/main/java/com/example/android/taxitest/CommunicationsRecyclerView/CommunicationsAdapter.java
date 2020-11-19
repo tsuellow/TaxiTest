@@ -74,7 +74,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
             IO.Options opts=new IO.Options();
             opts.forceNew = true;
             opts.query = "id="+ MainActivity.myId;
-            mSocket = IO.socket("https://id-ex-websocket-audiochat-eu.herokuapp.com",opts);
+            mSocket = IO.socket("http://ec2-3-88-176-60.compute-1.amazonaws.com:3000",opts);
             Log.d("socketTest","success");
             initializeSocketListener();
             connectSocket();

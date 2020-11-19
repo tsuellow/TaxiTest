@@ -11,7 +11,7 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
 @Database(entities = {TaxiObject.class, TaxiOld.class, TaxiNew.class, ClientObject.class,
-        ClientOld.class, ClientNew.class, CommRecordObject.class, MsjRecordObject.class},version = 9,exportSchema = false)
+        ClientOld.class, ClientNew.class, CommRecordObject.class, MsjRecordObject.class},version = 10,exportSchema = false)
 public abstract class SqlLittleDB extends RoomDatabase {
 
 

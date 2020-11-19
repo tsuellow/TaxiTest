@@ -23,11 +23,13 @@ import android.os.Handler;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -156,6 +158,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     public Context mContext;
     Vibrator mVibrator;
     public VectorMasterDrawable otherIcon, ownIcon;
+    public float defaultPivot=0.75f;
     float mTilt;
     double mScale;
     public SocketObject mOwnTaxiObject;
@@ -259,8 +262,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         // BarriosLayer
         mBarriosLayer =new BarriosLayer(mapView.map(), mContext, Constants.barriosFile);
         //LocConnections
-        mWebSocketDriverLocs =new WebSocketDriverLocations("https://id-ex-theos-taxi-test1.herokuapp.com/", mContext,rvCommsAdapter);
-        mWebSocketClientLocs =new WebSocketClientLocations("https://websocket-clients.herokuapp.com/", mContext,rvCommsAdapter);
+        mWebSocketDriverLocs =new WebSocketDriverLocations("http://ec2-3-88-176-60.compute-1.amazonaws.com:3003/", mContext,rvCommsAdapter);
+        mWebSocketClientLocs =new WebSocketClientLocations("http://ec2-3-88-176-60.compute-1.amazonaws.com:3002/", mContext,rvCommsAdapter);
 
         // OwnMarkerLayer
         setOwnMarkerLayer();
@@ -506,6 +509,10 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         Log.d(TAG, "setIsActive: is executed"+code);
         isActive=code;
         mOwnMarkerLayer.setIsActive(code);
+        setStatusText(code,context);
+    }
+
+    public void setStatusText(int code, Context context){
         switch (code){
             case 1:
                 status.setText(" Searching");
@@ -530,16 +537,19 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             @Override
             public void onClick(View view) {
                 if (!filterOn){
-                    filterOn=true;
-                    mWebSocketDriverLocs.setFilter(true);
-                    filterImage.setImageAlpha(255);
+                    setFilter(true);
                 }else{
-                    filterOn=false;
-                    mWebSocketDriverLocs.setFilter(false);
-                    filterImage.setImageAlpha(100);
+                    setFilter(false);
                 }
             }
         });
+    }
+
+    public void setFilter(boolean on){
+        filterOn=on;
+        mWebSocketDriverLocs.setFilter(on);
+        int alpha=on?255:100;
+        filterImage.setImageAlpha(alpha);
     }
 
     public boolean isFirstLocationFix=true;
@@ -599,14 +609,22 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     public void setupMap() {
         // Render theme
         mapView.map().setTheme(new AssetsRenderTheme(getAssets(),"", "vtm/day_mode.xml"));
-        //add set pivot
-        mapView.map().viewport().setMapViewCenter(0.0f, 0.75f);
-        //set important variables
-        mTilt = preferences.getFloat("defaultTilt",30.0f);
-        mapView.map().viewport().setTilt(mTilt);
+        //set zoom tilt and pivot to defaults
         mapView.map().viewport().setMaxTilt(57.5f);
-        mScale =(double)preferences.getFloat("defaultScale",1 << 17);
+        setPivotTiltZoom();
         mapView.map().setMapPosition(Constants.lastLocation.getLatitude(),Constants.lastLocation.getLongitude(), mScale);
+    }
+
+    public void setPivotTiltZoom(){
+        //pivot
+        float pivot=preferences.getFloat("pivot",defaultPivot);
+        mapView.map().viewport().setMapViewCenter(0.0f, pivot);
+        //tilt
+        mTilt = preferences.getFloat("tilt",30.0f);
+        mapView.map().viewport().setTilt(mTilt);
+        //zoom
+        float zoom=preferences.getFloat("zoom",17.0f);
+        mScale=Math.pow(2, zoom);
     }
 
     public void setupCompass() {
@@ -616,10 +634,38 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     }
 
     public void openTest(){
-        //TODO decide what goes in the settings
-        //Toast.makeText(mContext,"do something",Toast.LENGTH_SHORT).show();
-        Intent i=new Intent(this,PastTripsActivity.class);
-        startActivity(i);
+        PopupMenu popup=new PopupMenu(mContext,settings);
+        //inflate the created menu resource
+        popup.inflate(R.menu.menu_main);
+        //define what to do on each item click
+        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem menuItem) {
+                switch (menuItem.getItemId()){
+                    case R.id.opt_settings:{
+                        Intent i = new Intent(mContext,SettingsActivity.class);
+                        mContext.startActivity(i);
+                        break;
+                    }
+                    case R.id.opt_past_trips:{
+                        //Toast.makeText(mContext,"this guy wants to pay",Toast.LENGTH_LONG).show();
+                        Intent i = new Intent(mContext,PastTripsActivity.class);
+                        mContext.startActivity(i);
+                        break;
+                    }
+                    case R.id.opt_profile:{
+                        Toast.makeText(mContext,"open my profile",Toast.LENGTH_LONG).show();
+                        break;
+                    }
+                    case R.id.opt_help:{
+                        Toast.makeText(mContext,"open help",Toast.LENGTH_LONG).show();
+                        break;
+                    }
+                }
+                return false;
+            }
+        });
+        popup.show();
     }
 
     private void setIconColors(int color){
@@ -738,20 +784,20 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         wasMoved=true;
         mCompass.controlView(false);
 
-        mTilt = preferences.getFloat("defaultTilt",30.0f);
-        mScale =(double)preferences.getFloat("defaultScale",1 << 17);
+        setPivotTiltZoom();
         double tinyCorrection=1E-5;
         double lat=endLocation.getLatitude()+tinyCorrection;
         MapPosition defaultView=new MapPosition(lat,endLocation.getLongitude(),mScale);
         defaultView.setTilt(mTilt);
         defaultView.setBearing(-mCompass.getRotation());
-        mapView.map().animator().animateTo(800,defaultView, Easing.Type.SINE_IN);
+        mapView.map().animator().animateTo(800,defaultView, Easing.Type.LINEAR);
         //reset normal values after animation is done
         mapView.postDelayed(new Runnable() {
             @Override
             public void run() {
                 wasMoved=false;
                 mCompass.controlView(true);
+                mapView.map().updateMap();
             }
         },800);
         backToCenterImage.setVisibility(View.INVISIBLE);
@@ -778,6 +824,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             }
             public void onFinish() {
                 setDestGeo(destGeo);
+                setFilter(true);
                 dialog.dismiss();
             }
         };
@@ -805,6 +852,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             public void onClick(View view) {
                 countdownTimer.cancel();
                 setDestGeo(destGeo);
+                setFilter(true);
                 dialog.dismiss();
             }
         });

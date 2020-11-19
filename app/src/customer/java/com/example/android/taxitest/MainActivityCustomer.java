@@ -26,6 +26,7 @@ public class MainActivityCustomer extends MainActivity {
     public static int seatAmount;
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        defaultPivot=0.25f;
         super.onCreate(savedInstanceState);
         Intent intent=getIntent();
         if (intent!=null){
@@ -33,19 +34,9 @@ public class MainActivityCustomer extends MainActivity {
         }else {
             seatAmount=1;
         }
+
     }
 
-    @Override
-    public void setupMap() {
-        // Render theme
-        mapView.map().setTheme(new AssetsRenderTheme(getAssets(),"", "vtm/day_mode.xml"));
-        //add set pivot
-        mapView.map().viewport().setMapViewCenter(0.0f, 0.25f);
-        //set important variables
-        mTilt = mapView.map().viewport().getMinTilt();
-        mScale = 1 << 17;
-        mapView.map().setMapPosition(Constants.lastLocation.getLatitude(),Constants.lastLocation.getLongitude(), mScale);
-    }
 
     @Override
     public void setupCompass() {

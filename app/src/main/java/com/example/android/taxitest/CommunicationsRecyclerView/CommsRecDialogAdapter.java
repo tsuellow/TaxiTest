@@ -187,7 +187,12 @@ public class CommsRecDialogAdapter extends RecyclerView.Adapter<CommsRecDialogAd
             String received="received: "+MiscellaneousUtils.convertTime(msj.getReceived())+"\n";
             String played="played: "+MiscellaneousUtils.convertTime(msj.getPlayed())+"\n";
             String heard="heard: "+MiscellaneousUtils.convertTime(msj.getHeard())+"\n";
-            toast.append(received).append(played).append(heard);
+            if (msj.getFilePath()==null){
+                toast.append(received);
+            }else{
+                toast.append(received).append(played).append(heard);
+            }
+
         }else {
             String failed="failed: "+MiscellaneousUtils.convertTime(msj.getTimestamp());
             toast.append(failed);

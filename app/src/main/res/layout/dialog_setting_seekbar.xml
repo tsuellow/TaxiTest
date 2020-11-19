@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    android:padding="8dp">
+
+    <TextView
+        android:id="@+id/tv_title_dialog"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:text="Maximum visible num. of taxis "
+        android:textAlignment="center"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:id="@+id/view2"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@android:color/darker_gray"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_title_dialog" />
+
+
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/ll_controls"
+        android:orientation="vertical"
+        android:padding="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/map_container_card">
+
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:layout_gravity="center_vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/tv_bar_text"
+                android:textStyle="bold"
+                android:text="20 taxis"
+                android:textSize="16sp" />
+
+            <SeekBar
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/sb_bar"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:layout_gravity="center_vertical"
+                android:max="40"
+                android:progress="10" />
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+
+
+    <View
+        android:id="@+id/view"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="8dp"
+        android:background="@android:color/darker_gray"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ll_controls" />
+
+
+
+
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:id="@+id/ll_buttons"
+        app:layout_constraintTop_toBottomOf="@+id/view"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/ib_info"
+            android:src="@drawable/info"
+            android:background="@null"
+            android:tint="@color/colorDeselected"
+            android:padding="10dp"
+            android:layout_marginEnd="10dp"/>
+
+
+        <Button
+            android:id="@+id/bt_dialog_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:padding="8dp"
+            android:layout_margin="10dp"
+            android:background="@drawable/rounded_background"
+            android:text="cancel" />
+
+        <Button
+            android:id="@+id/bt_dialog_accept"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:padding="8dp"
+            android:layout_margin="10dp"
+            android:background="@drawable/rounded_background"
+            android:text="accept" />
+
+    </LinearLayout>
+
+
+
+</LinearLayout>

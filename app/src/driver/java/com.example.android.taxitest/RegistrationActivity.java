@@ -341,7 +341,7 @@ public class RegistrationActivity extends AppCompatActivity {
 
     }
 
-    private File imageFile(int requestType, Size size){
+    public File imageFile(int requestType, Size size){
         String name=requestType==REQUEST_TAKE_FACE?"face":"car";
         name=size==Size.FULL?name+"_full":size==Size.MED?name+"_med":name+"_thumb";
         File photoFile;
@@ -556,6 +556,7 @@ public class RegistrationActivity extends AppCompatActivity {
                                 SharedPreferences.Editor editor=preferences.edit();
                                 editor.putString("taxiId",CustomUtils.getOwnStringId(id));
                                 editor.apply();
+                                savePrefs();
                                 if (loadingDialog.isShowing())
                                 loadingDialog.dismiss();
                                 Dialog successDialog=makeRegistrationDialog(context,false,false,CustomUtils.getOwnStringId(id));
@@ -591,6 +592,22 @@ public class RegistrationActivity extends AppCompatActivity {
                     }
                 });
         MySingleton.getInstance(context).addToRequestQueue(jsonObjectRequest);
+    }
+
+    public void  savePrefs(){
+        SharedPreferences.Editor editor=preferences.edit();
+        editor.putString("firstname",firstName.getText().toString());
+        editor.putString("lastname",lastName.getText().toString());
+        editor.putString("gender",gender.getText().toString().contentEquals("male")?"m":"f");
+        editor.putString("phone",phoneNr.getText()==null?"":MiscellaneousUtils.depuratePhone(phoneNr.getText().toString()));
+        editor.putString("nrplate",nrPlate.getText().toString());
+        editor.putString("cardesc",carDescription.getText().toString());
+        editor.putString("photofacepath",imageFile(REQUEST_TAKE_FACE,Size.MED).getAbsolutePath());
+        editor.putString("photocarpath",imageFile(REQUEST_TAKE_CAR,Size.MED).getAbsolutePath());
+        editor.putLong("dob",dateOfBirth.getTime());
+        editor.putBoolean("sharephone",sharePhone.isChecked());
+        editor.putBoolean("agreetoterms",agreeToTerms.isChecked());
+        editor.apply();
     }
 
 

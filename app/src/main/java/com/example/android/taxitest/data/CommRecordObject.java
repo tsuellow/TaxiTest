@@ -44,7 +44,7 @@ public class CommRecordObject {
     private String firstName;
     private String lastName;
     private String gender;
-    private String dob;
+    private long dob;
     private String collar;
     private String seats;
     private String type;
@@ -82,6 +82,8 @@ public class CommRecordObject {
         type=((TaxiObject)comm.taxiMarker.taxiObject).getType();
         //remember entering city as well
 
+        //default placeholders
+        fillPlaceHolders();
     }
 
     @Ignore
@@ -104,6 +106,16 @@ public class CommRecordObject {
         type=taxiObject.getType();
         //remember entering city as well
 
+        //default placeholders
+        fillPlaceHolders();
+    }
+
+    private void fillPlaceHolders(){
+        firstName="Fulanito";
+        lastName="de Tal";
+        dob=new Date().getTime();
+        gender="x";
+        collar=seats;
     }
 
     public CommRecordObject() {
@@ -165,11 +177,11 @@ public class CommRecordObject {
         this.gender = gender;
     }
 
-    public String getDob() {
+    public long getDob() {
         return dob;
     }
 
-    public void setDob(String dob) {
+    public void setDob(long dob) {
         this.dob = dob;
     }
 

@@ -223,13 +223,13 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
             public void onAnimationParametersReceived(List<? extends SocketObject> baseTaxis, List<? extends SocketObject> newTaxis) {
                 //give existing taxis a purpose
                 boolean allOk=true;
-                if (baseTaxis.size()>0) {
+                if (baseTaxis.size()>0 && baseTaxis.size()==mItemList.size()) {
                     for (int i = 0; i < baseTaxis.size(); i++) {
                         SocketObject taxiObject = baseTaxis.get(i);
                         if (taxiObject.getIsActive() != 1) {
                             mItemList.get(i).setPurpose(TaxiMarker.Purpose.DISAPPEAR);
                         } else {
-                            //TODO figure out how to fix this bug
+                            //TODO figure out how to fix this bug  THIS BUG IS STILL THERE THINK WHAT HAPPENS WHEN YOU GO TO OTHER APPS OR ACTIVITIES
                             mItemList.get(i).setPurpose(TaxiMarker.Purpose.MOVE);
                         }
                         mItemList.get(i).setPurposeTaxiObject(taxiObject);
@@ -247,6 +247,8 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
 
                         }
                     }
+                }else{
+                    allOk=false;
                 }
                 //reset taxis in case of correspondence error
                 if(!allOk){

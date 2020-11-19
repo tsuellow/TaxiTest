@@ -78,6 +78,19 @@ public class GeoJsonUtils {
         }
     }
 
+    public HexagonQuadrantDrawable createSingleHex(Feature feature){
+        String quadrantId= feature.getProperty("id");
+        String neigh = (String)feature.getProperty("neighbors");
+        String[] neighbors=neigh.replace("[","").replace("]","")
+                .replace("\"","").split(",");
+        int bit=feature.getProperty("bite");
+        //coordinates
+        Polygon geom = (Polygon) feature.getGeometry();
+        List<LngLatAlt> coords = geom.getExteriorRing();
+        return new HexagonQuadrantDrawable(convertToGeo(coords),quadrantId,neighbors,bit);
+
+    }
+
 
     public static List<GeoPoint> convertToGeo(List<LngLatAlt> lnglatList){
         List<GeoPoint> result=new ArrayList<GeoPoint>();

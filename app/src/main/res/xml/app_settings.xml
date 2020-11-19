@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <PreferenceCategory
+        android:title="Basic settings"
+        app:iconSpaceReserved="false">
+
+
+        <Preference
+            android:title="Maximum num. of taxis shown"
+            android:defaultValue="20"
+            android:key="taxiamount"
+            android:summary="decrease if app performance is slow"
+            app:iconSpaceReserved="false"/>
+
+        <Preference
+            android:title="Set default pivot, zoom and tilt"
+            android:key="zoomtilt"
+            android:summary="double-tap the map to regain these values"
+            app:iconSpaceReserved="false"/>
+
+        <SwitchPreference
+            android:title="Set filter automatically"
+            android:defaultValue="true"
+            android:key="autofilter"
+            android:summary="turns on filter once destination changes"
+            app:iconSpaceReserved="false"/>
+
+        <Preference
+            android:title="Filter amplitude"
+            android:defaultValue="35"
+            android:key="filteramplitude"
+            android:summary="higher values will show a broader set of destination barrios"
+            app:iconSpaceReserved="false"/>
+
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="Profile settings"
+        app:iconSpaceReserved="false">
+
+        <Preference
+            android:title="Profile data"
+            android:key="profiledata"
+            android:summary="Fulano de Tal"
+            app:iconSpaceReserved="false"/>
+
+        <Preference
+            android:title="Edit profile"
+            android:key="profileedit"
+            android:summary="change personal data"
+            app:iconSpaceReserved="false"/>
+
+
+    </PreferenceCategory>
+
+
+
+
+</PreferenceScreen>

@@ -2,6 +2,8 @@ package com.example.android.taxitest.connection;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.example.android.taxitest.AppExecutors;
@@ -44,7 +46,9 @@ public class WebSocketDriverLocations {
     protected boolean filterOn=false;
     boolean processIsRunning=false;
     boolean isFirstTime=true;
-
+    SharedPreferences preferences;
+    double phi;
+    int limit;
     public SqlLittleDB mDb;
 
 
@@ -58,6 +62,9 @@ public class WebSocketDriverLocations {
         }
         mDb=SqlLittleDB.getInstance(context);
         commsInfo=communicationsAdapter;
+        //get filter presets
+        preferences= PreferenceManager.getDefaultSharedPreferences(context);
+
     }
 
     public void connectSocket(){
@@ -79,9 +86,9 @@ public class WebSocketDriverLocations {
         return processIsRunning;
     }
 
-    private CsvMapper mapper=new CsvMapper();
-    private CsvSchema schema = mapper.schemaFor(TaxiNew.class).withColumnSeparator('|');
-    private ObjectReader r=mapper.readerFor(TaxiNew.class).with(schema);
+    public CsvMapper mapper=new CsvMapper();
+    public CsvSchema schema = mapper.schemaFor(TaxiNew.class).withColumnSeparator('|');
+    public ObjectReader r=mapper.readerFor(TaxiNew.class).with(schema);
 
     int msjs=0;
     public void initializeSocketListener(){  //add target object itemizedlayer
@@ -146,7 +153,9 @@ public class WebSocketDriverLocations {
     }
 
     public void processReceivedData(){
-        mDb.taxiDao().runNewPreOutputTransactions(mNewPositionsList,filterOn,commsInfo.getCommIds());
+        phi = (double) preferences.getFloat("filteramplitude", 45.0f);
+        limit = preferences.getInt("taxiamount",20);
+        mDb.taxiDao().runNewPreOutputTransactions(mNewPositionsList,filterOn,commsInfo.getCommIds(),phi,limit);
 //        mDb.taxiDao().runPreOutputTransactions(mNewPositionsList, MiscellaneousUtils.getNumericId(MainActivity.myId));
 
 //        if (filterOn) {

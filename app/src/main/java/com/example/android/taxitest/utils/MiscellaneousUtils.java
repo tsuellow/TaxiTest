@@ -29,6 +29,11 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
+
+import static java.util.Calendar.DATE;
+import static java.util.Calendar.MONTH;
+import static java.util.Calendar.YEAR;
 
 public class MiscellaneousUtils {
 
@@ -143,7 +148,7 @@ public class MiscellaneousUtils {
 
     public static String convertTime(long time){
         Date date = new Date(time);
-        Format format = new SimpleDateFormat("hh:mm:ss a");
+        Format format = new SimpleDateFormat("h:mm:ss a");
         return format.format(date);
     }
 
@@ -160,6 +165,15 @@ public class MiscellaneousUtils {
         String dateString=null;
         if(date!=null){
             SimpleDateFormat sdf = new SimpleDateFormat("dd MMM - h:mm a");
+            dateString= sdf.format(date);
+        }
+        return dateString;
+    }
+
+    public static String getDateStringGeneric(Date date, String pattern){
+        String dateString=null;
+        if(date!=null){
+            SimpleDateFormat sdf = new SimpleDateFormat(pattern);
             dateString= sdf.format(date);
         }
         return dateString;
@@ -184,6 +198,23 @@ public class MiscellaneousUtils {
         int day = cal.get(Calendar.DAY_OF_MONTH);
         month = 1 + month;
         return day + "/" + month + "/" + year;
+    }
+
+    public static int getDiffYears(Date first, Date last) {
+        Calendar a = getCalendar(first);
+        Calendar b = getCalendar(last);
+        int diff = b.get(YEAR) - a.get(YEAR);
+        if (a.get(MONTH) > b.get(MONTH) ||
+                (a.get(MONTH) == b.get(MONTH) && a.get(DATE) > b.get(DATE))) {
+            diff--;
+        }
+        return diff;
+    }
+
+    public static Calendar getCalendar(Date date) {
+        Calendar cal = Calendar.getInstance(Locale.US);
+        cal.setTime(date);
+        return cal;
     }
 
     public static Date getRoundDate(Date date){
@@ -255,6 +286,14 @@ public class MiscellaneousUtils {
             fileOut.close();
         }catch (Exception e){
             Log.d("saveBitmapToFile", "saveBitmapToFile: failed");
+        }
+    }
+
+    public static String replaceNull(String text){
+        if (text==null){
+            return "-";
+        }else{
+            return text;
         }
     }
 

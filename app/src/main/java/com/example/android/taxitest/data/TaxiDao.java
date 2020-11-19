@@ -58,8 +58,8 @@ public abstract class TaxiDao {
     //pass 50 closest taxis to taxiBase
     @Query("replace into taxiBase(taxiId, latitude, longitude, locationTime, rotation, type, destinationLatitude, destinationLongitude, isActive) " +
             "select taxiId, latitude, longitude, locationTime, rotation, type, destinationLatitude, destinationLongitude, isActive " +
-            "from taxiNew order by pseudoDistance asc limit 20") //
-    abstract void feedCloseTaxis();
+            "from taxiNew order by pseudoDistance asc limit :lim") //
+    abstract void feedCloseTaxis(int lim);
 
     //make sure active comms taxis are included
     @Query("replace into taxiBase(taxiId, latitude, longitude, locationTime, rotation, type, destinationLatitude, destinationLongitude, isActive) " +
@@ -112,18 +112,18 @@ public abstract class TaxiDao {
     long t1;
     long t2;
     @Transaction
-    public void runNewPreOutputTransactions(List<TaxiNew> newData, boolean filter, List<Integer> clickedItems){
+    public void runNewPreOutputTransactions(List<TaxiNew> newData, boolean filter, List<Integer> clickedItems, double phi, int limit){
         long t01=new Date().getTime();
         t1=t01;
 
         insertFullData(newData);
         flagForDisappearance();
         if (filter){
-            sf = new SocketFilterDrivers(locToGeo(MainActivity.mMarkerLoc), MainActivity.destGeo, 45.0);
+            sf = new SocketFilterDrivers(locToGeo(MainActivity.mMarkerLoc), MainActivity.destGeo, phi);
             doScopeReductionFiltering(sf.bLeft, sf.mLeft, sf.bRight, sf.mRight, sf.bBlock, sf.mBlock, sf.signLeft, sf.signRight, sf.signBlock,clickedItems);
         }
         calculateDistances(locToGeo(MainActivity.mMarkerLoc).getLatitude(),locToGeo(MainActivity.mMarkerLoc).getLongitude());
-        feedCloseTaxis();
+        feedCloseTaxis(limit);
         feedOpenComms(clickedItems);
         clearTaxiNew();
         clearInactiveNewTaxis();

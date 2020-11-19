@@ -2,8 +2,10 @@ package com.example.android.taxitest;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -108,8 +110,10 @@ public class PastTripsAdapter extends RecyclerView.Adapter<PastTripsAdapter.View
         holder.destination.setText(comm.getBarrioTo());
         holder.destination.setTextColor(comm.getColorTo());
         File thumbFile=new File(mContext.getExternalFilesDir(null),"thumbs/"+comm.getTaxiId()+".jpg");
-        Bitmap bitmap=BitmapFactory.decodeFile(thumbFile.getAbsolutePath());
-        holder.photo.setImageBitmap(bitmap);
+        if (thumbFile.exists()){
+            Bitmap bitmap=BitmapFactory.decodeFile(thumbFile.getAbsolutePath());
+            holder.photo.setImageBitmap(bitmap);
+        }
         holder.collar.setText(comm.getCollar());
         holder.dateTime.setText(MiscellaneousUtils.getDateStringPast(new Date(comm.getTimestamp())));
         if (comm.getCommStatus() == CommRecordObject.ACCEPTED) {
@@ -133,7 +137,7 @@ public class PastTripsAdapter extends RecyclerView.Adapter<PastTripsAdapter.View
         holder.info.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(mContext, "show trip info", Toast.LENGTH_SHORT).show();
+                showInfoDialog(comm);
             }
         });
 
@@ -167,12 +171,15 @@ public class PastTripsAdapter extends RecyclerView.Adapter<PastTripsAdapter.View
         final Dialog dialog=new Dialog(mContext);
         dialog.setContentView(R.layout.comm_dialog);
         TextView title=dialog.findViewById(R.id.tv_title_dialog);
-        TextView noMsgs=dialog.findViewById(R.id.tv_no_msgs);
+        TextView date=dialog.findViewById(R.id.tv_date);
+        TextView noMsjs=dialog.findViewById(R.id.tv_no_msgs);
         title.setText("Chat with "+comm.getFirstName());
+        date.setText(MiscellaneousUtils.getDateStringGeneric(new Date(comm.getTimestamp()),"EEEE dd. MMMM yyyy"));
+        date.setVisibility(View.VISIBLE);
         RecyclerView commsRV=(RecyclerView) dialog.findViewById(R.id.rv_comms_dialog);
         Button closeBtn=(Button) dialog.findViewById(R.id.bt_dialog_close);
         CommsRecDialogAdapter adapter=new CommsRecDialogAdapter(mContext,comm);
-        populateDataSource(comm.getCommId(),adapter);
+        populateDataSource(comm.getCommId(),adapter, noMsjs);
         commsRV.setAdapter(adapter);
         LinearLayoutManager layoutManager = new LinearLayoutManager(dialog.getContext());
         layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
@@ -186,14 +193,91 @@ public class PastTripsAdapter extends RecyclerView.Adapter<PastTripsAdapter.View
         dialog.show();
     }
 
-    private static void populateDataSource(String commId, CommsRecDialogAdapter adapter) {
+    private static void populateDataSource(String commId, CommsRecDialogAdapter adapter, TextView placeHolderText) {
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
                 List<MsjRecordObject> msjs=PastTripsActivity.mDb.commsDao().getCommMsjs(commId);
+                if (msjs.size()>0){
+                    placeHolderText.setVisibility(View.GONE);
+                }
                 adapter.setMsjs(msjs);
             }
         });
+    }
+
+    public void showInfoDialog(CommRecordObject comm){
+        final Dialog dialog=new Dialog(mContext);
+        dialog.setContentView(R.layout.dialog_trip_details);
+        ImageView photo=dialog.findViewById(R.id.iv_photo);
+        TextView name=dialog.findViewById(R.id.tv_name);
+        TextView ageGenderId=dialog.findViewById(R.id.tv_age_gender_id);
+        TextView plate=dialog.findViewById(R.id.tv_plate);
+        TextView date=dialog.findViewById(R.id.tv_date);
+        TextView origin=dialog.findViewById(R.id.tv_origin);
+        TextView destination=dialog.findViewById(R.id.tv_destination);
+        TextView seats=dialog.findViewById(R.id.tv_seats);
+        TextView status=dialog.findViewById(R.id.tv_status);
+        ImageButton originPoint=dialog.findViewById(R.id.iv_pin_from);
+        ImageButton destinationPoint=dialog.findViewById(R.id.iv_pin_to);
+
+        File thumbFile=new File(mContext.getExternalFilesDir(null),"thumbs/"+comm.getTaxiId()+".jpg");
+        if (thumbFile.exists()){
+            Bitmap bitmap=BitmapFactory.decodeFile(thumbFile.getAbsolutePath());
+            photo.setImageBitmap(bitmap);
+        }
+        String nameStr=comm.getFirstName()+" "+MiscellaneousUtils.replaceNull(comm.getLastName());
+        name.setText(nameStr);
+        String otherPersonalData=""+MiscellaneousUtils.getDiffYears(new Date(comm.getDob()),new Date())+" ("+comm.getGender().charAt(0)+") / ID: "+comm.getTaxiId();
+        ageGenderId.setText(otherPersonalData);
+        if (!comm.getCollar().equals(comm.getSeats())){
+            plate.setText(comm.getCollar());
+        }else {
+            plate.setVisibility(View.GONE);
+        }
+        date.setText(MiscellaneousUtils.getDateStringGeneric(new Date(comm.getTimestamp()),"dd MMM yyyy - h:mm a"));
+        origin.setText(comm.getBarrioFrom());
+        origin.setTextColor(comm.getColorFrom());
+        destination.setText(comm.getBarrioTo());
+        destination.setTextColor(comm.getColorTo());
+        seats.setText(comm.getSeats());
+        if (comm.getCommStatus() == CommRecordObject.ACCEPTED) {
+            status.setText("Accepted");
+        } else {
+            if (comm.getCommStatus() == CommRecordObject.CONTACTED) {
+                status.setText("Contacted");
+            } else {
+                status.setText("Observing");
+            }
+        }
+        originPoint.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Uri uri=Uri.parse("geo:"+comm.getLatFrom()+","+comm.getLonFrom()+"?q="+comm.getLatFrom()+","+comm.getLonFrom()+"(Point of origin)");
+                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                mContext.startActivity(intent);
+            }
+        });
+
+        destinationPoint.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Uri uri=Uri.parse("geo:"+comm.getLatTo()+","+comm.getLonTo()+"?q="+comm.getLatTo()+","+comm.getLonTo()+"(Point of destination)");
+                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                mContext.startActivity(intent);
+            }
+        });
+
+
+        Button closeBtn=(Button) dialog.findViewById(R.id.bt_dialog_close);
+
+        closeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.dismiss();
+            }
+        });
+        dialog.show();
     }
 
 }
