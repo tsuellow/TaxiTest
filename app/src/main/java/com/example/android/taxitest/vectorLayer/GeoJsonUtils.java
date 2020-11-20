@@ -78,7 +78,7 @@ public class GeoJsonUtils {
         }
     }
 
-    public HexagonQuadrantDrawable createSingleHex(Feature feature){
+    public static void addSingleHex(HexagonQuadrantLayer hexLayer, Feature feature){
         String quadrantId= feature.getProperty("id");
         String neigh = (String)feature.getProperty("neighbors");
         String[] neighbors=neigh.replace("[","").replace("]","")
@@ -87,8 +87,15 @@ public class GeoJsonUtils {
         //coordinates
         Polygon geom = (Polygon) feature.getGeometry();
         List<LngLatAlt> coords = geom.getExteriorRing();
-        return new HexagonQuadrantDrawable(convertToGeo(coords),quadrantId,neighbors,bit);
+        hexLayer.addHex(new HexagonQuadrantDrawable(convertToGeo(coords),quadrantId,neighbors,bit));
+    }
 
+    public static void addHexQuadrants(HexagonQuadrantLayer hexLayer, FeatureCollection features){
+        for (int i=0;i<features.getFeatures().size();i++){
+            if (features.getFeatures().get(i).getGeometry() instanceof Polygon) {
+                addSingleHex(hexLayer,features.getFeatures().get(i));
+            }
+        }
     }
 
 
