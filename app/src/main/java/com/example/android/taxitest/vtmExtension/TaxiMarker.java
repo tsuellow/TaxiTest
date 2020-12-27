@@ -20,6 +20,7 @@ public class TaxiMarker implements MarkerInterface, Comparable<TaxiMarker> {
     protected MarkerSymbol markerSymbol;
     public String barrio;
     public int color;
+    public int age=0;
 
 
     private Purpose purpose=Purpose.NULL;
@@ -61,6 +62,25 @@ public class TaxiMarker implements MarkerInterface, Comparable<TaxiMarker> {
         this.purposeTaxiObject = purposeTaxiObject;
         if (movementListener!=null)
         movementListener.onMarkerMoved(purposeTaxiObject);
+    }
+
+    //TODO execute this before setting purposetaxiobject to taxiobject and use result to repaint ta
+    public boolean doesAlphaChange(){
+        int alphaOld=age/3;
+        int alphaNew;
+        if (taxiObject.getLocationTime()==purposeTaxiObject.getLocationTime()){
+            age=age+1;
+        }else{
+            age=0;
+        }
+        alphaNew=age/3;
+        return alphaNew != alphaOld;
+    }
+
+    public float getAlphaValue(){
+        int step=age/3;
+        float rawAlpha=1.0f-0.2f*step;
+        return Math.min(0.2f,rawAlpha);
     }
 
     public void setIsClicked(boolean clicked){

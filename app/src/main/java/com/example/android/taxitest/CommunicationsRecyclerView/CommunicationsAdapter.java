@@ -129,6 +129,16 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
         return result;
     }
 
+    public List<CommsObject> getCommsAwaitingConfirmation(){
+        List<CommsObject> result=new ArrayList<>();
+        for (CommsObject comm:mComms){
+            if (!comm.isCommEngaged()){
+                result.add(comm);
+            }
+        }
+        return result;
+    }
+
     public synchronized void cancelById(int taxiId){
         Log.d("testes", "cancelById: is happening");
         Iterator<CommsObject> i = mComms.iterator();
@@ -594,7 +604,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
                     int id = MiscellaneousUtils.getNumericId(msj.getSendingId());
                     if (getCommIndex(id)==-1){//comm is new incoming
                         Log.d("testes","new msj inv "+msj.getIntentCode());
-                        newIncomingComms.add(msj);
+                        //newIncomingComms.add(msj); //moved this to otherTaxiLayer as it might be that the taxi is visible so that doClick will work
                         messageInvitationListener.onInvitationReceived(msj);
                     }else{//comm is already there
                         if (msj.getIntentCode()!=CommsObject.REJECTED) {
@@ -610,11 +620,12 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
                         }else{
                             processCancellations(msj);
                         }
+                        //acknowledge receipt of msj
+                        sendAndRegisterOwnAck(new AcknowledgementObject(msj,CommsObject.RECEIVED));
                     }
-                    //acknowledge receipt of msj
-                    sendAndRegisterOwnAck(new AcknowledgementObject(msj,CommsObject.RECEIVED));
-                }catch (Exception err){
-                    Log.d("Error", err.toString());
+
+                }catch (Exception e){
+                    Log.d("Error", e.toString());
                 }
 
             }

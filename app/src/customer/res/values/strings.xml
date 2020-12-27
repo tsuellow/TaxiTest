@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">TaxiTest Customer</string>
+    <string name="app_name">Dale Viaje</string>
     <string name="appbar_scrolling_view_behavior">android.support.design.widget.AppBarLayout$ScrollingViewBehavior</string>
     <string name="file_provider" translatable="false">com.example.android.taxitest_fileprovider_customer</string>
 </resources>

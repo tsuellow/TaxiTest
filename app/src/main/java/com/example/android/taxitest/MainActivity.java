@@ -56,6 +56,7 @@ import com.example.android.taxitest.data.TaxiObject;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
 import com.example.android.taxitest.vectorLayer.BarriosLayer;
 import com.example.android.taxitest.vectorLayer.ConnectionLineLayer2;
+import com.example.android.taxitest.vtmExtension.CitySupport;
 import com.example.android.taxitest.vtmExtension.OtherTaxiLayer;
 import com.example.android.taxitest.vtmExtension.OwnMarker;
 import com.example.android.taxitest.vtmExtension.OwnMarkerLayer;
@@ -181,6 +182,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     public static String myId;
     public static GeoPoint destGeo=new GeoPoint(0,0);
     public static int isActive=0;
+    public static City city;
 
     NotificationManager mNotificationManager;
 
@@ -196,6 +198,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
         preferences= PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         myId=preferences.getString("taxiId","t0");
+        city=new CitySupport().getCityByName(preferences.getString("city",null));
 
 
 
@@ -241,7 +244,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
         //initialize map
         MapFileTileSource tileSource = new MapFileTileSource();
-        copyFileToExternalStorage(R.raw.result);//put in async task
+        copyFileToExternalStorage(Constants.MAP_RESOURCE);//put in async task
         File file=new File(mContext.getExternalFilesDir(null), Constants.MAP_FILE);
         String mapPath = file.getAbsolutePath();
         if (!tileSource.setMapFile(mapPath)) {
@@ -260,7 +263,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         // MapEventsReceiver
         mMapEventsReceiver=new MapEventsReceiver(mapView);
         // BarriosLayer
-        mBarriosLayer =new BarriosLayer(mapView.map(), mContext, Constants.barriosFile);
+        mBarriosLayer =new BarriosLayer(mapView.map(), mContext, city.resourceBarrios);
         //LocConnections
         mWebSocketDriverLocs =new WebSocketDriverLocations("http://ec2-3-88-176-60.compute-1.amazonaws.com:3003/", mContext,rvCommsAdapter);
         mWebSocketClientLocs =new WebSocketClientLocations("http://ec2-3-88-176-60.compute-1.amazonaws.com:3002/", mContext,rvCommsAdapter);
@@ -308,6 +311,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                             //use this to shift location (dev only)
 //                            mMarkerLoc.setLatitude(mMarkerLoc.getLatitude()-39.2908);
 //                            mMarkerLoc.setLongitude(mMarkerLoc.getLongitude()-96.095);
+//                            mMarkerLoc.setLatitude(mMarkerLoc.getLatitude()-28.03179311); //istanbul
+//                            mMarkerLoc.setLongitude(mMarkerLoc.getLongitude()-115.3572729); //istanbul
                             mOwnMarkerLayer.moveMarker(new GeoPoint(mMarkerLoc.getLatitude(),mMarkerLoc.getLongitude()));
                             mapView.map().setMapPosition(mMarkerLoc.getLatitude(), mMarkerLoc.getLongitude(), mScale);
                         }
@@ -339,7 +344,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             }
         });
 
-        //barrios button
+        //barrios_esteli button
         barriosImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -568,8 +573,6 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 }
                 //smoothen transition to new spot
                 Location adjustedLocation = locationResult.getLastLocation();
-//                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-39.2908);
-//                adjustedLocation.setLongitude(adjustedLocation.getLongitude()-96.095);
                 endLocation=adjustedLocation;
                 mCompass.setCurrLocation(endLocation);
                 if (mCurrMapLoc != null && mMarkerLoc != null ) {
@@ -741,10 +744,11 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         @Override
         public boolean onGesture(Gesture g, MotionEvent e) {
 
-//            if (g instanceof Gesture.Tap) {
-//                Toast.makeText(mContext,mBarriosLayer.getContainingBarrio(new GeoPoint(13.09,-86.36)).getBarrioName(),Toast.LENGTH_LONG).show();
-//                return true;
-//            }
+            if (g instanceof Gesture.Tap) {
+                Toast.makeText(mContext,mMap.viewport().fromScreenPoint(e.getX(), e.getY()).toString(),Toast.LENGTH_LONG).show();
+                Log.d("loquera","es "+mMap.viewport().fromScreenPoint(e.getX(), e.getY()).toString());
+                return true;
+            }
             if (g instanceof Gesture.DoubleTap) {
                 resetDefaultView();
                 return true;

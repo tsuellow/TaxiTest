@@ -23,37 +23,31 @@ public class EntryActivityDriver extends EntryActivity {
         searchTaxi.setText("find clients");
 
 
+
     }
 
     @Override
-    public void setOnClickListeners(final Button searchTaxi, final Button justWatch) {
+    public void setOnClickListeners(){
         searchTaxi.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                searchTaxi.setVisibility(View.GONE);
-                justWatch.setVisibility(View.GONE);
-                //parentLayout.setVisibility(View.GONE);
-                //setTheme(R.style.AppTheme_Launcher);
-                Handler handler=new Handler();
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        Intent intent = new Intent(EntryActivityDriver.this, MainActivityDriver.class);
-                        startActivity(intent);
-                    }
-                },300);
+                if (checkCity()){
+                    saveCity();
+                    llContainer.setVisibility(View.GONE);
 
+                    Handler handler=new Handler();
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            Intent intent = new Intent(EntryActivityDriver.this, MainActivityDriver.class);
+                            startActivity(intent);
+                        }
+                    },300);
+                }
             }
         });
 
-        justWatch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                searchTaxi.setVisibility(View.GONE);
-                justWatch.setVisibility(View.GONE);
-                Intent intent = new Intent(EntryActivityDriver.this, MainActivity.class);
-                startActivity(intent);
-            }
-        });
+//        when new buttons are added use this space to add new onclicklisteners that will leave only the logo visible
     }
+
 }

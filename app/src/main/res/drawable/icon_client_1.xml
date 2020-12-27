@@ -6,7 +6,7 @@
     android:viewportHeight="52">
 
     <path
-        android:fillColor="@color/colorRed"
+        android:fillColor="#000"
         android:name="arrow"
         android:strokeWidth="0.5"
         android:strokeColor="#000"

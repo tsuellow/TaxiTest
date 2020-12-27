@@ -92,6 +92,12 @@ public class MetaMessageObject{
         if (ack.getMsgId().equals(comm.mLatestMsjId) && isOutgoing) {
             comm.ackUpdateListener.onAckUpdateReceived(ack);
         }
+        //confirm that communication is enabeled
+        if (!comm.isCommEngaged()) {
+            if (ack.getAckCode() != CommsObject.SENT && ack.getAckCode() != CommsObject.FAILED) {
+                comm.setCommEngaged(true);
+            }
+        }
     }
 
     public AcknowledgementObject getAckAtTopOfList(){

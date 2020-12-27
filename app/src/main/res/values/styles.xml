@@ -33,6 +33,14 @@
         <item name="android:textColorPrimary">@android:color/white</item>
         <!--This line changes the color of icons in toolbar (back, overflow menu icons)-->
         <item name="android:textColorSecondary">@android:color/white</item>
+        <item name="android:textSize">38sp</item>
+        <item name="android:fontFamily">@font/dale_viaje_font</item>
+    </style>
+
+    <style name="ownStyle" parent="@style/Base.TextAppearance.AppCompat.Title">
+        <item name="android:textSize">38sp</item>
+        <item name="android:fontFamily">@font/dale_viaje_font</item>
+        <item name="android:textColorPrimary">@android:color/white</item>
     </style>
 
     <style name="AppTheme.NoActionBar">

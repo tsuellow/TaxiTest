@@ -160,9 +160,11 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                             @Override
                             public void run() {
                                 CommsObject comm = doClick(tm);
-                                //you need to do the following as both the msj and the ack arrive/are sent before the commsObject exists properly
+                                //you need to do the following as the msj arrives before the commsObject exists properly
                                 MetaMessageObject metaMsj=new MetaMessageObject(msj1, comm);
-                                metaMsj.addAckAtTopOfList(new AcknowledgementObject(msj1,CommsObject.RECEIVED));
+                                AcknowledgementObject ack=new AcknowledgementObject(msj1,CommsObject.RECEIVED);
+                                CommunicationsAdapter.attemptSendAck(ack);
+                                metaMsj.addAckAtTopOfList(ack);
                                 comm.addAtTopOfMsjList(metaMsj);
                             }
                         });
@@ -170,6 +172,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                     } else {
                         //if a taxi is not visible because it was filtered out we first have to make it appear
                         Log.d("testes", "taxci is not there");
+                        mCommunicationsAdapter.newIncomingComms.add(msj);
                         hasPayload = true;
                         if (!mWebSocketConnection.getProcessIsRunning()) {
                             mWebSocketConnection.startAccumulationTimer();
@@ -195,11 +198,19 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                         //when this is the first message we receive from this taxi, we first click the taxi and then add the msg
                         CommsObject comm=doClick(tm);
                         Log.d("testes", "entered if "+MiscellaneousUtils.getNumericId(msj.getSendingId()));
-                        comm.addAtTopOfMsjList(new MetaMessageObject(msj,comm));
+                        MetaMessageObject metaMsj=new MetaMessageObject(msj, comm);
+                        AcknowledgementObject ack=new AcknowledgementObject(msj,CommsObject.RECEIVED);
+                        CommunicationsAdapter.attemptSendAck(ack);
+                        metaMsj.addAckAtTopOfList(ack);
+                        comm.addAtTopOfMsjList(metaMsj);
                     }else{
                         //if taxi was already clicked we just find the relevant comm and add the msj
                         CommsObject comm=mCommunicationsAdapter.getItemList().get(mCommunicationsAdapter.getCommIndex(tm.taxiObject.getTaxiId()));
-                        comm.addAtTopOfMsjList(new MetaMessageObject(msj,comm));
+                        MetaMessageObject metaMsj=new MetaMessageObject(msj, comm);
+                        AcknowledgementObject ack=new AcknowledgementObject(msj,CommsObject.RECEIVED);
+                        CommunicationsAdapter.attemptSendAck(ack);
+                        metaMsj.addAckAtTopOfList(ack);
+                        comm.addAtTopOfMsjList(metaMsj);
                     }
                     i.remove();
                 }
@@ -372,7 +383,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
         BarrioPolygonDrawable barrio = barriosLayer.getContainingBarrio(taxiMarker.destGeoPoint);
         taxiMarker.color=barrio.getStyle().fillColor;
         taxiMarker.barrio=barrio.getBarrioName();
-        if (!taxiMarker.getIsClicked()) {
+        if (!taxiMarker.getIsClicked() && taxiMarker.age<3) {
             for (DrawableBitmapCorrespondence item : bitmapReferenceList) {
                 if (barrio.getBarrioId() == item.barrioId) {
                     return new MarkerSymbol(item.barrioBitmap, placement,isBillboard);

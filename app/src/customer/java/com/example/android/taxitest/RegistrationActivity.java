@@ -2,6 +2,7 @@ package com.example.android.taxitest;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
@@ -73,12 +74,13 @@ public class RegistrationActivity extends AppCompatActivity {
     public EditText firstName, lastName, phoneNr, priorities, dob;
     TextInputLayout loFirstName, loGender, loDob, loPhone;
     public AutoCompleteTextView gender;
-    TextView textPhotoFace, textWarning;
+    public TextView textPhotoFace, textWarning, salute;
     public CheckBox sharePhone, agreeToTerms;
 
     public ImageView photoFace, infoFirst, infoLast, infoPhone, infoPrio, infoSharePhone;
     public Button register, readTerms;
     ScrollView svParent;
+    public Toolbar mToolbar;
 
     Date dateOfBirth;
     public SharedPreferences preferences;
@@ -92,9 +94,13 @@ public class RegistrationActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setTheme(R.style.AppTheme);
+        //setTheme(R.style.AppTheme);
         setContentView(R.layout.activity_registration);
-        getSupportActionBar().setTitle("Welcome to TaxiTest");
+        mToolbar = (Toolbar) findViewById(R.id.toolbar_registration);
+        setSupportActionBar(mToolbar);
+        getSupportActionBar().setTitle("User Registration");
+        salute=(TextView) findViewById(R.id.tv_salute);
+        salute.setText("Personal Data");
         initViews();
 
         preferences= PreferenceManager.getDefaultSharedPreferences(getApplicationContext());

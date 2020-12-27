@@ -1,11 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/sv_parent"
+    android:windowActionBarOverlay="true"
+    android:orientation="vertical"
     tools:context="com.example.android.taxitest.RegistrationActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        >
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar_registration"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:theme="@style/AppTheme.Toolbar"
+            app:titleTextColor="@android:color/white"
+            app:titleTextAppearance="@style/ownStyle"/>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ScrollView
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/sv_parent">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -79,8 +103,8 @@
                 android:paddingBottom="8dp"
                 android:paddingStart="8dp"
                 android:src="@drawable/info"
-                android:tint="@color/colorSelected"
-                app:layout_constraintStart_toEndOf="@+id/lo_first_name" />
+                app:layout_constraintStart_toEndOf="@+id/lo_first_name"
+                app:tint="@color/colorSelected" />
 
         </LinearLayout>
 
@@ -127,9 +151,9 @@
                 android:paddingStart="8dp"
                 android:layout_gravity="bottom"
                 android:src="@drawable/info"
-                android:tint="@color/colorSelected"
                 app:layout_constraintStart_toEndOf="@+id/lo_first_name"
-                android:background="@null"/>
+                android:background="@null"
+                app:tint="@color/colorSelected" />
 
         </LinearLayout>
 
@@ -255,9 +279,9 @@
                 android:paddingStart="8dp"
                 android:layout_gravity="bottom"
                 android:src="@drawable/info"
-                android:tint="@color/colorSelected"
                 app:layout_constraintStart_toEndOf="@+id/lo_first_name"
-                android:background="@null"/>
+                android:background="@null"
+                app:tint="@color/colorSelected" />
 
 
 
@@ -301,9 +325,9 @@
                 android:paddingStart="8dp"
                 android:layout_gravity="bottom"
                 android:src="@drawable/info"
-                android:tint="@color/colorSelected"
                 app:layout_constraintStart_toEndOf="@+id/lo_first_name"
-                android:background="@null"/>
+                android:background="@null"
+                app:tint="@color/colorSelected" />
 
         </LinearLayout>
 
@@ -331,8 +355,8 @@
                 android:paddingStart="8dp"
                 android:layout_gravity="bottom|end"
                 android:src="@drawable/info"
-                android:tint="@color/colorSelected"
-                android:background="@null"/>
+                android:background="@null"
+                app:tint="@color/colorSelected" />
 
         </LinearLayout>
 
@@ -490,5 +514,6 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-</ScrollView>
+    </ScrollView>
+</LinearLayout>
 

@@ -3,9 +3,11 @@ package com.example.android.taxitest;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.PorterDuff;
 import android.opengl.Visibility;
@@ -13,6 +15,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -34,6 +37,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.android.taxitest.vtmExtension.AndroidGraphicsCustom;
+import com.example.android.taxitest.vtmExtension.CitySupport;
 import com.google.android.material.textfield.TextInputLayout;
 
 import org.mapsforge.core.model.Tag;
@@ -91,6 +95,7 @@ public class ChooseDestination extends AppCompatActivity {
     LinearLayout parentLayout;
     ImageView fakeSplash;
     TextView chosenBarrioName;
+    Toolbar mToolbar;
 
     int seatAmount=1;
     HashMap<String,GeoPoint> barriosList;
@@ -98,12 +103,20 @@ public class ChooseDestination extends AppCompatActivity {
     private PoiPersistenceManager mPersistenceManager;
     File poiDb;
 
+    SharedPreferences preferences;
+    public City city;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setTheme(R.style.AppTheme);
+        //setTheme(R.style.AppTheme);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_choose_destination);
-        getSupportActionBar().setTitle("Choose your destination");
+        mToolbar = (Toolbar) findViewById(R.id.toolbar_choose_dest);
+        setSupportActionBar(mToolbar);
+        getSupportActionBar().setTitle("Choose Destination");
+
+        preferences= PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        city=new CitySupport().getCityByName(preferences.getString("city",null));
 
         parentLayout=(LinearLayout) findViewById(R.id.parent_layout_choose_dest);
         fakeSplash=(ImageView) findViewById(R.id.logo_fake_splash);
@@ -122,7 +135,7 @@ public class ChooseDestination extends AppCompatActivity {
         ptOfReferenceList=new HashMap<>();
 
 
-        poiDb=new File(getApplicationContext().getExternalFilesDir(null).getAbsolutePath()+"/db_nica.poi");
+        poiDb=new File(getApplicationContext().getExternalFilesDir(null).getAbsolutePath()+"/"+Constants.POI_FILE);
         mPersistenceManager = AndroidPoiPersistenceManagerFactory.getPoiPersistenceManager(poiDb.getAbsolutePath());
 
 
@@ -185,7 +198,7 @@ public class ChooseDestination extends AppCompatActivity {
                 String name=(String) adapterView.getItemAtPosition(i);
                 Toast.makeText(getApplicationContext(),name,Toast.LENGTH_LONG).show();
                 GeoPoint p = barriosList.get(name);
-                fragment.moveDestination(p);
+                fragment.moveDestination(p,false);
             }
         });
 
@@ -197,7 +210,7 @@ public class ChooseDestination extends AppCompatActivity {
                 String name=(String) adapterView.getItemAtPosition(i);
                 Toast.makeText(getApplicationContext(),name,Toast.LENGTH_LONG).show();
                 GeoPoint p= ptOfReferenceList.get(name);
-                fragment.moveDestination(p);
+                fragment.moveDestination(p,false);
             }
         });
 
@@ -240,11 +253,17 @@ public class ChooseDestination extends AppCompatActivity {
 
         fragment.setDestinationSetListener(new DestinationFragment.DestinationSetListener() {
             @Override
-            public void destinationSet(String barrioName, int color, GeoPoint dest) {
+            public void destinationSet(String barrioName, int color, GeoPoint dest, boolean fromMap) {
                 destGeo=dest;
                 chosenDestLayout.setVisibility(View.VISIBLE);
                 chosenBarrioName.setText(barrioName);
                 chosenBarrioName.setTextColor(color);
+                if (fromMap){
+                    chooseBarrio.setText(null);
+                    chooseReference.setText(null);
+                    chooseBarrio.clearFocus();
+                    chooseReference.clearFocus();
+                }
             }
         });
 
@@ -287,6 +306,14 @@ public class ChooseDestination extends AppCompatActivity {
         destGeo=new GeoPoint(0.0,0.0);
     }
 
+    @Override
+    public void onBackPressed() {
+        //super.onBackPressed();
+        Intent intent=new Intent(this,EntryActivityCustomer.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+    }
+
     public static void hideSoftKeyboard(Activity activity) {
         InputMethodManager inputMethodManager =
                 (InputMethodManager) activity.getSystemService(
@@ -305,7 +332,7 @@ public class ChooseDestination extends AppCompatActivity {
 
     public static class DestinationFragment extends BasicMapFragment{
 
-        public void moveDestination(final GeoPoint p){
+        public void moveDestination(final GeoPoint p, boolean fromMap){
             mOwnMarkerLayer.setDest(p);
             customItemLayer.removeAllItems();
             MarkerItem pin=new MarkerItem("Destination", "picked on touch",p);
@@ -319,7 +346,7 @@ public class ChooseDestination extends AppCompatActivity {
             //someMethodOutside(p);
             String barrioDest=mBarriosLayer.getContainingBarrio(p).getBarrioName();
             int colorDest=mBarriosLayer.getContainingBarrio(p).getStyle().fillColor;
-            destinationSetListener.destinationSet(barrioDest,colorDest,p);
+            destinationSetListener.destinationSet(barrioDest,colorDest,p,fromMap);
             mapView.map().postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -329,7 +356,7 @@ public class ChooseDestination extends AppCompatActivity {
         }
 
         interface DestinationSetListener{
-            void destinationSet(String barrioName, int color, GeoPoint dest);
+            void destinationSet(String barrioName, int color, GeoPoint dest, boolean fromMap);
         }
 
         public void setDestinationSetListener(DestinationSetListener destinationSetListener) {
@@ -361,7 +388,7 @@ public class ChooseDestination extends AppCompatActivity {
 //            }
                 if (g instanceof Gesture.Tap) {
                     GeoPoint p = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
-                    moveDestination(p);
+                    moveDestination(p, true);
                     return true;
                 }
 //            if (g instanceof Gesture.TripleTap) {
@@ -373,15 +400,15 @@ public class ChooseDestination extends AppCompatActivity {
 
     private HashMap<String,GeoPoint> getPoiData(GeoPoint geoPoint, final String category, final List<Tag> patterns, String exclusion){
         Collection<org.mapsforge.poi.storage.PointOfInterest> result;
+        Log.d("loquera",city.latLonMax.toString());
         try {
             PoiCategoryManager categoryManager = mPersistenceManager.getCategoryManager();
             PoiCategoryFilter categoryFilter = new ExactMatchPoiCategoryFilter();
             if (category != null)
                 categoryFilter.addCategory(categoryManager.getPoiCategoryByTitle(category));
             org.mapsforge.core.model.BoundingBox bb = new org.mapsforge.core.model.BoundingBox(
-                    //TODO choose box dynamically based on location
-                    Constants.lowerLeftLabelLimit.getLatitude(),Constants.lowerLeftLabelLimit.getLongitude(),
-                    Constants.upperRightLabelLimit.getLatitude(),Constants.upperRightLabelLimit.getLongitude());
+                    city.latLonMin.getLatitude(),city.latLonMin.getLongitude(),
+                    city.latLonMax.getLatitude(),city.latLonMax.getLongitude());
             result= mPersistenceManager.findInRect(bb, categoryFilter, patterns, Integer.MAX_VALUE);
         } catch (Throwable t) {
             result=null;

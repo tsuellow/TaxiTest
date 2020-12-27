@@ -43,7 +43,6 @@ public class ModifyProfileActivity extends RegistrationActivity {
     boolean sharePhoneVal, agreeToTermsVal;
     long dobLong;
 
-    TextView salute;
 
 
     @Override
@@ -51,9 +50,9 @@ public class ModifyProfileActivity extends RegistrationActivity {
         super.onCreate(savedInstanceState);
         getPrefData();
         populateEditBoxes();
-        getSupportActionBar().setTitle("Edit profile");
+        getSupportActionBar().setTitle("Edit Profile");
         salute=(TextView) findViewById(R.id.tv_salute);
-        salute.setText("User Data");
+        salute.setText("Personal Data");
         register.setText("Submit");
     }
 

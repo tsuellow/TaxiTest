@@ -75,6 +75,7 @@ public class CommsObject {
     public TaxiMarker taxiMarker;
     private List<MetaMessageObject> msjList=new ArrayList<>();
     boolean accepted=false;
+    boolean commEngaged=false;
 
     public static SqlLittleDB mDb;
 
@@ -232,6 +233,13 @@ public class CommsObject {
         this.accepted = accepted;
     }
 
+    public boolean isCommEngaged() {
+        return commEngaged;
+    }
+
+    public void setCommEngaged(boolean commEngaged) {
+        this.commEngaged = commEngaged;
+    }
 
     //callback for when a new acknowledgement has arrived
     public interface AckUpdateListener{

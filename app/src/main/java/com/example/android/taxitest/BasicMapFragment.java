@@ -1,12 +1,14 @@
 package com.example.android.taxitest;
 
 import android.Manifest;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,6 +23,7 @@ import androidx.fragment.app.Fragment;
 import com.example.android.taxitest.data.TaxiObject;
 import com.example.android.taxitest.vectorLayer.BarriosLayer;
 import com.example.android.taxitest.vtmExtension.AndroidGraphicsCustom;
+import com.example.android.taxitest.vtmExtension.CitySupport;
 import com.example.android.taxitest.vtmExtension.OwnMarker;
 import com.example.android.taxitest.vtmExtension.OwnMarkerLayer;
 import com.google.android.gms.common.ConnectionResult;
@@ -104,11 +107,17 @@ public class BasicMapFragment extends Fragment implements GoogleApiClient.Connec
     boolean wasMoved=false;
     private static final String TAG = "BasicMapFragment";
 
+    SharedPreferences preferences;
+    public City city;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         //return super.onCreateView(inflater, container, savedInstanceState);
         Log.d(TAG, "onCreateView: executed");
+
+        preferences= PreferenceManager.getDefaultSharedPreferences(requireContext());
+        city=new CitySupport().getCityByName(preferences.getString("city",null));
 
         //set content view assets and multiple components
         View rootView=inflater.inflate(R.layout.fragment_basic_map,container,false);
@@ -153,7 +162,7 @@ public class BasicMapFragment extends Fragment implements GoogleApiClient.Connec
         mCompass.setEnabled(true);
         mCompass.setMode(Compass.Mode.OFF);
         // BarriosLayer
-        mBarriosLayer =new BarriosLayer(mapView.map(), getContext(), Constants.barriosFile);
+        mBarriosLayer =new BarriosLayer(mapView.map(), getContext(), city.resourceBarrios);
         // OwnMarkerLayer
         setOwnIcon();
         setOwnMarkerLayer();

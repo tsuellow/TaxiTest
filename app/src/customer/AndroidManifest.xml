@@ -34,12 +34,12 @@
         <activity
             android:name=".RegistrationActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme"
+            android:theme="@style/AppTheme.NoActionBar"
             tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".ChooseDestination"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.Launcher"
+            android:theme="@style/AppTheme.NoActionBar"
             tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".MainActivityCustomer"
@@ -57,7 +57,7 @@
         <activity
             android:name=".ModifyProfileActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme"
+            android:theme="@style/AppTheme.NoActionBar"
             tools:ignore="LockedOrientationActivity" />
         <provider
             android:name="androidx.core.content.FileProvider"

@@ -7,13 +7,14 @@ import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 public class EntryActivityCustomer extends EntryActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(R.style.AppTheme);
         //check if this is first interaction
-        SharedPreferences preferences= PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        preferences= PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean isFirstInteraction=(preferences.getString("taxiId", null)==null);
         if (isFirstInteraction){
             Intent i=new Intent(EntryActivityCustomer.this, RegistrationActivity.class);
@@ -27,34 +28,28 @@ public class EntryActivityCustomer extends EntryActivity {
     }
 
     @Override
-    public void setOnClickListeners(final Button searchTaxi, final Button justWatch) {
+    public void setOnClickListeners(){
         searchTaxi.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                searchTaxi.setVisibility(View.GONE);
-                justWatch.setVisibility(View.GONE);
-                //parentLayout.setVisibility(View.GONE);
-                //setTheme(R.style.AppTheme_Launcher);
-                Handler handler=new Handler();
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        Intent intent = new Intent(EntryActivityCustomer.this, ChooseDestination.class);
-                        startActivity(intent);
-                    }
-                },300);
-
+                if (checkCity()){
+                    saveCity();
+                    llContainer.setVisibility(View.GONE);
+                    //Toast.makeText(getApplicationContext(),"taxiid: "+preferences.getString("taxiId",null),Toast.LENGTH_LONG).show();
+                    Handler handler=new Handler();
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            Intent intent = new Intent(EntryActivityCustomer.this, ChooseDestination.class);
+                            startActivity(intent);
+                        }
+                    },300);
+                }
             }
         });
 
-        justWatch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                searchTaxi.setVisibility(View.GONE);
-                justWatch.setVisibility(View.GONE);
-                Intent intent = new Intent(EntryActivityCustomer.this, MainActivityCustomer.class);
-                startActivity(intent);
-            }
-        });
+//        when new buttons are added use this space to add new onclicklisteners that will leave only the logo visible
     }
+
+
 }
