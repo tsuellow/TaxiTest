@@ -1,6 +1,5 @@
 package com.example.android.taxitest;
 
-import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -22,13 +21,13 @@ import com.example.android.taxitest.CommunicationsRecyclerView.CommsObject;
 import com.example.android.taxitest.CommunicationsRecyclerView.CommunicationsAdapter;
 import com.example.android.taxitest.connection.WebSocketDriverLocations;
 import com.example.android.taxitest.data.SocketObject;
-import com.example.android.taxitest.data.TaxiObject;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
 import com.example.android.taxitest.vectorLayer.BarriosLayer;
 import com.example.android.taxitest.vectorLayer.ConnectionLineLayer2;
 import com.example.android.taxitest.vtmExtension.OtherTaxiLayer;
 import com.example.android.taxitest.vtmExtension.TaxiMarker;
 
+import org.json.JSONObject;
 import org.oscim.core.GeoPoint;
 import org.oscim.map.Map;
 
@@ -81,6 +80,10 @@ public class OtherDriversLayer extends OtherTaxiLayer {
                         ((MainActivityCustomer)context).setIsActive(2,context);
                         Log.d("commies", "run: "+mSelectedComm.taxiMarker.taxiObject.getTaxiId()+"   "+(mSelectedComm==null));
                         clearComms(mSelectedComm.taxiMarker.taxiObject.getTaxiId());
+                        //backup the accepted comm to server
+                        JSONObject json=MainActivityCustomer.getCommBackupJson(comm,barriosLayer);
+                        //TODO uncomment next line once corresponding node.js file has been created
+                        comm.backUpAcceptedComm(json);
                     }
                 });
             }
@@ -135,7 +138,7 @@ public class OtherDriversLayer extends OtherTaxiLayer {
             commInfo.setVisibility(View.GONE);
         }else{
             border.setCardBackgroundColor(comm.taxiMarker.color);
-            photo.setImageBitmap(comm.commCardData.photo);
+            photo.setImageBitmap(comm.commCardData.thumb);
             name.setText(comm.commCardData.firstName+" "+comm.commCardData.lastName);
             plate.setText("plate: "+comm.commCardData.collar);
         }

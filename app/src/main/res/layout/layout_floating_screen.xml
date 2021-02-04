@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="@color/colorPrimaryDark"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:id="@+id/ib_close"
+            android:scaleType="fitCenter"
+            android:src="@drawable/close"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="6dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:tint="#fff"/>
+
+        <com.example.android.taxitest.utils.CustomTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/ct_title"
+            android:layout_gravity="center_vertical|center_horizontal"
+            android:text="intro"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:paddingBottom="4dp"
+            android:textColor="#fff"
+            android:fontFamily="@font/dale_viaje_font"
+            android:textSize="45sp"
+            app:stroke="2"
+            android:layout_weight="1"
+            android:gravity="center"
+            app:autoSizeTextType="uniform"
+            app:autoSizeMinTextSize="16sp"
+            app:autoSizeMaxTextSize="46sp"
+            app:autoSizeStepGranularity="2sp"
+            android:ellipsize="end"
+            android:letterSpacing="0.05"
+            android:lineSpacingExtra="-18dp"
+            android:shadowColor="#fff"
+            android:shadowRadius="1"/>
+
+        <ImageButton
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:id="@+id/ib_fullscreen"
+            android:padding="3dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_fullscreen"
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="6dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:tint="#fff"/>
+
+    </LinearLayout>
+    <com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
+        android:id="@+id/yp_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        app:showYouTubeButton="false"
+        app:showFullScreenButton="false"
+        app:showVideoCurrentTime="false"
+        app:showVideoDuration="false"
+        app:showSeekBar="false">
+
+    </com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="25dp"
+        android:gravity="center"
+        android:background="@color/colorPrimaryDark"
+        android:orientation="vertical">
+
+        <com.pierfrancescosoffritti.androidyoutubeplayer.core.ui.views.YouTubePlayerSeekBar
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sb_video_progress"
+            app:color="@color/colorAccent"
+            android:layout_gravity="bottom"
+            app:fontSize="0dp"/>
+
+
+    </LinearLayout>
+
+</LinearLayout>

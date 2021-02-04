@@ -26,6 +26,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.android.taxitest.connection.MySingleton;
+import com.example.android.taxitest.utils.CustomTextView;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
 
 import org.json.JSONException;
@@ -35,11 +36,13 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class ModifyProfileActivity extends RegistrationActivity {
+public class ModifyProfileActivity extends RegistrationActivityClient {
 
-    String firstNameStr,lastNameStr,genderStr,phoneNrStr,prioritiesStr,photoFacePathStr;
+    String firstNameStr,lastNameStr,genderStr,phoneNrStr,prioritiesStr,photoFacePathStr,cityStr;
     boolean sharePhoneVal, agreeToTermsVal;
     long dobLong;
 
@@ -51,8 +54,8 @@ public class ModifyProfileActivity extends RegistrationActivity {
         getPrefData();
         populateEditBoxes();
         getSupportActionBar().setTitle("Edit Profile");
-        salute=(TextView) findViewById(R.id.tv_salute);
-        salute.setText("Personal Data");
+        salute=(CustomTextView) findViewById(R.id.tv_salute);
+        salute.setText("Personal\nData");
         register.setText("Submit");
     }
 
@@ -62,6 +65,7 @@ public class ModifyProfileActivity extends RegistrationActivity {
         genderStr=preferences.getString("gender","m");
         phoneNrStr=preferences.getString("phone","");
         prioritiesStr=preferences.getString("prio","");
+        cityStr=preferences.getString("residencecity","");
         photoFacePathStr=preferences.getString("photofacepath",null);
         dobLong=preferences.getLong("dob",0);
         dateOfBirth=new Date(dobLong);
@@ -91,6 +95,20 @@ public class ModifyProfileActivity extends RegistrationActivity {
                 return false;
             }
         });
+        city.setText(cityStr);
+        ArrayAdapter<String> cityAdapter=new ArrayAdapter<String>(this,
+                android.R.layout.simple_list_item_1, cities.getCityDropdown());
+        city.setAdapter(cityAdapter);
+        city.setKeyListener(null);
+        city.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                ((AutoCompleteTextView) view).showDropDown();
+                city.setError(null);
+                return false;
+            }
+
+        });
         phoneNr.setText(phoneNrStr);
         priorities.setText(prioritiesStr);
         Calendar cal=Calendar.getInstance();
@@ -104,128 +122,42 @@ public class ModifyProfileActivity extends RegistrationActivity {
         mBase64= MiscellaneousUtils.base64Bitmap(BitmapFactory.decodeFile(imageFile(REQUEST_TAKE_FACE,Size.THUMB).getAbsolutePath()));
     }
 
+    //overwritten for register button
     @Override
-    public JSONObject writeJson() {
-        try {
-            String lastNameStr=lastName.getText()==null?"":lastName.getText().toString();
-            String phoneStr=phoneNr.getText()==null?"":MiscellaneousUtils.depuratePhone(phoneNr.getText().toString());
-
-            JSONObject json=new JSONObject();
-            json.put("id",MiscellaneousUtils.getNumericId(preferences.getString("taxiId","0")));
-            json.put("firstName",firstName.getText().toString());
-            json.put("lastName",lastNameStr);
-            json.put("dob",MiscellaneousUtils.getDateString(dateOfBirth));
-            json.put("gender",gender.getText().toString().substring(0,1));
-            json.put("phone",phoneStr);
-            json.put("sharePhone",sharePhone.isChecked()?1:0);
-            json.put("extra","");
-            json.put("timestamp",MiscellaneousUtils.getDateString(new Date()));
-            json.put("photo",mBase64);
-            return json;
-
-        }catch (JSONException e){
-            e.printStackTrace();
-            return null;
-        }
+    public void setSubmissionParams() {
+        requestMethod= Request.Method.PATCH;
+        apiExtension="client/"+MiscellaneousUtils.getNumericId(preferences.getString("taxiId","0"));
     }
 
     @Override
-    public void registerUser(JSONObject backupJson, Context context) {
-        final Dialog loadingDialog=makeRegistrationDialog(context,true,false,"null");
-        loadingDialog.show();
+    public Map<String, String> getHeaders() {
+        Map<String, String> headers=new HashMap<>();
+        headers.put("token",preferences.getString("token",""));
+        return headers;
+    }
 
-        JsonObjectRequest jsonObjectRequest;
+    //overwritten for register button
+    @Override
+    public int doOnSuccess(JSONObject json) throws JSONException {
+        return MiscellaneousUtils.getNumericId(preferences.getString("taxiId","0"));
+    }
 
-        jsonObjectRequest = new JsonObjectRequest
-                (Request.Method.POST, Constants.SERVER_URL + "update_client.php", backupJson, new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        try {
-                            String res = response.getString("response");
 
-                            if (res.equals("OK")) {
-                                register.setEnabled(false);
-                                savePrefs();
-                                if (loadingDialog.isShowing())
-                                    loadingDialog.dismiss();
-                                Dialog successDialog=makeRegistrationDialog(context,false,false,preferences.getString("taxiId","0"));
-                                successDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                                    @Override
-                                    public void onDismiss(DialogInterface dialogInterface) {
-                                        onBackPressed();
-                                    }
-                                });
-                                successDialog.show();
-                                //all ok display id
-                            }else{
-                                Toast.makeText(context,"Modification failed: "+res,Toast.LENGTH_LONG).show();
-                                //error on server side fix
-                            }
-                            //notification
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            Toast.makeText(context,"json failed",Toast.LENGTH_LONG).show();
-
-                        }
-
-                    }
-                }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        error.printStackTrace();
-                        if (loadingDialog.isShowing())
-                            loadingDialog.dismiss();
-                        Dialog errorDialog=makeRegistrationDialog(context,false,true,"null");
-                        errorDialog.show();
-
-                    }
-                });
-        MySingleton.getInstance(context).addToRequestQueue(jsonObjectRequest);
+    @Override
+    public void setActivities() {
+        mCurrActivity=ModifyProfileActivity.this;
+        mNextActivity=SettingsActivity.class;
     }
 
     @Override
-    public Dialog makeRegistrationDialog(Context context, boolean loading, boolean error, String id) {
-        final Dialog dialog=new Dialog(context);
-        dialog.setContentView(R.layout.dialog_register);
-        TextView titleView=dialog.findViewById(R.id.tv_title_dialog);
-        TextView textView=dialog.findViewById(R.id.tv_text);
-        ImageView imageView=(ImageView) dialog.findViewById(R.id.iv_check);
-        ProgressBar loadingView=(ProgressBar) dialog.findViewById(R.id.pb_loading);
-        Button closeBtn=dialog.findViewById(R.id.bt_close);
-        String title;
-        String text;
-        if(loading){
-            title="Submission ongoing";
-            text="Please wait while data submission process finishes";
-            imageView.setVisibility(View.GONE);
-            loadingView.setVisibility(View.VISIBLE);
-        }else{
-            imageView.setVisibility(View.VISIBLE);
-            loadingView.setVisibility(View.GONE);
-            if (!error){
-                title="Submission complete";
-                text= "You have changed your profile data successfully.<br>Your user ID is still "+"<b>" + id + "</b> <br>This ID will be useful if you ever lose your phone on a ride";
-                imageView.setImageResource(R.drawable.confirm);
-                imageView.setColorFilter(ContextCompat.getColor(context, R.color.colorGreen), android.graphics.PorterDuff.Mode.MULTIPLY);
-            }else{
-                title="Error";
-                text= "An error occurred while sending the data.<br> Please make sure your internet connection is working and try again later";
-                imageView.setImageResource(R.drawable.close);
-                imageView.setColorFilter(ContextCompat.getColor(context, R.color.colorRed), android.graphics.PorterDuff.Mode.MULTIPLY);
-            }
-        }
-        textView.setText(Html.fromHtml(text));
-        titleView.setText(title);
-        closeBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (!loading && !error) {
-                    Intent i = new Intent(ModifyProfileActivity.this, SettingsActivity.class);
-                    startActivity(i);
-                }
-                dialog.dismiss();
-            }
-        });
-        return dialog;
+    public void defineRegistrationDialogStrings(String id) {
+        titleOngoing="Submission ongoing";
+        textOngoing="Please wait while data submission process finishes";
+        titleSuccess="Submission complete";
+        textSuccess="You have changed your profile data successfully.<br>Your user ID is still "+"<b>" + id + "</b> <br>This ID will be useful if you ever lose your phone";
+        titleError="Error";
+        textError="An error occurred while sending the data.<br> Please make sure your internet connection is working and try again later";
     }
+
+
 }

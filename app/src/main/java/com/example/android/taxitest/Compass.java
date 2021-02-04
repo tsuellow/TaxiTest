@@ -24,6 +24,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Location;
+import android.os.Vibrator;
 import android.util.Log;
 import android.view.Surface;
 import android.view.WindowManager;
@@ -483,15 +484,10 @@ public class Compass extends Layer implements SensorEventListener, Map.UpdateLis
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        // int type = sensor.getType();
-        // switch (type) {
-        // case Sensor.TYPE_GRAVITY:
-        // mGravityAccuracy = accuracy;
-        // break;
-        // case Sensor.TYPE_MAGNETIC_FIELD:
-        // mMagneticFieldAccuracy = accuracy;
-        // break;
-        // }
+         if (sensor.getType()==Sensor.TYPE_ORIENTATION && accuracy==3){
+             mCorrectionFactor=0.0f;
+         }
+
     }
 
 }

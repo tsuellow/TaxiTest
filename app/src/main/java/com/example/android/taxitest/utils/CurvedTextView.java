@@ -33,8 +33,8 @@ public class CurvedTextView  extends View {
         pxs = 60 * getResources().getDisplayMetrics().density;
         Log.d("pxs size",""+pxs);
 
-        textSize=Math.round(pxs/7);
-        offset=Math.round(pxs/13);
+        textSize=Math.round(pxs/6);
+        offset=Math.round(pxs/20);
 
         paintFill = new Paint();
         paintFill.setAntiAlias(true);
@@ -45,7 +45,7 @@ public class CurvedTextView  extends View {
         paintStroke.setAntiAlias(true);
         paintStroke.setTextSize(textSize);
         paintStroke.setStyle(Paint.Style.STROKE);
-        paintStroke.setStrokeWidth(2);
+        paintStroke.setStrokeWidth(3);
         paintStroke.setColor(Color.BLACK);
 
 
@@ -56,9 +56,10 @@ public class CurvedTextView  extends View {
     {
         Path path = new Path();
         //path.addCircle(60, 60, 52, Path.Direction.CCW);
-        path.addCircle(pxs/2, pxs/2, 8*pxs/20, Path.Direction.CCW);
-        canvas.drawTextOnPath(plate, path, Math.round(pxs*3.1416*0.5), offset, paintStroke);
-        canvas.drawTextOnPath(plate, path, Math.round(pxs*3.1416*0.5), offset, paintFill);
+        Log.d("texttest", "once"+pxs);
+        path.addCircle(pxs/2, pxs/2, 8*pxs/19, Path.Direction.CCW);
+        canvas.drawTextOnPath(plate, path, Math.round(pxs*3.1416*0.53), offset, paintStroke);
+        canvas.drawTextOnPath(plate, path, Math.round(pxs*3.1416*0.53), offset, paintFill);
     }
 }
 

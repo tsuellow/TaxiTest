@@ -103,7 +103,7 @@ public class MainActivityDriver extends MainActivity{
                 Location adjustedLocation = locationResult.getLastLocation();
 //                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-39.2908); //hannover andres
 //                adjustedLocation.setLongitude(adjustedLocation.getLongitude()-96.095); //hannover andres
-                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-39.25441545); //hannover hubertus
+                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-39.25471545); //hannover hubertus
                 adjustedLocation.setLongitude(adjustedLocation.getLongitude()-96.11757698); //hannover hubertus
 //                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-28.03179311); //istanbul
 //                adjustedLocation.setLongitude(adjustedLocation.getLongitude()-115.3572729); //istanbul

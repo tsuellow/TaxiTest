@@ -8,7 +8,7 @@
     android:layout_height="match_parent"
     android:windowActionBarOverlay="true"
     android:orientation="vertical"
-    tools:context="com.example.android.taxitest.RegistrationActivity">
+    tools:context="com.example.android.taxitest.RegistrationActivityDriver">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -37,17 +37,24 @@
         android:padding="12dp">
 
 
-        <TextView
+        <com.example.android.taxitest.utils.CustomTextView
             android:id="@+id/tv_salute"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:gravity="center"
             android:focusable="true"
             android:focusableInTouchMode="true"
-            android:text="User Registration"
-            android:textSize="28sp"
+            android:text="personal\ndata"
+            android:textSize="40sp"
+            android:fontFamily="@font/dale_viaje_font"
+            android:textColor="@color/colorSelected"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            android:lineSpacingExtra="-18dp"
+            android:letterSpacing="0.08"
+            app:stroke="1" />
 
         <TextView
             android:id="@+id/tv_warning"
@@ -283,7 +290,63 @@
                 android:background="@null"
                 app:tint="@color/colorSelected" />
 
+        </LinearLayout>
 
+        <LinearLayout
+            android:id="@+id/linearLayout3_1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="36dp"
+            app:layout_constraintTop_toBottomOf="@+id/linearLayout3">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/lo_city"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="city"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <androidx.appcompat.widget.AppCompatAutoCompleteTextView
+                    android:id="@+id/actv_residence_city"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/rounded_background_edit_text"
+                    android:completionThreshold="1"
+                    android:inputType="phone"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="10dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="4dp"
+                    android:textSize="20sp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/lo_type"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:hint="vehicle"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <androidx.appcompat.widget.AppCompatAutoCompleteTextView
+                    android:id="@+id/actv_type"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/rounded_background_edit_text"
+                    android:completionThreshold="1"
+                    android:inputType="phone"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="10dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="4dp"
+                    android:textSize="20sp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
 
         </LinearLayout>
 
@@ -292,7 +355,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:id="@+id/linearLayout5"
-            app:layout_constraintTop_toBottomOf="@+id/linearLayout3">
+            app:layout_constraintTop_toBottomOf="@+id/linearLayout3_1">
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/lo_car_desc"
@@ -379,10 +442,13 @@
                 android:layout_width="65dp"
                 android:layout_height="28dp"
                 android:id="@+id/bt_terms"
+                android:padding="0dp"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
                 android:text="read"
+                android:textSize="12sp"
                 android:textColor="#FFF"
                 android:layout_gravity="bottom|end"
-                android:src="@drawable/info"
                 android:background="@drawable/rounded_background_borderless"
                 android:backgroundTint="@color/colorSelected" />
 
@@ -407,14 +473,19 @@
                 android:gravity="center_horizontal"
                 android:orientation="vertical">
 
-                <TextView
-                    android:layout_width="100dp"
+                <com.example.android.taxitest.utils.CustomTextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAlignment="center"
                     android:id="@+id/tv_face"
-                    android:layout_marginBottom="8dp"
-                    android:text="photo face"
-                    android:textSize="18sp" />
+                    android:gravity="center"
+                    android:layout_marginBottom="20dp"
+                    android:textColor="@color/colorSelected"
+                    android:text="photo\nface"
+                    android:fontFamily="@font/dale_viaje_font"
+                    android:textSize="40sp"
+                    android:letterSpacing="0.08"
+                    android:lineSpacingExtra="-18dp"
+                    app:stroke="1"/>
 
                 <androidx.cardview.widget.CardView xmlns:card_view="http://schemas.android.com/apk/res-auto"
                     android:id="@+id/cv_border_color_face"
@@ -456,14 +527,19 @@
                 android:gravity="center_horizontal"
                 android:orientation="vertical">
 
-                <TextView
-                    android:layout_width="100dp"
+                <com.example.android.taxitest.utils.CustomTextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAlignment="center"
                     android:id="@+id/tv_car"
-                    android:layout_marginBottom="8dp"
-                    android:text="photo taxi"
-                    android:textSize="18sp" />
+                    android:gravity="center"
+                    android:layout_marginBottom="20dp"
+                    android:textColor="@color/colorSelected"
+                    android:text="photo\nvehicle"
+                    android:fontFamily="@font/dale_viaje_font"
+                    android:textSize="40sp"
+                    android:letterSpacing="0.08"
+                    android:lineSpacingExtra="-18dp"
+                    app:stroke="1"/>
 
                 <androidx.cardview.widget.CardView xmlns:card_view="http://schemas.android.com/apk/res-auto"
                     android:id="@+id/cv_border_color_car"
@@ -505,7 +581,6 @@
             android:layout_height="wrap_content"
             android:layout_margin="40dp"
             android:layout_gravity="center_horizontal"
-            android:background="@drawable/rounded_background"
             android:text="Register"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

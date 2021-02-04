@@ -15,7 +15,8 @@ public class Constants {
     public static int barriosFile=R.raw.barrios_esteli;
     public static GeoPoint lowerLeftLabelLimit=new GeoPoint(13.041135,-86.406090 );
     public static GeoPoint upperRightLabelLimit=new GeoPoint(13.124386, -86.309543);
-    public static String SERVER_URL="https://www.awicon.de/theostaxi/php/";
+    public static String SERVER_URL="http://ec2-3-88-176-60.compute-1.amazonaws.com:3004/";
+    public static String S3_SERVER_URL="https://dale-viaje.s3.amazonaws.com/";
 
 
 }

@@ -5,11 +5,11 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
-import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.android.taxitest.AppExecutors;
 import com.example.android.taxitest.Constants;
@@ -28,7 +29,6 @@ import com.example.android.taxitest.R;
 import com.example.android.taxitest.connection.MySingleton;
 import com.example.android.taxitest.data.ClientObject;
 import com.example.android.taxitest.data.CommRecordObject;
-import com.example.android.taxitest.data.CommsDao;
 import com.example.android.taxitest.data.SqlLittleDB;
 import com.example.android.taxitest.data.TaxiObject;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
@@ -38,6 +38,7 @@ import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -45,6 +46,8 @@ import java.util.List;
 
 public class CommsObject {
 
+    private static final String TAG = "CommsObject";
+    
     //list of intent codes
     public static final int OBSERVING=0;
     public static final int REQUEST_SENT=1;
@@ -84,23 +87,26 @@ public class CommsObject {
     }
 
     //driver info driverObject from room DB
-    public CardData commCardData;
+    public CardData commCardData=new CardData();
     public void setCommCardData(CardData cardData){
         commCardData=cardData;
     }
     public class CardData{
-        public String collar;
-        public String title;
 
-        public String firstName;
-        public String lastName;
-        public String extra;
-        public double reputation;
-        public Date dob;
-        public String gender;
-        public Bitmap photo;
+        public String title="Fulanito";
+        public String collar="ES0000";
+        public String firstName="Fulanito";
+        public String lastName="de Tal";
+        public String extra="";
+        public long profileTimestamp=0;
+        public double reputation=3.0;
+        public Date dob=new Date();
+        public String gender="male";
+        public Bitmap thumb = null;
 
-        public CardData(String title, String collar, String firstName, String lastName, double reputation, Date dob, String gender, Bitmap photo) {
+        public CardData(){};
+
+        public void setData(String title, String collar, String firstName, String lastName, double reputation, Date dob, String gender, long timestamp) {
             this.title=title;
             this.collar = collar;
             this.firstName = firstName;
@@ -108,7 +114,11 @@ public class CommsObject {
             this.reputation = reputation;
             this.dob = dob;
             this.gender = gender;
-            this.photo = photo;
+            this.profileTimestamp=timestamp;
+        }
+
+        public void setThumb(Bitmap bitmap){
+            thumb=bitmap;
         }
     }
 
@@ -120,10 +130,11 @@ public class CommsObject {
 
     public CommsObject(TaxiMarker taxiMarker, Context context) {
         this.taxiMarker=taxiMarker;
-        commId=CustomUtils.getOtherStringId(taxiMarker.taxiObject.getTaxiId())+"_"+(new Date().getTime());
+        commId=MainActivity.myId+"_"+CustomUtils.getOtherStringId(taxiMarker.taxiObject.getTaxiId())+"_"+(new Date().getTime());
         mContext=context;
         archiveComm();
         sendDataRequest();
+
     }
 
     public void archiveComm(){
@@ -173,13 +184,13 @@ public class CommsObject {
 
 
         if (msjUpdateListener!=null) {
-            Log.d("socketTest","msjStatus:"+mMsjStatus);
+            Log.d(TAG,"msjStatus:"+mMsjStatus);
             msjUpdateListener.onMsjUpdateReceived(mMsjStatus);
         }
     }
 
     public void updateCommStatus(int status){
-        Log.d("status7","msjStatus:"+status);
+        Log.d(TAG,"msjStatus:"+status);
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
@@ -228,9 +239,12 @@ public class CommsObject {
         return accepted;
     }
 
-    public void setAccepted(boolean accepted) {
-        updateCommStatus(CommRecordObject.ACCEPTED);
-        this.accepted = accepted;
+    public void setAccepted() {
+        if(!accepted){
+            updateCommStatus(CommRecordObject.ACCEPTED);
+            this.accepted = true;
+            getImageFile(false);//gets and saves the photo of other party once accepted
+        }
     }
 
     public boolean isCommEngaged() {
@@ -322,7 +336,15 @@ public class CommsObject {
         dialog.setContentView(R.layout.comm_dialog);
         TextView title=dialog.findViewById(R.id.tv_title_dialog);
         TextView noMsgs=dialog.findViewById(R.id.tv_no_msgs);
-        title.setText("Chat with "+taxiMarker.taxiObject.getTaxiId());
+        TextView name=dialog.findViewById(R.id.tv_other);
+        if (commCardData==null){
+            title.setText("Chat with UNKNOWN");
+            name.setText("UNKNOWN");
+        }else{
+            title.setText("Chat with "+commCardData.firstName);
+            name.setText(commCardData.firstName+", ");
+        }
+
         if (msjList.size()==0){
             noMsgs.setVisibility(View.VISIBLE);
         }else{
@@ -334,7 +356,9 @@ public class CommsObject {
         commsRV.setAdapter(adapter);
         LinearLayoutManager layoutManager = new LinearLayoutManager(dialog.getContext());
         layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+        layoutManager.setReverseLayout(true);
         commsRV.setLayoutManager(layoutManager);
+        commsRV.scrollToPosition(0);
 //        DividerItemDecoration deco=new DividerItemDecoration(commsRV.getContext(), layoutManager.getOrientation());
 //        deco.setDrawable(Objects.requireNonNull(ContextCompat.getDrawable(context, R.drawable.divider)));
 //        commsRV.addItemDecoration(deco);
@@ -348,23 +372,18 @@ public class CommsObject {
     }
 
     public void sendDataRequest(){
-        try {
-            JSONObject json=new JSONObject();
-            json.put("taxiId" ,taxiMarker.taxiObject.getTaxiId());
-            requestCommData(json, this);
-        }catch (JSONException e){
-            e.printStackTrace();
-        }
-
+        String url=Constants.SERVER_URL + CustomUtils.apiExtension+taxiMarker.taxiObject.getTaxiId();
+        requestCommData(url, this);
+        getImageFile(true);
     }
 
 
-    public void requestCommData(JSONObject json, final CommsObject commsObject){
+    public void requestCommData(String url, final CommsObject commsObject){
 
         JsonObjectRequest jsonObjectRequestDriver;
 
         jsonObjectRequestDriver = new JsonObjectRequest
-                (Request.Method.POST, Constants.SERVER_URL + CustomUtils.phpFile, json, new Response.Listener<JSONObject>() {
+                (Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
                         try {
@@ -376,11 +395,12 @@ public class CommsObject {
                                     updateCommRec();//insert received data into db
                                     dataUpdateListener.onDataUpdateReceived();
                                 }catch (Exception e){
-                                    Log.d("commsobject", "recibimos paja");
+                                    Log.d(TAG, "recibimos paja");
                                 }
                                 //change comms strings and photo
                             }else{
                                 //error on server side fix
+                                Log.d(TAG, "error in json");
                             }
                             //notification
                         } catch (JSONException e) {
@@ -395,6 +415,70 @@ public class CommsObject {
                     public void onErrorResponse(VolleyError error) {
                         error.printStackTrace();
                         //send request again
+
+                    }
+                });
+        MySingleton.getInstance(mContext).addToRequestQueue(jsonObjectRequestDriver);
+    }
+
+    public void getImageFile(boolean isThumb){
+        Log.d(TAG, "bitmap requested");
+        String url=isThumb?CustomUtils.getThumbUrl(taxiMarker.taxiObject.getTaxiId()):CustomUtils.getFaceUrl(taxiMarker.taxiObject.getTaxiId(),commCardData.profileTimestamp);
+        ImageRequest imageRequest=new ImageRequest(url,
+                new Response.Listener<Bitmap>() {
+            @Override
+            public void onResponse(Bitmap response) {
+                Log.d(TAG, "bitmap received");
+                if (isThumb){
+                    commCardData.setThumb(response);
+                    photoUpdateListener.onPhotoUpdateReceived();
+                    File thumbFile=MiscellaneousUtils.makeThumbFile(mContext,CustomUtils.getOtherStringId(taxiMarker.taxiObject.getTaxiId()));
+                    MiscellaneousUtils.saveBitmapToFile(thumbFile,response);
+                }else{
+                    File faceFile=MiscellaneousUtils.makePhotoFile(mContext,commId,CustomUtils.getOtherStringId(taxiMarker.taxiObject.getTaxiId()));
+                    MiscellaneousUtils.saveBitmapToFile(faceFile,response);
+                }
+
+            }
+        }, 480, 480, ImageView.ScaleType.CENTER_INSIDE, Bitmap.Config.RGB_565,
+                new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.d(TAG, "error caught"+CustomUtils.getThumbUrl(taxiMarker.taxiObject.getTaxiId()));
+                error.printStackTrace();
+            }
+        });
+        MySingleton.getInstance(mContext).addToRequestQueue(imageRequest);
+    }
+
+
+    public  void backUpAcceptedComm(JSONObject json){
+
+        JsonObjectRequest jsonObjectRequestDriver;
+
+        jsonObjectRequestDriver = new JsonObjectRequest
+                (Request.Method.POST, Constants.SERVER_URL + "comm-log", json, new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            String res = response.getString("response");
+                            if (res.equals("OK")) {
+                                Log.d(TAG, "successful");
+                            }else{
+                                Log.d(TAG, "failed at sql");
+                            }
+                            //notification
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            Log.d(TAG, "failed at json");
+                        }
+
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        error.printStackTrace();
+                        Log.d(TAG, "failed at volley");
 
                     }
                 });
@@ -419,6 +503,16 @@ public class CommsObject {
 
     public void setDataUpdateListener(DataUpdateListener dataUpdateListener) {
         this.dataUpdateListener = dataUpdateListener;
+    }
+
+    public interface PhotoUpdateListener{
+        void onPhotoUpdateReceived();
+    }
+
+    PhotoUpdateListener photoUpdateListener;
+
+    public void setPhotoUpdateListener(PhotoUpdateListener photoUpdateListener) {
+        this.photoUpdateListener = photoUpdateListener;
     }
 
 

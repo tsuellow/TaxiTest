@@ -32,18 +32,20 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".RegistrationActivity"
+            android:name=".RegistrationActivityClient"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"
             tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".ChooseDestination"
             android:screenOrientation="portrait"
+            android:hardwareAccelerated="true"
             android:theme="@style/AppTheme.NoActionBar"
             tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".MainActivityCustomer"
             android:screenOrientation="portrait"
+            android:hardwareAccelerated="true"
             android:theme="@style/AppTheme.Launcher"
             tools:ignore="LockedOrientationActivity">
         </activity>
@@ -53,12 +55,17 @@
         <activity
             android:name=".SettingsActivity"
             android:launchMode="singleTask"
+            android:theme="@style/AppTheme.NoActionBar"
             tools:ignore="LockedOrientationActivity"/>
         <activity
             android:name=".ModifyProfileActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"
             tools:ignore="LockedOrientationActivity" />
+        <activity
+            android:name=".HelpActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar"/>
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="@string/file_provider"

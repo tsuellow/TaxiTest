@@ -34,11 +34,11 @@
         android:layout_marginTop="12dp"
         android:id="@+id/iv_check"
         android:src="@drawable/confirm"
-        android:tint="@color/colorGreen"
         app:layout_constraintTop_toBottomOf="@id/pb_loading"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:visibility="gone"/>
+        android:visibility="gone"
+        app:tint="@color/colorGreen" />
 
     <ProgressBar
         android:id="@+id/pb_loading"
@@ -81,9 +81,8 @@
     <Button
         android:id="@+id/bt_close"
         android:layout_width="wrap_content"
-        android:layout_height="40dp"
+        android:layout_height="wrap_content"
         android:layout_margin="8dp"
-        android:background="@drawable/rounded_background"
         android:text="Close"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

@@ -8,22 +8,29 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
+import android.os.Environment;
 import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.MotionEvent;
 
 import androidx.core.app.NotificationCompat;
 
 
+import com.example.android.taxitest.CustomUtils;
 import com.example.android.taxitest.MainActivity;
 
 import com.example.android.taxitest.R;
+import com.example.android.taxitest.RegistrationActivityBasic;
+import com.google.android.gms.common.util.IOUtils;
 
 import org.oscim.core.GeoPoint;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.Format;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -271,8 +278,17 @@ public class MiscellaneousUtils {
         return new File(dirFile,filename);
     }
 
+    public static File makeThumbFile(Context context, String taxiId){
+        return MiscellaneousUtils.makeFile(context,"thumbs", taxiId+".jpg");
+
+    }
+
     public static File makeAudioFile(Context context, String commId, String senderId){
         return makeFile(context,commId+"/audio",senderId+"_"+(new Date().getTime())+".aac");
+    }
+
+    public static File makePhotoFile(Context context, String commId, String taxiId){
+        return makeFile(context,commId+"/photo",taxiId+".jpg");
     }
 
     public static void saveBitmapToFile(File file, Bitmap bitmap){
@@ -296,5 +312,45 @@ public class MiscellaneousUtils {
             return text;
         }
     }
+
+    public static byte[] readFileToBytes(File file) {
+        byte[] bytes = new byte[(int) file.length()];
+        try (FileInputStream fis = new FileInputStream(file)) {
+            //read file into bytes[]
+            //fis.read(bytes);
+            bytes = IOUtils.toByteArray(fis);
+        }catch (IOException e){
+            Log.d("byteerror",""+e.getMessage());
+            e.printStackTrace();
+        }
+
+        return bytes;
+
+    }
+
+    public static boolean isClick(MotionEvent event, Long startTime) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN: {
+                startTime=event.getEventTime();
+                return false;
+            }
+            case MotionEvent.ACTION_UP: {
+                long clickDuration = event.getEventTime() - startTime;
+                return clickDuration < 200;
+            }
+            default:
+                return false;
+        }
+    }
+
+    public static File imageFile(int requestType, RegistrationActivityBasic.Size size, Context context){
+        String name=requestType==RegistrationActivityBasic.REQUEST_TAKE_FACE?"face":"car";
+        name=size== RegistrationActivityBasic.Size.FULL?name+"_full":size== RegistrationActivityBasic.Size.MED?name+"_med":name+"_thumb";
+        File photoFile;
+        photoFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), ""+name+".jpg");
+        return photoFile;
+    }
+
+
 
 }

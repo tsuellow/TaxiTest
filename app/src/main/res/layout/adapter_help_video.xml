@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:layout_margin="6dp"
+        android:alpha="0.85"
+        app:cardCornerRadius="4dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <com.example.android.taxitest.utils.CustomTextView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:id="@+id/ct_name_short"
+                android:background="@color/colorPrimaryDark"
+                android:layout_gravity="center_vertical|center_horizontal"
+                android:text="intro"
+                android:textColor="#fff"
+                android:fontFamily="@font/dale_viaje_font"
+                android:textSize="65sp"
+                app:stroke="2"
+                android:layout_weight="1"
+                android:gravity="center"
+                app:autoSizeTextType="uniform"
+                app:autoSizeMinTextSize="16sp"
+                app:autoSizeMaxTextSize="66sp"
+                app:autoSizeStepGranularity="2sp"
+                android:maxLines="2"
+                android:ellipsize="end"
+                android:letterSpacing="0.05"
+                android:lineSpacingExtra="-18dp"
+                android:shadowColor="#fff"
+                android:shadowRadius="1"/>
+
+            <TextView
+                android:id="@+id/tv_name_long"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Introductory app tour"
+                android:padding="2dp"
+                android:textSize="12sp"
+                android:maxLines="2"
+                android:ellipsize="end"/>
+
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/ib_play_button"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center"
+            android:scaleType="centerInside"
+            android:src="@drawable/play_button"
+            android:tint="@color/colorDeselected"
+            android:alpha="0.4"
+            android:background="?attr/selectableItemBackgroundBorderless" />
+
+
+
+    </androidx.cardview.widget.CardView>
+
+
+</LinearLayout>

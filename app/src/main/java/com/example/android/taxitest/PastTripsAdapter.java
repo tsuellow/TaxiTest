@@ -173,9 +173,11 @@ public class PastTripsAdapter extends RecyclerView.Adapter<PastTripsAdapter.View
         TextView title=dialog.findViewById(R.id.tv_title_dialog);
         TextView date=dialog.findViewById(R.id.tv_date);
         TextView noMsjs=dialog.findViewById(R.id.tv_no_msgs);
+        TextView name=dialog.findViewById(R.id.tv_other);
         title.setText("Chat with "+comm.getFirstName());
         date.setText(MiscellaneousUtils.getDateStringGeneric(new Date(comm.getTimestamp()),"EEEE dd. MMMM yyyy"));
         date.setVisibility(View.VISIBLE);
+        name.setText(comm.getFirstName()+" ,");
         RecyclerView commsRV=(RecyclerView) dialog.findViewById(R.id.rv_comms_dialog);
         Button closeBtn=(Button) dialog.findViewById(R.id.bt_dialog_close);
         CommsRecDialogAdapter adapter=new CommsRecDialogAdapter(mContext,comm);
@@ -183,7 +185,9 @@ public class PastTripsAdapter extends RecyclerView.Adapter<PastTripsAdapter.View
         commsRV.setAdapter(adapter);
         LinearLayoutManager layoutManager = new LinearLayoutManager(dialog.getContext());
         layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+        layoutManager.setReverseLayout(true);
         commsRV.setLayoutManager(layoutManager);
+        commsRV.scrollToPosition(0);
         closeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

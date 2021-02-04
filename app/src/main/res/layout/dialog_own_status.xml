@@ -42,21 +42,17 @@
         <Button
             android:id="@+id/bt_taxi_empty"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:padding="8dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:textStyle="bold"
-            android:background="@drawable/rounded_background"
             android:text="taxi is Empty" />
 
         <Button
             android:id="@+id/bt_taxi_full"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:padding="8dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:textStyle="bold"
-            android:background="@drawable/rounded_background"
             android:text="taxi is full" />
 
     </LinearLayout>
@@ -74,10 +70,8 @@
     <Button
         android:id="@+id/bt_close"
         android:layout_width="wrap_content"
-        android:layout_height="40dp"
-        android:padding="8dp"
+        android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:background="@drawable/rounded_background"
         android:text="close"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

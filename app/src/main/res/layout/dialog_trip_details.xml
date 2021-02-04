@@ -157,6 +157,8 @@
                 android:shadowDx="1"
                 android:shadowDy="1"
                 android:shadowRadius="1"
+                android:maxLines="1"
+                android:ellipsize="end"
                 android:text="barrio name"
                 android:textColor="@color/colorBlue"
                 android:textSize="14sp" />
@@ -193,6 +195,8 @@
                 android:shadowDx="1"
                 android:shadowDy="1"
                 android:shadowRadius="1"
+                android:maxLines="1"
+                android:ellipsize="end"
                 android:text="barrio name"
                 android:textColor="@color/colorBlue"
                 android:textSize="14sp" />
@@ -282,10 +286,8 @@
         <Button
             android:id="@+id/bt_dialog_close"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:padding="8dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:background="@drawable/rounded_background"
             android:text="close" />
 
     </LinearLayout>

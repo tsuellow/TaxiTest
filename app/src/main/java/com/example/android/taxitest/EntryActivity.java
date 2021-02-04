@@ -4,32 +4,51 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.util.Log;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import com.example.android.taxitest.utils.CustomTextView;
 import com.example.android.taxitest.utils.MapUtilsCustom;
+import com.example.android.taxitest.utils.MiscellaneousUtils;
 import com.example.android.taxitest.vtmExtension.CitySupport;
 import com.google.android.material.textfield.TextInputLayout;
+
+import java.io.File;
 
 public class EntryActivity extends AppCompatActivity {
 
     Button searchTaxi, justWatch;
     AutoCompleteTextView chooseCity;
     ConstraintLayout parentLayout;
-    LinearLayout llContainer;
+    LinearLayout llContainer, llUserSalute;
     CitySupport cities;
+    ImageView settings, photo;
+    CustomTextView name;
     SharedPreferences preferences;
+    Context mContext;
+    Class mNextActivitySearch;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,14 +60,25 @@ public class EntryActivity extends AppCompatActivity {
         MapUtilsCustom.copyFileToExternalStorage(Constants.POI_RESOURCE,Constants.POI_FILE,getApplicationContext());
         MapUtilsCustom.copyFileToExternalStorage(Constants.MAP_RESOURCE,Constants.MAP_FILE,getApplicationContext());
 
+        llUserSalute=(LinearLayout) findViewById(R.id.ll_user);
+        photo=(ImageView) findViewById(R.id.iv_photo_face);
+        name=(CustomTextView) findViewById(R.id.tv_name);
+        settings=(ImageView) findViewById(R.id.settings);
         searchTaxi=(Button) findViewById(R.id.search_taxi);
-        //justWatch=(Button) findViewById(R.id.watch_only);
         parentLayout=(ConstraintLayout) findViewById(R.id.entry_parent_view);
         llContainer=(LinearLayout) findViewById(R.id.ll_button_container);
         chooseCity=(AutoCompleteTextView) findViewById(R.id.actv_city);
 
+        setCurrentContext();
+        File faceFile= MiscellaneousUtils.imageFile(RegistrationActivityBasic.REQUEST_TAKE_FACE,
+                RegistrationActivityBasic.Size.MED,getApplicationContext());
+        Bitmap faceBitmap= BitmapFactory.decodeFile(faceFile.getAbsolutePath());
+        photo.setImageBitmap(faceBitmap);
+        name.setText(preferences.getString("firstname","Fulanito"));
+        Animation slideAnimation = AnimationUtils.loadAnimation(mContext, R.anim.slide_anim);
+        llUserSalute.startAnimation(slideAnimation);
+        //showLayout(true,llUserSalute);
         cities=new CitySupport();
-
         ArrayAdapter<String> adapter=new ArrayAdapter<String>(this,
                 android.R.layout.simple_list_item_1, cities.getCityDropdown());
 
@@ -62,16 +92,38 @@ public class EntryActivity extends AppCompatActivity {
                 chooseCity.setError(null);
                 return false;
             }
-
         });
 
-
-
+        settings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                openSettings();
+            }
+        });
 
         setOnClickListeners();
+    }
 
+    public void setCurrentContext(){
+        mContext=EntryActivity.this;
+        mNextActivitySearch=MainActivity.class;
+    }
 
-
+    private void showLayout(boolean show, LinearLayout linearLayout){
+        if (show){
+            linearLayout.setVisibility(View.VISIBLE);
+            linearLayout.animate()
+                    .translationX(0)
+                    .setDuration(300)
+                    .alpha(1)
+                    .start();
+        } else {
+            linearLayout.animate()
+                    .translationX(linearLayout.getWidth())
+                    .alpha(0)
+                    .setDuration(300)
+                    .start();
+        }
     }
 
     public boolean checkCity(){
@@ -102,6 +154,42 @@ public class EntryActivity extends AppCompatActivity {
         }
     }
 
+    public void openSettings(){
+        PopupMenu popup=new PopupMenu(mContext,settings);
+        //inflate the created menu resource
+        popup.inflate(R.menu.menu_main);
+        //define what to do on each item click
+        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem menuItem) {
+                switch (menuItem.getItemId()){
+                    case R.id.opt_settings:{
+                        Intent i = new Intent(mContext,SettingsActivity.class);
+                        mContext.startActivity(i);
+                        break;
+                    }
+                    case R.id.opt_past_trips:{
+                        //Toast.makeText(mContext,"this guy wants to pay",Toast.LENGTH_LONG).show();
+                        Intent i = new Intent(mContext,PastTripsActivity.class);
+                        mContext.startActivity(i);
+                        break;
+                    }
+                    case R.id.opt_profile:{
+                        Toast.makeText(mContext,"open my profile",Toast.LENGTH_LONG).show();
+                        break;
+                    }
+                    case R.id.opt_help:{
+                        Intent i = new Intent(mContext,HelpActivity.class);
+                        mContext.startActivity(i);
+                        break;
+                    }
+                }
+                return false;
+            }
+        });
+        popup.show();
+    }
+
     public void setOnClickListeners(){
         searchTaxi.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -109,12 +197,15 @@ public class EntryActivity extends AppCompatActivity {
                 if (checkCity()){
                     saveCity();
                     llContainer.setVisibility(View.GONE);
+                    llUserSalute.clearAnimation();
+                    llUserSalute.setVisibility(View.GONE);
+                    settings.setVisibility(View.GONE);
 
                     Handler handler=new Handler();
                     handler.postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            Intent intent = new Intent(EntryActivity.this, MainActivity.class);
+                            Intent intent = new Intent(mContext, mNextActivitySearch);
                             startActivity(intent);
                         }
                     },300);

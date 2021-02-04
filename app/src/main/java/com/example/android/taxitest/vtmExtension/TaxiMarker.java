@@ -1,6 +1,8 @@
 package com.example.android.taxitest.vtmExtension;
 
 
+import android.util.Log;
+
 import com.example.android.taxitest.data.SocketObject;
 import com.example.android.taxitest.data.TaxiObject;
 import org.oscim.core.GeoPoint;
@@ -64,6 +66,19 @@ public class TaxiMarker implements MarkerInterface, Comparable<TaxiMarker> {
         movementListener.onMarkerMoved(purposeTaxiObject);
     }
 
+    public void setDestColor(int color, String barrio) {
+        if (barrio!=this.barrio){
+            this.color = color;
+            this.barrio=barrio;
+            //Log.d("colorchange", "got triggered0");
+            if (colorChangeListener!=null){
+                Log.d("colorchange", "got triggered");
+                colorChangeListener.onColorChanged();
+            }
+        }
+        this.color = color;
+    }
+
     //TODO execute this before setting purposetaxiobject to taxiobject and use result to repaint ta
     public boolean doesAlphaChange(){
         int alphaOld=age/3;
@@ -80,7 +95,7 @@ public class TaxiMarker implements MarkerInterface, Comparable<TaxiMarker> {
     public float getAlphaValue(){
         int step=age/3;
         float rawAlpha=1.0f-0.2f*step;
-        return Math.min(0.2f,rawAlpha);
+        return Math.max(0.2f,rawAlpha);
     }
 
     public void setIsClicked(boolean clicked){
@@ -153,6 +168,7 @@ public class TaxiMarker implements MarkerInterface, Comparable<TaxiMarker> {
 
     }
 
+    //movement listener
     public interface MovementListener{
         void onMarkerMoved(SocketObject newPoint);
     }
@@ -161,5 +177,16 @@ public class TaxiMarker implements MarkerInterface, Comparable<TaxiMarker> {
 
     public void setMovementListener(MovementListener movementListener){
         this.movementListener=movementListener;
+    }
+
+    //color change listener
+    public interface ColorChangeListener{
+        void onColorChanged();
+    }
+
+    ColorChangeListener colorChangeListener;
+
+    public void setColorChangeListener(ColorChangeListener colorChangeListener){
+        this.colorChangeListener=colorChangeListener;
     }
 }

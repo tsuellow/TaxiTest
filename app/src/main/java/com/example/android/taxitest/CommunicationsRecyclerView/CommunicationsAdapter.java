@@ -34,6 +34,7 @@ import com.example.android.taxitest.RecordButtonUtils.RecordButton;
 import com.example.android.taxitest.utils.CurvedTextView;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
 import com.example.android.taxitest.vectorLayer.ConnectionLineLayer2;
+import com.example.android.taxitest.vtmExtension.TaxiMarker;
 import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
@@ -52,7 +53,6 @@ import java.util.List;
 
 public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAdapter.ViewHolder>{
 
-    private static final String LOG_TAG = "AudioRecordTest";
 
     public List<CommsObject> mComms;
     private Context mContext;
@@ -61,7 +61,6 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
     RecyclerView mRecyclerView;
     public static SoundPool soundPool = null;
     public static int soundMsjArrived,soundCanceled,soundAck;
-
 
     public CommunicationsAdapter(Context context, ConnectionLineLayer2 connectionLineLayer){
         mContext=context;
@@ -290,18 +289,50 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
         holder.destColor.setCardBackgroundColor(comm.taxiMarker.color);
         holder.recordButton.setCommId(CustomUtils.getOtherStringId(taxiId));
 
+        if (comm.commCardData!=null){
+            holder.name.setText(comm.commCardData.title);
+            holder.numberPlate.setText(comm.commCardData.collar);
+            double rounded = Math. round(comm.commCardData.reputation * 10.0) / 10.0;
+            holder.reputation.setText(String.valueOf(rounded));
+            if (comm.commCardData.thumb!=null){
+                holder.loadingFace.setVisibility(View.GONE);
+                holder.photo.setImageBitmap(comm.commCardData.thumb);
+            }
+
+        }
+
+        comm.taxiMarker.setColorChangeListener(new TaxiMarker.ColorChangeListener() {
+            @Override
+            public void onColorChanged() {
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        CommsObject currComm=mComms.get(getCommIndex(taxiId));
+                        holder.destination.setText(currComm.taxiMarker.barrio);
+                        holder.destination.setTextColor(currComm.taxiMarker.color);
+                        holder.destColor.setCardBackgroundColor(currComm.taxiMarker.color);
+                    }
+                });
+            }
+        });
+
         comm.setDataUpdateListener(new CommsObject.DataUpdateListener() {
             @Override
             public void onDataUpdateReceived() {
                 holder.name.setText(comm.commCardData.title);
-                holder.photo.setImageBitmap(comm.commCardData.photo);
-                holder.loadingFace.setVisibility(View.GONE);
                 holder.numberPlate.setText(comm.commCardData.collar);
-                double rounded = Math. round(comm.commCardData.reputation * 100.0) / 100.0;
+                double rounded = Math. round(comm.commCardData.reputation * 10.0) / 10.0;
                 holder.reputation.setText(String.valueOf(rounded));
             }
         });
 
+        comm.setPhotoUpdateListener(new CommsObject.PhotoUpdateListener() {
+            @Override
+            public void onPhotoUpdateReceived() {
+                holder.loadingFace.setVisibility(View.GONE);
+                holder.photo.setImageBitmap(comm.commCardData.thumb);
+            }
+        });
 
         //resetting values for recycling process
         resetMediaProgressBar(holder.progressBar);
@@ -323,6 +354,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
                         Log.d("socketTest","is being executed");
                         CommsObject currComm=mComms.get(getCommIndex(taxiId));
                         repaintButton(currComm,holder.confirmOrPlay, holder.ackBubble, holder.descriptionText, holder.descriptionPointer);
+                        connectionLines.playCommAnim(currComm.taxiMarker.taxiObject.getTaxiId());
                     }
                 });
                 //notifyItemChanged(getCommIndex(taxiId));
@@ -399,7 +431,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
                         metaMsj.addAckAtTopOfList(new AcknowledgementObject(metaMsj.getMsjObject(),CommsObject.SENT));
                         MessageObject msj=metaMsj.getMsjObject();
                         attemptSendMsj(msj);
-                        connectionLines.playCommAnim(taxiId);
+                        //connectionLines.playCommAnim(taxiId);
                         break;
                     case  CommsObject.AWAITING:
                         //do nothing, only toast/play own msg
@@ -418,11 +450,11 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
                     case  CommsObject.ACCEPT:
                         //send acceptance
                         MetaMessageObject metaMsjAccept=new MetaMessageObject(CommsObject.ACCEPTED,null,currComm);
-                        currComm.setAccepted(true);
+                        currComm.setAccepted();
                         currComm.addAtTopOfMsjList(metaMsjAccept);
                         MessageObject msjAccept=metaMsjAccept.getMsjObject();
                         attemptSendMsj(msjAccept);
-                        connectionLines.playCommAnim(taxiId);
+                        //connectionLines.playCommAnim(taxiId);
                         commAcceptedListener.onCommAccepted(currComm);
                         break;
                     case  CommsObject.BT_ACCEPTED:
@@ -610,7 +642,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
                         if (msj.getIntentCode()!=CommsObject.REJECTED) {
                             CommsObject comm = mComms.get(getCommIndex(id));
                             if (msj.getIntentCode()==CommsObject.ACCEPTED){
-                                comm.setAccepted(true);
+                                comm.setAccepted();
                                 Log.d("socketTest","codemsj0 "+msj.getIntentCode());
                                 commAcceptedListener.onCommAccepted(comm);
                             }

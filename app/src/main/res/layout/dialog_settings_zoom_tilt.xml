@@ -173,19 +173,15 @@
         <Button
             android:id="@+id/bt_dialog_cancel"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:padding="8dp"
-            android:layout_margin="10dp"
-            android:background="@drawable/rounded_background"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
             android:text="cancel" />
 
         <Button
             android:id="@+id/bt_dialog_accept"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:padding="8dp"
-            android:layout_margin="10dp"
-            android:background="@drawable/rounded_background"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
             android:text="accept" />
 
     </LinearLayout>

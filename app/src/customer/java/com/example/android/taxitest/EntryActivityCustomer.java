@@ -17,7 +17,7 @@ public class EntryActivityCustomer extends EntryActivity {
         preferences= PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean isFirstInteraction=(preferences.getString("taxiId", null)==null);
         if (isFirstInteraction){
-            Intent i=new Intent(EntryActivityCustomer.this, RegistrationActivity.class);
+            Intent i=new Intent(EntryActivityCustomer.this, RegistrationActivityClient.class);
             startActivity(i);
         }
         //else load normal launching activity
@@ -27,29 +27,12 @@ public class EntryActivityCustomer extends EntryActivity {
 
     }
 
-    @Override
-    public void setOnClickListeners(){
-        searchTaxi.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (checkCity()){
-                    saveCity();
-                    llContainer.setVisibility(View.GONE);
-                    //Toast.makeText(getApplicationContext(),"taxiid: "+preferences.getString("taxiId",null),Toast.LENGTH_LONG).show();
-                    Handler handler=new Handler();
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            Intent intent = new Intent(EntryActivityCustomer.this, ChooseDestination.class);
-                            startActivity(intent);
-                        }
-                    },300);
-                }
-            }
-        });
-
-//        when new buttons are added use this space to add new onclicklisteners that will leave only the logo visible
+    public void setCurrentContext(){
+        mContext=EntryActivityCustomer.this;
+        mNextActivitySearch=ChooseDestination.class;
     }
+
+
 
 
 }

@@ -55,14 +55,14 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
     public boolean isBillboard;
     public MarkerSymbol.HotspotPlace placement;
 
-    public List<DrawableBitmapCorrespondence> bitmapReferenceList= new ArrayList<>();
+//    public List<DrawableBitmapCorrespondence> bitmapReferenceList= new ArrayList<>();
 
     //helper vars
     PathModel pathModelArrow;
     PathModel pathModelCircle;
     double mapScale;
-    public Bitmap[] scaledGrayedSymbols = new Bitmap[40];
-    public Bitmap[] appearDisappearAnim = new Bitmap[40];
+    public MarkerSymbol[] scaledGrayedSymbols = new MarkerSymbol[40];
+    public MarkerSymbol[] appearDisappearAnim = new MarkerSymbol[40];
     private WebSocketDriverLocations mWebSocketConnection;
     private ConnectionLineLayer2 mConnectionLines;
     public CommunicationsAdapter mCommunicationsAdapter;
@@ -92,8 +92,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
         mapScale=map.getMapPosition().getScale();
 
         prepareScaleAndAppearanceTransitions();
-        isBillboard=false;
-        placement=MarkerSymbol.HotspotPlace.CENTER;
+
         mDb=SqlLittleDB.getInstance(context);
     }
 
@@ -302,6 +301,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
     public void doUnClick(TaxiMarker item, boolean animate){
         item.setIsClicked(false);
         //mConnectionLines.removeLine(item.taxiObject.getTaxiId());
+        item.setColorChangeListener(null);
         mConnectionLines.remove(item.taxiObject.getTaxiId());
         if (animate){
             mCommunicationsAdapter.cancelByIdWithAnim(item.taxiObject.getTaxiId());
@@ -320,9 +320,12 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
             if (item.getIsClicked()){
                 doUnClick(item,true);
             }else{
-                doClick(item);
+                if (mCommunicationsAdapter.getItemCount()<5){
+                    doClick(item);
+                }else{
+                    Toast.makeText(context,"You have 5 or more open communications. Cancel some to start a new one", Toast.LENGTH_LONG).show();
+                }
             }
-            Toast.makeText(context, item.taxiObject.getTaxiId() + " id", Toast.LENGTH_LONG).show();
             return true;
         }
 
@@ -350,8 +353,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
 
     //adds a new taxi to the layer
     public void addTaxi(TaxiMarker item) {
-        MarkerSymbol symbol = new MarkerSymbol(appearDisappearAnim[0], placement, isBillboard);
-        item.setRotatedSymbol(symbol);
+        item.setRotatedSymbol(appearDisappearAnim[0]);//first frame of appear anim
         mItemList.add(item);
         populate();
     }
@@ -381,36 +383,35 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
     //checks if bitmap for geopoint already exists else it calculates a new one
     public MarkerSymbol fetchBitmap(TaxiMarker taxiMarker) {
         BarrioPolygonDrawable barrio = barriosLayer.getContainingBarrio(taxiMarker.destGeoPoint);
-        taxiMarker.color=barrio.getStyle().fillColor;
-        taxiMarker.barrio=barrio.getBarrioName();
-        if (!taxiMarker.getIsClicked() && taxiMarker.age<3) {
-            for (DrawableBitmapCorrespondence item : bitmapReferenceList) {
-                if (barrio.getBarrioId() == item.barrioId) {
-                    return new MarkerSymbol(item.barrioBitmap, placement,isBillboard);
-                }
-            }
-            Log.d("referenceList",""+bitmapReferenceList.size());
-        }
-        int color = barrio.getStyle().fillColor;
-        VectorMasterDrawable drawable = modifyDrawable(color, taxiMarker.getIsClicked());
+        taxiMarker.setDestColor(barrio.getStyle().fillColor,barrio.getBarrioName());
+//        if (!taxiMarker.getIsClicked() && taxiMarker.age<3) {
+//            for (DrawableBitmapCorrespondence item : bitmapReferenceList) {
+//                if (barrio.getBarrioId() == item.barrioId) {
+//                    return new MarkerSymbol(item.barrioBitmap, placement,isBillboard);
+//                }
+//            }
+//            Log.d("referenceList",""+bitmapReferenceList.size());
+//        }
+//        int color = barrio.getStyle().fillColor;
+        VectorMasterDrawable drawable = modifyDrawable(taxiMarker);
         Bitmap bitmap = AndroidGraphicsCustom.drawableToBitmap(drawable, ZoomUtils.getDrawableSize(mMap.getMapPosition().getZoom()));
-        if (!taxiMarker.getIsClicked()) {
-            bitmapReferenceList.add(new DrawableBitmapCorrespondence(barrio.getBarrioId(), color, drawable, bitmap));
-        }
+//        if (!taxiMarker.getIsClicked()) {
+//            bitmapReferenceList.add(new DrawableBitmapCorrespondence(barrio.getBarrioId(), color, drawable, bitmap));
+//        }
         return new MarkerSymbol(bitmap, placement,isBillboard);
     }
 
     // modifies drawable according to destination colors
-    public VectorMasterDrawable modifyDrawable(int color, boolean isClicked) {
+    public VectorMasterDrawable modifyDrawable(TaxiMarker taxiMarker) {
         VectorMasterDrawable result = new VectorMasterDrawable(context,drawable.getResID());
         PathModel pathModelArrow=result.getPathModelByName("arrow");
         PathModel pathModelCircle=result.getPathModelByName("circle");
-        pathModelArrow.setFillColor(color);
-        pathModelArrow.setFillAlpha(1.0f);
-        pathModelArrow.setStrokeAlpha(1.0f);
-        pathModelCircle.setStrokeColor(PaintUtils.getSaturation(color));
+        pathModelArrow.setFillColor(taxiMarker.color);
+        pathModelArrow.setFillAlpha(taxiMarker.getAlphaValue());
+        //pathModelCircle.setFillAlpha(taxiMarker.getAlphaValue());
+        pathModelCircle.setStrokeColor(PaintUtils.getSaturation(taxiMarker.color));
         pathModelCircle.setStrokeAlpha(1.0f);
-        if (isClicked){
+        if (taxiMarker.isClicked){
             pathModelArrow.setStrokeWidth(2.0f);
         }
         return result;
@@ -419,19 +420,19 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
 
 
     //helper class to store existing bitmaps for taxis
-    public class DrawableBitmapCorrespondence {
-        public int barrioId;
-        public int barrioColor;
-        public Drawable barrioDrawable;
-        public Bitmap barrioBitmap;
-
-        public DrawableBitmapCorrespondence(int barrioId, int barrioColor, Drawable barrioDrawable, Bitmap barrioBitmap) {
-            this.barrioId = barrioId;
-            this.barrioColor = barrioColor;
-            this.barrioDrawable = barrioDrawable;
-            this.barrioBitmap = barrioBitmap;
-        }
-    }
+//    public class DrawableBitmapCorrespondence {
+//        public int barrioId;
+//        public int barrioColor;
+//        public Drawable barrioDrawable;
+//        public Bitmap barrioBitmap;
+//
+//        public DrawableBitmapCorrespondence(int barrioId, int barrioColor, Drawable barrioDrawable, Bitmap barrioBitmap) {
+//            this.barrioId = barrioId;
+//            this.barrioColor = barrioColor;
+//            this.barrioDrawable = barrioDrawable;
+//            this.barrioBitmap = barrioBitmap;
+//        }
+//    }
 
     public void setOffAnimation(final int frames) {
         Collections.sort(mItemList);
@@ -447,18 +448,16 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                             marker.executeFrame(a, frames);
                         }else if (marker.getPurpose()== TaxiMarker.Purpose.APPEAR){
                             //play appear animation
-                            Bitmap appearDisappear=getAppearDisappearFrame(a,frames,true);
-                            MarkerSymbol symbol=new MarkerSymbol(appearDisappear, placement,isBillboard);
-                            marker.setRotatedSymbol(symbol);
+                            marker.setRotatedSymbol(getAppearDisappearFrame(a,frames,true));
                         }else{
                             //play disappear animation
-                            marker.setRotatedSymbol(new MarkerSymbol(getAppearDisappearFrame(a,frames,false), placement,isBillboard));
+                            marker.setRotatedSymbol(getAppearDisappearFrame(a,frames,false));
                         }
                     }
                     mConnectionLines.updateLines();
                     populate();
                     update();
-                    mMap.updateMap(false);
+                    mMap.updateMap(true);
                 }
             }, i * 500 / frames);
         }
@@ -477,11 +476,17 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                     }else if (m.getPurpose() == TaxiMarker.Purpose.APPEAR){
                         m.setRotatedSymbol(fetchBitmap(m));
                     }
+
+                    if (m.doesAlphaChange()){
+                        m.setRotatedSymbol(fetchBitmap(m));
+                    }
+                    //assume all values from purpose at the end of anim
+                    m.setTaxiObject(m.getPurposeTaxiObject());
                 }
-                //assume all values from purpose at the end of amin
-                for (TaxiMarker marker:mItemList){
-                    marker.setTaxiObject(marker.getPurposeTaxiObject());
-                }
+
+//                for (TaxiMarker marker:mItemList){
+//                    marker.setTaxiObject(marker.getPurposeTaxiObject());
+//                }
                 populate();
                 update();
                 mMap.updateMap(false);
@@ -515,9 +520,9 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
     public synchronized void scaleOtherIcons(double zoom){
         mZoom2=zoom;
         int currSize=getDrawableIndex(zoom);
-        Bitmap otherSymbol = scaledGrayedSymbols[currSize];
+
         for (TaxiMarker otherTaxiMarker : mItemList ) {
-            otherTaxiMarker.setRotatedSymbol(new MarkerSymbol(otherSymbol, placement, isBillboard));
+            otherTaxiMarker.setRotatedSymbol(scaledGrayedSymbols[currSize]);
             if (zoom!=mZoom2){
                 return;
             }
@@ -527,29 +532,32 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
     }
 
     public void prepareScaleAndAppearanceTransitions(){
+        isBillboard=false;
+        placement=MarkerSymbol.HotspotPlace.CENTER;
+
         pathModelArrow.setFillColor(Color.GRAY);
         pathModelArrow.setFillAlpha(0.5f);
         pathModelArrow.setStrokeAlpha(0.0f);
         pathModelCircle.setStrokeAlpha(0.0f);
         for (int i = 0; i < 40; i++) {
-            scaledGrayedSymbols[i] = AndroidGraphicsCustom.drawableToBitmap(drawable, 41 + i);
-            appearDisappearAnim[i]=AndroidGraphicsCustom.drawableToBitmap(drawable,2+2*i);
+            scaledGrayedSymbols[i] = new MarkerSymbol(AndroidGraphicsCustom.drawableToBitmap(drawable, 41 + i),placement,isBillboard);
+            appearDisappearAnim[i]=new MarkerSymbol(AndroidGraphicsCustom.drawableToBitmap(drawable,2+2*i),placement,isBillboard);
         }
     }
 
     //TODO this is causing fatal exceptions it was trying to access frame 100 where 99 is the max value. rethink this
-    private Bitmap getAppearDisappearFrame(int frame, int totalFrames, boolean appear){
+    private MarkerSymbol getAppearDisappearFrame(int frame, int totalFrames, boolean appear){
 
         int maxSizeIndex=getDrawableIndex(mZoom2);
         int currSizeIndex=maxSizeIndex*frame/totalFrames;
         Log.d("wtf bitmap"," maxSize:"+maxSizeIndex+" currSizeInd:"+currSizeIndex);
-        Bitmap bitmap;
+        MarkerSymbol symbol;
         if (appear){
-            bitmap= appearDisappearAnim[currSizeIndex];
+            symbol= appearDisappearAnim[currSizeIndex];
         }else{
-            bitmap= appearDisappearAnim[maxSizeIndex-currSizeIndex];
+            symbol= appearDisappearAnim[maxSizeIndex-currSizeIndex];
         }
-        return bitmap;
+        return symbol;
     }
 
     public double mZoom;
@@ -561,12 +569,12 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                 public void run() {
                     if (mZoom == zoom) {
                         //shrink all cached bitmaps
-                        for(DrawableBitmapCorrespondence item:bitmapReferenceList){
-                            item.barrioBitmap=AndroidGraphicsCustom.drawableToBitmap(item.barrioDrawable, ZoomUtils.getDrawableSize(zoom));
-                            if (zoom!=mZoom){
-                                return;
-                            }
-                        }
+//                        for(DrawableBitmapCorrespondence item:bitmapReferenceList){
+//                            item.barrioBitmap=AndroidGraphicsCustom.drawableToBitmap(item.barrioDrawable, ZoomUtils.getDrawableSize(zoom));
+//                            if (zoom!=mZoom){
+//                                return;
+//                            }
+//                        }
                         for (TaxiMarker item:mItemList) {
                             item.setRotatedSymbol(fetchBitmap(item));
                             //check if this fixes concurrent modification exception

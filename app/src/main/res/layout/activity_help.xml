@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".HelpActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:id="@+id/tb_help"
+        >
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar_trips"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:theme="@style/AppTheme.Toolbar"
+            app:title="help"
+            app:titleTextColor="@android:color/white"
+            app:titleTextAppearance="@style/ownStyle"/>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+
+    <ScrollView
+        android:id="@+id/scrollView2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_below="@+id/tb_help"
+        tools:layout_editor_absoluteX="0dp">
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <com.example.android.taxitest.utils.CustomTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="12dp"
+                android:fontFamily="@font/dale_viaje_font"
+                android:letterSpacing="0.08"
+                android:lineSpacingExtra="-18dp"
+                android:padding="8dp"
+                android:shadowColor="@color/colorPrimary"
+                android:shadowRadius="1"
+                android:text="Video Tutorials"
+                android:textAlignment="center"
+                android:textSize="40sp"
+                app:stroke="1" />
+
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_help_videos"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginBottom="8dp"
+                android:scrollbars="vertical" />
+
+            <com.example.android.taxitest.utils.CustomTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="12dp"
+                android:fontFamily="@font/dale_viaje_font"
+                android:letterSpacing="0.08"
+                android:lineSpacingExtra="-18dp"
+                android:padding="8dp"
+                android:shadowColor="@color/colorPrimary"
+                android:shadowRadius="1"
+                android:text="Documents"
+                android:textAlignment="center"
+                android:textSize="40sp"
+                app:stroke="1" />
+
+            <LinearLayout
+                android:id="@+id/linearLayout2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="0dp"
+                android:orientation="horizontal"
+                app:layout_constraintTop_toBottomOf="@+id/linearLayout6">
+
+                <ImageView
+                    android:id="@+id/iv_info_terms"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:layout_gravity="bottom|end"
+                    android:background="@null"
+                    android:padding="8dp"
+                    android:layout_marginStart="12dp"
+                    android:src="@drawable/info"
+                    app:tint="@color/colorSelected" />
+
+                <TextView
+                    android:id="@+id/cb_terms"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_margin="4dp"
+                    android:layout_marginEnd="10dp"
+                    android:layout_weight="1"
+                    android:text="Terms and conditions" />
+
+                <Button
+                    android:id="@+id/bt_terms"
+                    android:layout_width="65dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="center|end"
+                    android:layout_marginEnd="16dp"
+                    android:background="@drawable/rounded_background_borderless"
+                    android:backgroundTint="@color/colorSelected"
+                    android:padding="0dp"
+                    android:paddingStart="0dp"
+                    android:paddingEnd="0dp"
+                    android:text="read"
+                    android:textColor="#FFF"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/linearLayout3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:orientation="horizontal"
+                app:layout_constraintTop_toBottomOf="@+id/linearLayout6">
+
+                <ImageView
+                    android:id="@+id/iv_info_data_use"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:layout_gravity="bottom|end"
+                    android:background="@null"
+                    android:padding="8dp"
+                    android:layout_marginStart="12dp"
+                    android:src="@drawable/info"
+                    app:tint="@color/colorSelected" />
+
+                <TextView
+                    android:id="@+id/cb_data_use"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_margin="4dp"
+                    android:layout_marginEnd="10dp"
+                    android:layout_weight="1"
+                    android:text="How we use your data" />
+
+                <Button
+                    android:id="@+id/bt_data_use"
+                    android:layout_width="65dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="center|end"
+                    android:layout_marginEnd="16dp"
+                    android:background="@drawable/rounded_background_borderless"
+                    android:backgroundTint="@color/colorSelected"
+                    android:padding="0dp"
+                    android:paddingStart="0dp"
+                    android:paddingEnd="0dp"
+                    android:text="read"
+                    android:textColor="#FFF"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+
+            <com.example.android.taxitest.utils.CustomTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="16dp"
+                android:fontFamily="@font/dale_viaje_font"
+                android:letterSpacing="0.08"
+                android:lineSpacingExtra="-18dp"
+                android:padding="8dp"
+                android:shadowColor="@color/colorPrimary"
+                android:shadowRadius="1"
+                android:text="Suggestions"
+                android:textAlignment="center"
+                android:textSize="40sp"
+                app:stroke="1" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:paddingStart="16dp"
+                android:paddingTop="4dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="8dp"
+                android:text="Contact us under the following links and leave your comments and ideas"
+                android:textAlignment="center" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:id="@+id/ib_whastapp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="6dp"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/whatsapp"
+                    app:tint="@color/colorPrimary" />
+
+                <ImageButton
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:id="@+id/ib_googleplay"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="5dp"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/googleplay"
+                    app:tint="@color/colorPrimary" />
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:paddingStart="16dp"
+                android:paddingTop="4dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="16dp"
+                android:text="or write us at dale.viaje@gmail.com for your business propositions"
+                android:textAlignment="center" />
+
+            <com.example.android.taxitest.utils.CustomTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="12dp"
+                android:fontFamily="@font/dale_viaje_font"
+                android:letterSpacing="0.08"
+                android:lineSpacingExtra="-18dp"
+                android:padding="8dp"
+                android:shadowColor="@color/colorPrimary"
+                android:shadowRadius="1"
+                android:text="About Us"
+                android:textAlignment="center"
+                android:textSize="40sp"
+                app:stroke="1" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="16dp"
+                android:paddingTop="4dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="8dp"
+                android:text="This app has been a personal project for some time and is a gift for my city, Estelí.\n As of now its is not a business although we are considering financing it through Advertisement in the future.\n Our aim is to make it available for free to both drivers and customers in order to improve the quality, efficiency and safety of the public transportation for all involved parties."
+                android:textAlignment="center" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right"
+                android:fontFamily="@font/dale_viaje_font"
+                android:letterSpacing="0.01"
+                android:lineSpacingExtra="-18dp"
+                android:padding="16dp"
+                android:text=" by \n theo &amp; \n andres"
+                android:textColor="@color/colorPrimary"
+                android:textSize="40sp" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="220dp"
+        android:layout_height="460dp"
+        android:id="@+id/cv_video_container"
+        android:visibility="gone"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:translationZ="30dp"
+        android:elevation="8dp"
+        android:layout_margin="40px"
+        app:cardCornerRadius="8dp">
+
+        <include layout="@layout/layout_floating_screen"/>
+
+    </androidx.cardview.widget.CardView>
+
+
+
+</RelativeLayout>

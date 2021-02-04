@@ -157,6 +157,21 @@ public class ChooseDestination extends AppCompatActivity {
         loadingBarrios=(ProgressBar) findViewById(R.id.pb_barrio);
         loadingReference=(ProgressBar) findViewById(R.id.pb_reference);
 
+//        chooseBarrio.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+//            @Override
+//            public void onFocusChange(View v, boolean hasFocus) {
+//                if (!hasFocus){
+//                    return;
+//                }
+//                if (loadingBarrios.getVisibility()==View.VISIBLE){
+//                    Toast.makeText(getApplicationContext(),"please wait, content is still loading", Toast.LENGTH_SHORT).show();
+//
+//                }
+//                ((AutoCompleteTextView) v).showDropDown();
+//
+//            }
+//        });
+
         chooseBarrio.setOnTouchListener(new View.OnTouchListener() {
 
             @Override
@@ -297,6 +312,7 @@ public class ChooseDestination extends AppCompatActivity {
                         intent.putExtra("DEST_LON",destGeo.getLongitude());
                         intent.putExtra("SEATS",seatAmount);
                         startActivity(intent);
+                        finishAndRemoveTask();
                     }
                 },300);
 
@@ -310,8 +326,10 @@ public class ChooseDestination extends AppCompatActivity {
     public void onBackPressed() {
         //super.onBackPressed();
         Intent intent=new Intent(this,EntryActivityCustomer.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
+        fragment.onDestroy();
+        finishAffinity();
     }
 
     public static void hideSoftKeyboard(Activity activity) {

@@ -81,11 +81,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:id="@+id/actv_barrio"
-                            android:textSize="16sp"
-                            android:paddingTop="8dp"
-                            android:paddingBottom="4dp"
-                            android:paddingStart="12dp"
-                            android:background="@drawable/rounded_background_edit_text"
+
                             android:inputType="textAutoComplete"
                             android:completionThreshold="1"/>
 
@@ -97,8 +93,8 @@
                         android:indeterminateTint="@color/colorDeselected"
                         android:layout_width="26dp"
                         android:layout_height="26dp"
-                        android:layout_marginBottom="2.2dp"
-                        android:layout_marginEnd="2.2dp"
+                        android:layout_marginBottom="2.1dp"
+                        android:layout_marginEnd="2.1dp"
                         android:layout_gravity="end|bottom"/>
                 </FrameLayout>
 
@@ -117,15 +113,9 @@
                         <androidx.appcompat.widget.AppCompatAutoCompleteTextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textSize="16sp"
-                            android:paddingTop="8dp"
-                            android:paddingBottom="4dp"
-                            android:paddingStart="12dp"
-                            android:background="@drawable/rounded_background_edit_text"
                             android:id="@+id/actv_reference"
-                            android:ems="10"
-                            android:completionThreshold="0"
-                            />
+                            android:completionThreshold="0"/>
+
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <ProgressBar
@@ -134,9 +124,10 @@
                         android:indeterminateTint="@color/colorDeselected"
                         android:layout_width="26dp"
                         android:layout_height="26dp"
-                        android:layout_marginBottom="2.2dp"
-                        android:layout_marginEnd="2.2dp"
+                        android:layout_marginBottom="2.1dp"
+                        android:layout_marginEnd="2.1dp"
                         android:layout_gravity="end|bottom"/>
+
                 </FrameLayout>
 
             </LinearLayout>
@@ -224,7 +215,7 @@
             android:layout_height="wrap_content"
             android:paddingTop="8dp"
             android:layout_marginTop="15dp"
-            android:background="@drawable/rounded_background_edit_text"
+            android:background="@drawable/rounded_background_tight"
             android:orientation="vertical"
             android:id="@+id/confirm_layout"
             android:layout_gravity="center_horizontal|top"
@@ -255,19 +246,15 @@
 
                 <Button
                     android:layout_width="wrap_content"
-                    android:layout_height="38dp"
+                    android:layout_height="wrap_content"
                     android:text="Cancel"
-                    android:textColor="@color/colorDeselected"
-                    android:background="@drawable/background_button"
                     android:layout_margin="8dp"
                     android:id="@+id/bt_dest_cancel"/>
 
                 <Button
                     android:layout_width="wrap_content"
-                    android:layout_height="38dp"
+                    android:layout_height="wrap_content"
                     android:text="OK"
-                    android:textColor="@color/colorDeselected"
-                    android:background="@drawable/background_button"
                     android:layout_margin="8dp"
                     android:id="@+id/bt_dest_confirm" />
 

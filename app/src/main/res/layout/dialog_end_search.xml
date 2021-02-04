@@ -93,7 +93,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="plate: ES12345"
-                android:textSize="10sp" />
+                android:textSize="12sp" />
 
         </LinearLayout>
 
@@ -190,20 +190,16 @@
         <Button
             android:id="@+id/bt_finish"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:padding="8dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:textStyle="bold"
-            android:background="@drawable/rounded_background"
             android:text="yes, end search" />
 
         <Button
             android:id="@+id/bt_continue"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:padding="8dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:background="@drawable/rounded_background"
             android:text="continue searching" />
 
     </LinearLayout>

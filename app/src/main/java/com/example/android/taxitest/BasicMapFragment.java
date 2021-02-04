@@ -435,6 +435,7 @@ public class BasicMapFragment extends Fragment implements GoogleApiClient.Connec
     public void onPause() {
         mapView.onPause();
         super.onPause();
+        mCompass.pause();
         //here we need this
         fusedLocationProviderClient.removeLocationUpdates(locationCallback);
         Log.d(TAG, "onPause: happened");

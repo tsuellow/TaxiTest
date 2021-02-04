@@ -3,11 +3,20 @@ package com.example.android.taxitest;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.example.android.taxitest.CommunicationsRecyclerView.CommsObject;
+import com.example.android.taxitest.connection.MySingleton;
 import com.example.android.taxitest.data.ClientObject;
 import com.example.android.taxitest.data.TaxiObject;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
+import com.example.android.taxitest.vectorLayer.BarriosLayer;
 import com.example.android.taxitest.vtmExtension.OtherTaxiLayer;
 import com.example.android.taxitest.vtmExtension.OwnMarker;
 import com.example.android.taxitest.vtmExtension.OwnMarkerLayer;
@@ -16,10 +25,13 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationResult;
 import com.sdsmdg.harjot.vectormaster.VectorMasterDrawable;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.oscim.android.theme.AssetsRenderTheme;
 import org.oscim.core.GeoPoint;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 public class MainActivityCustomer extends MainActivity {
 
@@ -76,10 +88,10 @@ public class MainActivityCustomer extends MainActivity {
                 Location adjustedLocation = locationResult.getLastLocation();
 //                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-39.2908); //hannover andres
 //                adjustedLocation.setLongitude(adjustedLocation.getLongitude()-96.095); //hannover andres
-//                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-39.25441545); //hannover hubertus
-//                adjustedLocation.setLongitude(adjustedLocation.getLongitude()-96.11757698); //hannover hubertus
-                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-28.03179311); //istanbul
-                adjustedLocation.setLongitude(adjustedLocation.getLongitude()-115.3572729); //istanbul
+                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-39.25441545); //hannover hubertus
+                adjustedLocation.setLongitude(adjustedLocation.getLongitude()-96.11757698); //hannover hubertus
+//                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-28.03179311); //istanbul
+//                adjustedLocation.setLongitude(adjustedLocation.getLongitude()-115.3572729); //istanbul
                 endLocation=adjustedLocation;
                 mCompass.setCurrLocation(endLocation);
                 if (mCurrMapLoc != null && mMarkerLoc != null ) {
@@ -113,8 +125,34 @@ public class MainActivityCustomer extends MainActivity {
     @Override
     public Intent getCloseIntent() {
         Intent intent = new Intent(MainActivityCustomer.this, EntryActivityCustomer.class);
-        finish();
+        //finish();
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         return intent;
     }
+
+
+    public static JSONObject getCommBackupJson(CommsObject comm, BarriosLayer barriosLayer){
+        JSONObject json=new JSONObject();
+        try {
+            json.put("commId" , comm.commId);
+            json.put("clientId" , MiscellaneousUtils.getNumericId(myId));
+            json.put("driverId" ,comm.taxiMarker.taxiObject.getTaxiId());
+            json.put("seats" , seatAmount);
+            json.put("city" , city.name);
+            json.put("barrioFrom" , barriosLayer.getContainingBarrio(new GeoPoint(mOwnTaxiObject.getLatitude(),mOwnTaxiObject.getLongitude())).getBarrioName());
+            json.put("barrioTo" , destBarrio);
+            json.put("latFrom" , mOwnTaxiObject.getLatitude());
+            json.put("lonFrom" , mOwnTaxiObject.getLongitude());
+            json.put("latTo" , mOwnTaxiObject.getDestinationLatitude());
+            json.put("lonTo" , mOwnTaxiObject.getDestinationLongitude());
+            json.put("timestamp" , MiscellaneousUtils.getDateString(new Date()));
+            //Log.d("volley",json.toString());
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return json;
+    }
+
+
 }

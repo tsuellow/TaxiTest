@@ -19,7 +19,6 @@ import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.Handler;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -30,22 +29,17 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.OnBackPressedCallback;
-import androidx.activity.OnBackPressedDispatcher;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat;
 
-import com.example.android.taxitest.CommunicationsRecyclerView.CommsObject;
 import com.example.android.taxitest.CommunicationsRecyclerView.CommunicationsAdapter;
 import com.example.android.taxitest.CommunicationsRecyclerView.SmoothLinearLayoutManager;
 import com.example.android.taxitest.connection.WebSocketClientLocations;
@@ -99,7 +93,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -162,7 +155,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     public float defaultPivot=0.75f;
     float mTilt;
     double mScale;
-    public SocketObject mOwnTaxiObject;
+    public static SocketObject mOwnTaxiObject;
     AnimatedVectorDrawableCompat advCompat;
     AnimatedVectorDrawable adv;
     boolean wasMoved=false;
@@ -181,6 +174,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     SharedPreferences preferences;
     public static String myId;
     public static GeoPoint destGeo=new GeoPoint(0,0);
+    public static String destBarrio;
     public static int isActive=0;
     public static City city;
 
@@ -395,7 +389,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         settings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                openTest();
+                openSettings();
             }
         });
 
@@ -504,7 +498,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
     public void setDestGeo(GeoPoint geo){
         destGeo=geo;
-        destination.setText(mBarriosLayer.getContainingBarrio(geo).getBarrioName());
+        destBarrio=mBarriosLayer.getContainingBarrio(geo).getBarrioName();
+        destination.setText(destBarrio);
         destination.setTextColor(mBarriosLayer.getContainingBarrio(geo).getStyle().fillColor);
         mOwnMarkerLayer.setDest(geo);
         setIsActive(1,mContext);
@@ -636,7 +631,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         mCompass.setMode(defaultMode);
     }
 
-    public void openTest(){
+    public void openSettings(){
         PopupMenu popup=new PopupMenu(mContext,settings);
         //inflate the created menu resource
         popup.inflate(R.menu.menu_main);
@@ -1049,6 +1044,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 mDb.clientDao().clearTaxiNew();
             }
         });
+        //disconnect compass sensor updates
+        mCompass.pause();
         //disconnect location updates
         fusedLocationProviderClient.removeLocationUpdates(locationCallback);
         //disconnect sockets

@@ -5,4 +5,9 @@
         <attr name="mic_icon" format="reference" />
 
     </declare-styleable>
+    <declare-styleable name="CustomTextView">
+        <attr name="stroke" format="float"/>
+    </declare-styleable>
+
+
 </resources>

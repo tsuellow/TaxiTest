@@ -14,7 +14,7 @@ import java.util.Date;
 
 public class CustomUtils {
 
-    public static final String phpFile="get_driver.php";
+    public static final String apiExtension ="driver/";
 
     public static void interpretJson(JSONObject data, CommsObject comm){
         try {
@@ -26,10 +26,11 @@ public class CustomUtils {
             String genStr = data.getString("gender");
             String gender = genStr.equals("m") ? "male" : "female";
             double reputation = data.getDouble("repAvg");
-            String base64 = data.getString("photo");
-            byte[] biteOutput = Base64.decode(base64, 0);
-            Bitmap photo = BitmapFactory.decodeByteArray(biteOutput, 0, biteOutput.length);
-            comm.setCommCardData(comm.new CardData(firstName,collar,firstName,lastName,reputation,dob,gender,photo));
+            long timestamp=data.getLong("timestamp");
+            //String base64 = data.getString("photo");
+            //byte[] biteOutput = Base64.decode(base64, 0);
+            //Bitmap photo = BitmapFactory.decodeByteArray(biteOutput, 0, biteOutput.length);
+            comm.commCardData.setData(firstName,collar,firstName,lastName,reputation,dob,gender,timestamp);
         }catch (JSONException e){
             e.printStackTrace();
         }
@@ -40,5 +41,13 @@ public class CustomUtils {
     }
     public static String getOtherStringId(int id){
         return "t"+id;
+    }
+
+    public static String getThumbUrl(int taxiId){
+        return Constants.S3_SERVER_URL+"drivers/thumb/"+taxiId+".jpg";
+    }
+
+    public static String getFaceUrl(int taxiId, long profileTimestamp){
+        return Constants.S3_SERVER_URL+"drivers/photos/"+taxiId+"/face/"+profileTimestamp+".jpg";
     }
 }
