@@ -19,6 +19,7 @@ import androidx.cardview.widget.CardView;
 
 import com.example.android.taxitest.CommunicationsRecyclerView.CommsObject;
 import com.example.android.taxitest.CommunicationsRecyclerView.CommunicationsAdapter;
+import com.example.android.taxitest.connection.IncomingUdpSocket;
 import com.example.android.taxitest.connection.WebSocketDriverLocations;
 import com.example.android.taxitest.data.SocketObject;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
@@ -38,7 +39,7 @@ public class OtherDriversLayer extends OtherTaxiLayer {
     CommsObject mSelectedComm=null;
     boolean autoCloseTriggered=false;
 
-    public OtherDriversLayer(Context context, BarriosLayer barriosLayer, Map map, List<TaxiMarker> list, WebSocketDriverLocations webSocketConnection, ConnectionLineLayer2 connectionLineLayer, CommunicationsAdapter commsAdapter) {
+    public OtherDriversLayer(Context context, BarriosLayer barriosLayer, Map map, List<TaxiMarker> list, IncomingUdpSocket webSocketConnection, ConnectionLineLayer2 connectionLineLayer, CommunicationsAdapter commsAdapter) {
         super(context, barriosLayer, map, list, webSocketConnection, connectionLineLayer, commsAdapter);
     }
 

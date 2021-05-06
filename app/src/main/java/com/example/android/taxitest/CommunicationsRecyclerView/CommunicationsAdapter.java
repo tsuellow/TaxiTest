@@ -73,7 +73,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
             IO.Options opts=new IO.Options();
             opts.forceNew = true;
             opts.query = "id="+ MainActivity.myId;
-            mSocket = IO.socket("http://ec2-3-88-176-60.compute-1.amazonaws.com:3000",opts);
+            mSocket = IO.socket("http://54.91.130.128:3000",opts);
             Log.d("socketTest","success");
             initializeSocketListener();
             connectSocket();

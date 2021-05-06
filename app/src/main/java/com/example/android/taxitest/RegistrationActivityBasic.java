@@ -627,6 +627,7 @@ public class RegistrationActivityBasic extends AppCompatActivity {
 
                 } else {
                     String result = new String(networkResponse.data);
+                    Log.d("volleyErrorResponse",result);
                     try {
                         JSONObject response = new JSONObject(result);
                         String status = response.getString("status");
@@ -655,6 +656,7 @@ public class RegistrationActivityBasic extends AppCompatActivity {
             @Override
             protected Map<String, String> getParams() {
                 Map<String, String> params = new HashMap<>();
+                Log.d("volleyText",json.toString());
                 params.put("textData", json.toString());
                 return params;
             }

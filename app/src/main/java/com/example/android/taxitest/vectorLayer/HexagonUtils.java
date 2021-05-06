@@ -6,6 +6,7 @@ import com.example.android.taxitest.vtmExtension.TaxiMarker;
 
 import org.oscim.core.GeoPoint;
 import org.oscim.layers.marker.MarkerInterface;
+import org.oscim.utils.FastMath;
 
 import java.util.ArrayList;
 
@@ -16,7 +17,7 @@ public class HexagonUtils {
     public static double[] quadProfileClient={300,300,400,500,600};
     public static double[] quadProfileComms={100,100,100,100,100};
 
-    //this creates a halo of 8 marker-points around the taximarker so that the user can receive broadcasts from these points quadrants
+    //this creates a halo of 8 marker-points around the taximarker so that the user can receive broadcasts from these points' quadrants
     public static ArrayList<GeoPoint> getSurroundingMarkers(double[] profile, SocketObject socketObject){
         ArrayList<GeoPoint> geos=new ArrayList<>();
 
@@ -36,37 +37,36 @@ public class HexagonUtils {
         double theta=Math.toDegrees(Math.atan(slope));
         if (deltaLon<0) theta = 180 + theta;
         for (int i=0;i<5;i++){
-            double degs=theta+i*45.0;
+            double deviation=i*45.0;
             if (i>0&&i<4){
-               geos.addAll(getPoints(geo,degs,profile[i]));
+               geos.addAll(getPoints(geo,theta,deviation,profile[i]));
             }else{
                 if (i==0) {
-                    geos.add(getSinglePoint(geo, degs, profile[i], false));
+                    geos.add(getSinglePoint(geo, FastMath.clampDegree(theta+0), profile[i]));
                 }
 
                 if (i==4) {
-                    geos.add(getSinglePoint(geo, degs, profile[i], true));
+                    geos.add(getSinglePoint(geo, FastMath.clampDegree(theta+180), profile[i]));
                 }
             }
         }
         return geos;
     }
 
-    public static ArrayList<GeoPoint> getPoints(GeoPoint geoPoint, double degs, double h){
+    public static ArrayList<GeoPoint> getPoints(GeoPoint geoPoint, double bearing, double deviation, double h){
         ArrayList<GeoPoint> geos=new ArrayList<>();
-        geos.add(getSinglePoint(geoPoint,degs,h,false));
-        geos.add(getSinglePoint(geoPoint,degs,h,true));
+        geos.add(getSinglePoint(geoPoint, FastMath.clampDegree(bearing+deviation),h));
+        geos.add(getSinglePoint(geoPoint,FastMath.clampDegree(bearing-deviation),h));
         if (h>300){
-            geos.add(getSinglePoint(geoPoint,degs,h/2,false));
-            geos.add(getSinglePoint(geoPoint,degs,h/2,true));
+            geos.add(getSinglePoint(geoPoint,FastMath.clampDegree(bearing+deviation),h/2));
+            geos.add(getSinglePoint(geoPoint,FastMath.clampDegree(bearing-deviation),h/2));
         }
         return geos;
     }
 
-    public static GeoPoint getSinglePoint(GeoPoint geoPoint, double degs, double h, boolean mirror){
-        int v=mirror?-1:1;
-        double catOp=Math.sin(Math.toRadians(degs))*h;
-        double catAd=Math.cos(Math.toRadians(degs))*h;
-        return  new GeoPoint(geoPoint.getLatitude()+v*catOp,geoPoint.getLongitude()+v*catAd);
+    public static GeoPoint getSinglePoint(GeoPoint geoPoint, double degs, double h){
+        double catOp=GeoPoint.latitudeDistance((int)(Math.sin(Math.toRadians(degs))*h));
+        double catAd=GeoPoint.longitudeDistance((int)(Math.cos(Math.toRadians(degs))*h),geoPoint.getLatitude());
+        return  new GeoPoint(geoPoint.getLatitude()+catOp,geoPoint.getLongitude()+catAd);
     }
 }

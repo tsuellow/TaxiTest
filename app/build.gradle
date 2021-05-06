@@ -75,8 +75,11 @@ dependencies {
 
     implementation 'de.grundid.opendatalab:geojson-jackson:1.8.1'
 
-    //websocket
+    //websocket socket.io
     implementation 'com.github.nkzawa:socket.io-client:0.6.0'
+
+    //websocket ws
+    implementation "org.java-websocket:Java-WebSocket:1.5.1"
 
     //room dep
     def room_version = "2.2.5"

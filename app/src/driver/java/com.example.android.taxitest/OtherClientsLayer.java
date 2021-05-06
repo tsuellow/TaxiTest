@@ -8,6 +8,7 @@ import android.util.Log;
 
 import com.example.android.taxitest.CommunicationsRecyclerView.CommsObject;
 import com.example.android.taxitest.CommunicationsRecyclerView.CommunicationsAdapter;
+import com.example.android.taxitest.connection.IncomingUdpSocket;
 import com.example.android.taxitest.connection.WebSocketDriverLocations;
 import com.example.android.taxitest.data.ClientObject;
 import com.example.android.taxitest.data.CommRecordObject;
@@ -36,7 +37,7 @@ public class OtherClientsLayer extends OtherTaxiLayer {
 //    List<DrawableBitmapCorrespondence> bitmapReferenceList= new ArrayList<>();
 
     public OtherClientsLayer(Context context, BarriosLayer barriosLayer, Map map, List<TaxiMarker> list,
-                             WebSocketDriverLocations webSocketConnection,
+                             IncomingUdpSocket webSocketConnection,
                              ConnectionLineLayer2 connectionLineLayer, CommunicationsAdapter commsAdapter) {
         super(context, barriosLayer, map, list, webSocketConnection, connectionLineLayer, commsAdapter);
 

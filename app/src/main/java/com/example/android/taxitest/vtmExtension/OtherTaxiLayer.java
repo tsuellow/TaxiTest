@@ -8,16 +8,14 @@ import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.example.android.taxitest.AppExecutors;
 import com.example.android.taxitest.CommunicationsRecyclerView.AcknowledgementObject;
 import com.example.android.taxitest.CommunicationsRecyclerView.CommsObject;
 import com.example.android.taxitest.CommunicationsRecyclerView.CommunicationsAdapter;
 import com.example.android.taxitest.CommunicationsRecyclerView.MessageObject;
 import com.example.android.taxitest.CommunicationsRecyclerView.MetaMessageObject;
-import com.example.android.taxitest.CustomUtils;
 import com.example.android.taxitest.R;
-import com.example.android.taxitest.connection.WebSocketDriverLocations;
-import com.example.android.taxitest.data.CommRecordObject;
+import com.example.android.taxitest.UdpDataProcessor;
+import com.example.android.taxitest.connection.IncomingUdpSocket;
 import com.example.android.taxitest.data.SocketObject;
 import com.example.android.taxitest.data.SqlLittleDB;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
@@ -37,13 +35,11 @@ import org.oscim.layers.marker.ItemizedLayer;
 import org.oscim.layers.marker.MarkerSymbol;
 import org.oscim.map.Map;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 import static com.example.android.taxitest.utils.ZoomUtils.getDrawableIndex;
-import static com.example.android.taxitest.utils.ZoomUtils.getDrawableSize;
 
 public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.UpdateListener
 {
@@ -63,14 +59,14 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
     double mapScale;
     public MarkerSymbol[] scaledGrayedSymbols = new MarkerSymbol[40];
     public MarkerSymbol[] appearDisappearAnim = new MarkerSymbol[40];
-    private WebSocketDriverLocations mWebSocketConnection;
+    private IncomingUdpSocket mUdpSocketConnection;
     private ConnectionLineLayer2 mConnectionLines;
     public CommunicationsAdapter mCommunicationsAdapter;
 
 
 
     public OtherTaxiLayer(Context context, BarriosLayer barriosLayer, Map map, List<TaxiMarker> list,
-                          WebSocketDriverLocations webSocketConnection,
+                          IncomingUdpSocket webSocketConnection,
                           ConnectionLineLayer2 connectionLineLayer, CommunicationsAdapter commsAdapter) {
         super(map,
                 list,
@@ -79,7 +75,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
         this.context = context;
         loadVectorDrawable();
         this.barriosLayer = barriosLayer;
-        this.mWebSocketConnection=webSocketConnection;
+        this.mUdpSocketConnection =webSocketConnection;
         initializeWebSocket();
         mConnectionLines =connectionLineLayer;
         mCommunicationsAdapter=commsAdapter;
@@ -173,8 +169,8 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                         Log.d("testes", "taxci is not there");
                         mCommunicationsAdapter.newIncomingComms.add(msj);
                         hasPayload = true;
-                        if (!mWebSocketConnection.getProcessIsRunning()) {
-                            mWebSocketConnection.startAccumulationTimer();
+                        if (!mUdpSocketConnection.dataProcessor.getProcessIsRunning()) {
+                            mUdpSocketConnection.dataProcessor.startAccumulationTimer();
                         }
                     }
                 }
@@ -224,11 +220,12 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
     }
 
     public void initializeWebSocket(){
-        mWebSocketConnection.initializeSocketListener();
-        mWebSocketConnection.startAccumulationTimer();
-        mWebSocketConnection.connectSocket();
+
+        //mWebSocketConnection.initializeSocketListener();
+        mUdpSocketConnection.dataProcessor.startAccumulationTimer();
+        //mWebSocketConnection.connectSocket();
         //listener for websocket data accumulation result every 3 seconds
-        mWebSocketConnection.setAnimationDataListener(new WebSocketDriverLocations.AnimationDataListener() {
+        mUdpSocketConnection.dataProcessor.setAnimationDataListener(new UdpDataProcessor.AnimationDataListener() {
             @Override
             public void onAnimationParametersReceived(List<? extends SocketObject> baseTaxis, List<? extends SocketObject> newTaxis) {
                 //give existing taxis a purpose
@@ -490,7 +487,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                 populate();
                 update();
                 mMap.updateMap(false);
-                mWebSocketConnection.setProcessIsRunning(false);
+                mUdpSocketConnection.dataProcessor.setProcessIsRunning(false);
                 runPostAnimationTasks();
             }
         }, 500);

@@ -2,6 +2,7 @@ package com.example.android.taxitest.vectorLayer;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.util.Log;
 
 import com.example.android.taxitest.CommunicationsRecyclerView.CommsObject;
 import com.example.android.taxitest.CommunicationsRecyclerView.CommunicationsAdapter;
@@ -29,8 +30,10 @@ public class HexagonQuadrantLayer extends VectorLayer {
     int mResource;
     private List<HexagonQuadrantDrawable> fullDrawables=new ArrayList<>();
 
-    private BitSet sendingBits=new BitSet(64);
-    private BitSet receivingBits=new BitSet(64);
+//    private BitSet sendingBits=new BitSet(64);
+//    private BitSet receivingBits=new BitSet(64);
+
+
     private HashSet<HexagonQuadrantDrawable> sendingDrawables=new HashSet<>();
     private HashSet<HexagonQuadrantDrawable> receivingDrawables=new HashSet<>();
 
@@ -42,13 +45,13 @@ public class HexagonQuadrantLayer extends VectorLayer {
         return receivingDrawables;
     }
 
-    public BitSet getSendingBits() {
-        return sendingBits;
-    }
-
-    public BitSet getReceivingBits() {
-        return receivingBits;
-    }
+//    public BitSet getSendingBits() {
+//        return sendingBits;
+//    }
+//
+//    public BitSet getReceivingBits() {
+//        return receivingBits;
+//    }
 
     public HexagonQuadrantDrawable getQuadById(String id){
         for (HexagonQuadrantDrawable hex:fullDrawables){
@@ -117,43 +120,51 @@ public class HexagonQuadrantLayer extends VectorLayer {
 //        }
 //        return bits;
 //    }
-
-    public BitSet getSendingBits(CommunicationsAdapter adapter, SocketObject taxiObject){
+//  public BitSet getSendingBits(CommunicationsAdapter adapter, SocketObject taxiObject){
+    public HashSet<Integer> getSendingChannels(CommunicationsAdapter adapter, SocketObject taxiObject){
         //create empty vessel sets
-        BitSet bits=new BitSet(64);
+        //BitSet bits=new BitSet(64);
+        HashSet<Integer> channels=new HashSet<>();
         HashSet<HexagonQuadrantDrawable> areaSet=new HashSet<>();
 
         GeoPoint geo=new GeoPoint(taxiObject.getLatitude(),taxiObject.getLongitude());
         //add own barrio
         HexagonQuadrantDrawable ownHex=this.getContainingQuadrant(geo);
-        bits.set(ownHex.getBit());
+        //bits.set(ownHex.getBit());
+        channels.add(ownHex.getBit());
         areaSet.add(ownHex);
 
         //add hexs of comms that have not yet been received
         //no need for surrounding points as other party is receiving around himself
         for (CommsObject comm:adapter.getCommsAwaitingConfirmation()){
             HexagonQuadrantDrawable commHex=this.getContainingQuadrant(comm.taxiMarker.geoPoint);
-            bits.set(commHex.getBit());
+            //bits.set(commHex.getBit());
+            channels.add(commHex.getBit());
             areaSet.add(commHex);
         }
 
         //change sending bits in case there is a difference
-        if (!bits.equals(sendingBits)){
-            sendingBits=bits;//consider not setting until later so you can check for changes;
+//        if (!bits.equals(sendingBits)){
+//            sendingBits=bits;//consider not setting until later so you can check for changes;
             sendingDrawables=areaSet;
-        }
-        return sendingBits;
+//        }
+        //return sendingBits;
+        return channels;
     }
 
-    public BitSet getReceivingBits(CommunicationsAdapter adapter, SocketObject taxiObject, double[] profile, int layerDepth){
+    //public BitSet getReceivingBits(CommunicationsAdapter adapter, SocketObject taxiObject, double[] profile, int layerDepth){
+    public HashSet<Integer> getReceivingChannels(CommunicationsAdapter adapter, SocketObject taxiObject, double[] profile, int layerDepth){
         //create empty vessel sets
-        BitSet bits=new BitSet(64);
+        //BitSet bits=new BitSet(64);
+        HashSet<Integer> channels=new HashSet<>();
         HashSet<HexagonQuadrantDrawable> areaSet=new HashSet<>();
 
         //add hexs immediately around my current position
         for (GeoPoint geo:HexagonUtils.getSurroundingMarkers(profile,taxiObject)){
+            Log.d("hexagon:",geo.toString());
             HexagonQuadrantDrawable surroundingHex=this.getContainingQuadrant(geo);
-            bits.set(surroundingHex.getBit());
+            //bits.set(surroundingHex.getBit());
+            channels.add(surroundingHex.getBit());
             areaSet.add(surroundingHex);
         }
 
@@ -165,9 +176,12 @@ public class HexagonQuadrantLayer extends VectorLayer {
                 for (String id : hex.getNeighbors()) {
                     if (!ids.contains(id)) {
                         HexagonQuadrantDrawable quadrant = this.getQuadById(id);
-                        areaSubSet.add(quadrant);
-                        bits.set(quadrant.getBit());
-                        ids.add(id);
+                        if (quadrant!=null){
+                            areaSubSet.add(quadrant);
+                            //bits.set(quadrant.getBit());
+                            channels.add(quadrant.getBit());
+                            ids.add(id);
+                        }
                     }
                 }
             }
@@ -179,15 +193,17 @@ public class HexagonQuadrantLayer extends VectorLayer {
             TaxiMarker taxiMarker=comm.taxiMarker;
             for (GeoPoint geo:HexagonUtils.getSurroundingMarkers(HexagonUtils.quadProfileComms,taxiMarker.taxiObject)){
                 HexagonQuadrantDrawable commHex=this.getContainingQuadrant(geo);
-                bits.set(commHex.getBit());
+                //bits.set(commHex.getBit());
+                channels.add(commHex.getBit());
                 areaSet.add(commHex);
             }
         }
 
-        if (!bits.equals(receivingBits)){
-            receivingBits=bits;//consider not setting until later so you can check for changes;
+//        if (!bits.equals(receivingBits)){
+//            receivingBits=bits;//consider not setting until later so you can check for changes;
             receivingDrawables=areaSet;
-        }
-        return bits;
+//        }
+//        return bits;
+        return channels;
     }
 }

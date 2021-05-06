@@ -74,73 +74,73 @@ public class MainActivityDriver extends MainActivity{
 
     @Override
     public void setupOtherMarkerLayer() {
-        mOtherTaxisLayer=new OtherClientsLayer(mContext, mBarriosLayer,mapView.map(),new ArrayList<TaxiMarker>(), mWebSocketClientLocs, mConnectionLineLayer, rvCommsAdapter);
+        mOtherTaxisLayer=new OtherClientsLayer(mContext, mBarriosLayer,mapView.map(),new ArrayList<TaxiMarker>(), mUdpInConnection, mConnectionLineLayer, rvCommsAdapter);
     }
 
     @Override
     public void setOwnMarkerLayer() {
         ownIcon=new VectorMasterDrawable(this,R.drawable.icon_taxi);
         mOwnMarkerLayer= new OwnMarkerLayer(mContext, mBarriosLayer,mapView.map(),new ArrayList<OwnMarker>(),ownIcon, Constants.lastLocation,destGeo,mCompass);
-        mWebSocketDriverLocs.mSocket.connect();
+        //mWebSocketDriverLocs.mSocket.connect();
 
     }
 
-    @Override
-    public void setupLocationCallback() {
-        //callback every 3000ms
-        //TODO send old locations if callback  fails to execute. prevent from unclicking on other users
-        locationCallback = new LocationCallback() {
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                if (locationResult == null) {
-                    return;
-                }
-                if (isFirstLocationFix){
-                    setIsActive(1,mContext);
-                    isFirstLocationFix=false;
-                }
-                //smoothen transition to new spot
-                Location adjustedLocation = locationResult.getLastLocation();
-//                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-39.2908); //hannover andres
-//                adjustedLocation.setLongitude(adjustedLocation.getLongitude()-96.095); //hannover andres
-                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-39.25471545); //hannover hubertus
-                adjustedLocation.setLongitude(adjustedLocation.getLongitude()-96.11757698); //hannover hubertus
-//                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-28.03179311); //istanbul
-//                adjustedLocation.setLongitude(adjustedLocation.getLongitude()-115.3572729); //istanbul
-                endLocation=adjustedLocation;
-                mCompass.setCurrLocation(endLocation);
-                if (mCurrMapLoc != null && mMarkerLoc != null ) {
-                    startMoveAnim(500);
-                }
-                //emit current position
-                mOwnTaxiObject=new TaxiObject(MiscellaneousUtils.getNumericId(myId),endLocation.getLatitude(),endLocation.getLongitude(),endLocation.getTime(),mCompass.getRotation(),"t",destGeo.getLatitude(),destGeo.getLongitude(),1);
-                //this should be different websocket
-                mWebSocketDriverLocs.attemptSend(mOwnTaxiObject.objectToCsv());
-                Log.d(TAG, "onLocationResult: "+mOwnTaxiObject.objectToCsv());
-            }
+//    @Override
+//    public void setupLocationCallback() {
+//        //callback every 3000ms
+//        //TODO send old locations if callback  fails to execute. prevent from unclicking on other users
+//        locationCallback = new LocationCallback() {
+//            @Override
+//            public void onLocationResult(LocationResult locationResult) {
+//                if (locationResult == null) {
+//                    return;
+//                }
+//                if (isFirstLocationFix){
+//                    setIsActive(1,mContext);
+//                    isFirstLocationFix=false;
+//                }
+//                //smoothen transition to new spot
+//                Location adjustedLocation = locationResult.getLastLocation();
+////                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-39.2908); //hannover andres
+////                adjustedLocation.setLongitude(adjustedLocation.getLongitude()-96.095); //hannover andres
+////                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-39.25471545); //hannover hubertus
+////                adjustedLocation.setLongitude(adjustedLocation.getLongitude()-96.11757698); //hannover hubertus
+////                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-28.03179311); //istanbul
+////                adjustedLocation.setLongitude(adjustedLocation.getLongitude()-115.3572729); //istanbul
+//                endLocation=adjustedLocation;
+//                mCompass.setCurrLocation(endLocation);
+//                if (mCurrMapLoc != null && mMarkerLoc != null ) {
+//                    startMoveAnim(500);
+//                }
+//                //emit current position
+//                mOwnTaxiObject=new TaxiObject(MiscellaneousUtils.getNumericId(myId),endLocation.getLatitude(),endLocation.getLongitude(),endLocation.getTime(),mCompass.getRotation(),"t",destGeo.getLatitude(),destGeo.getLongitude(),1);
+//                //this should be different websocket
+//                mWebSocketDriverLocs.attemptSend(mOwnTaxiObject.objectToCsv());
+//                Log.d(TAG, "onLocationResult: "+mOwnTaxiObject.objectToCsv());
+//            }
+//
+//            ;
+//        };
+//    }
 
-            ;
-        };
-    }
-
-    @Override
-    public void setupFilterButton() {
-        //filter button
-        filterImage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (!filterOn){
-                    filterOn=true;
-                    mWebSocketClientLocs.setFilter(true);
-                    filterImage.setImageAlpha(255);
-                }else{
-                    filterOn=false;
-                    mWebSocketClientLocs.setFilter(false);
-                    filterImage.setImageAlpha(100);
-                }
-            }
-        });
-    }
+//    @Override
+//    public void setupFilterButton() {
+//        //filter button
+//        filterImage.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                if (!filterOn){
+//                    filterOn=true;
+//                    mWebSocketClientLocs.setFilter(true);
+//                    filterImage.setImageAlpha(255);
+//                }else{
+//                    filterOn=false;
+//                    mWebSocketClientLocs.setFilter(false);
+//                    filterImage.setImageAlpha(100);
+//                }
+//            }
+//        });
+//    }
 
 
 
@@ -207,13 +207,13 @@ public class MainActivityDriver extends MainActivity{
         return intent;
     }
 
-    @Override
-    public void doOnDestroy() {
-        setIsActive(0,mContext);
-        mOwnTaxiObject=new TaxiObject(MiscellaneousUtils.getNumericId(myId),endLocation.getLatitude(),
-                endLocation.getLongitude(),endLocation.getTime(),mCompass.getRotation(),"t",
-                destGeo.getLatitude(),destGeo.getLongitude(),isActive);
-        mWebSocketDriverLocs.attemptSend(mOwnTaxiObject.objectToCsv());
-        super.doOnDestroy();
-    }
+//    @Override
+//    public void doOnDestroy() {
+//        setIsActive(0,mContext);
+//        mOwnTaxiObject=new TaxiObject(MiscellaneousUtils.getNumericId(myId),endLocation.getLatitude(),
+//                endLocation.getLongitude(),endLocation.getTime(),mCompass.getRotation(),"t",
+//                destGeo.getLatitude(),destGeo.getLongitude(),isActive);
+//        mWebSocketDriverLocs.attemptSend(mOwnTaxiObject.objectToCsv());
+//        super.doOnDestroy();
+//    }
 }

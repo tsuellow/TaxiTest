@@ -16,6 +16,7 @@ import android.graphics.Color;
 import android.graphics.drawable.AnimatedVectorDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -42,14 +43,20 @@ import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat;
 
 import com.example.android.taxitest.CommunicationsRecyclerView.CommunicationsAdapter;
 import com.example.android.taxitest.CommunicationsRecyclerView.SmoothLinearLayoutManager;
+import com.example.android.taxitest.connection.IncomingUdpSocket;
+import com.example.android.taxitest.connection.OutgoingWebSocket;
 import com.example.android.taxitest.connection.WebSocketClientLocations;
 import com.example.android.taxitest.connection.WebSocketDriverLocations;
+import com.example.android.taxitest.connection.WsJsonMsg;
+import com.example.android.taxitest.data.ClientObject;
 import com.example.android.taxitest.data.SocketObject;
 import com.example.android.taxitest.data.SqlLittleDB;
 import com.example.android.taxitest.data.TaxiObject;
 import com.example.android.taxitest.utils.MiscellaneousUtils;
 import com.example.android.taxitest.vectorLayer.BarriosLayer;
 import com.example.android.taxitest.vectorLayer.ConnectionLineLayer2;
+import com.example.android.taxitest.vectorLayer.HexagonQuadrantLayer;
+import com.example.android.taxitest.vectorLayer.HexagonUtils;
 import com.example.android.taxitest.vtmExtension.CitySupport;
 import com.example.android.taxitest.vtmExtension.OtherTaxiLayer;
 import com.example.android.taxitest.vtmExtension.OwnMarker;
@@ -92,6 +99,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -120,8 +129,10 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     static ImageView statusDot;
 
     //websocket connection
-    WebSocketDriverLocations mWebSocketDriverLocs;
-    WebSocketClientLocations mWebSocketClientLocs;
+//    WebSocketDriverLocations mWebSocketDriverLocs;
+//    WebSocketClientLocations mWebSocketClientLocs;
+    OutgoingWebSocket mWsOutConnection;
+    IncomingUdpSocket mUdpInConnection;
 
     //database
     SqlLittleDB mDb;
@@ -138,6 +149,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     public OwnMarkerLayer mOwnMarkerLayer;
     public OtherTaxiLayer mOtherTaxisLayer;
     ConnectionLineLayer2 mConnectionLineLayer;
+    public HexagonQuadrantLayer mQuadrantLayer;
 
     //google fused location provider variables
     FusedLocationProviderClient fusedLocationProviderClient;
@@ -258,9 +270,23 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         mMapEventsReceiver=new MapEventsReceiver(mapView);
         // BarriosLayer
         mBarriosLayer =new BarriosLayer(mapView.map(), mContext, city.resourceBarrios);
+        //quadrants
+        mQuadrantLayer=new HexagonQuadrantLayer(mapView.map(),mContext,city.resourceQuadrants);
         //LocConnections
-        mWebSocketDriverLocs =new WebSocketDriverLocations("http://ec2-3-88-176-60.compute-1.amazonaws.com:3003/", mContext,rvCommsAdapter);
-        mWebSocketClientLocs =new WebSocketClientLocations("http://ec2-3-88-176-60.compute-1.amazonaws.com:3002/", mContext,rvCommsAdapter);
+//        mWebSocketDriverLocs =new WebSocketDriverLocations("http://ec2-3-88-176-60.compute-1.amazonaws.com:3003/", mContext,rvCommsAdapter);
+//        mWebSocketClientLocs =new WebSocketClientLocations("http://ec2-3-88-176-60.compute-1.amazonaws.com:3002/", mContext,rvCommsAdapter);
+        URI uri;
+        try{
+            //uri=new URI("ws://34.207.241.98:3000");
+            uri=new URI("ws://34.207.241.98:4000");
+        }catch (URISyntaxException e){
+            uri=null;
+        }
+        mUdpInConnection=new IncomingUdpSocket(rvCommsAdapter,mContext);
+        mWsOutConnection= new OutgoingWebSocket(uri,mContext,mUdpInConnection);
+        mWsOutConnection.connectToServer();
+
+
 
         // OwnMarkerLayer
         setOwnMarkerLayer();
@@ -547,7 +573,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
     public void setFilter(boolean on){
         filterOn=on;
-        mWebSocketDriverLocs.setFilter(on);
+        //mWebSocketDriverLocs.setFilter(on);
+        mUdpInConnection.dataProcessor.setFilter(on);
         int alpha=on?255:100;
         filterImage.setImageAlpha(alpha);
     }
@@ -562,21 +589,30 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 if (locationResult == null) {
                     return;
                 }
-                if (isFirstLocationFix){
+                if (isFirstLocationFix && mWsOutConnection.getConnectionStatus()==OutgoingWebSocket.ESTABLISHED){
                     setIsActive(1,mContext);
                     isFirstLocationFix=false;
                 }
                 //smoothen transition to new spot
                 Location adjustedLocation = locationResult.getLastLocation();
+//                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-39.2908); //hannover andres
+//                adjustedLocation.setLongitude(adjustedLocation.getLongitude()-96.095); //hannover andres
+//                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-39.25441545); //hannover hubertus
+//                adjustedLocation.setLongitude(adjustedLocation.getLongitude()-96.11757698); //hannover hubertus
+//                adjustedLocation.setLatitude(adjustedLocation.getLatitude()-28.03179311); //istanbul
+//                adjustedLocation.setLongitude(adjustedLocation.getLongitude()-115.3572729); //istanbul
                 endLocation=adjustedLocation;
                 mCompass.setCurrLocation(endLocation);
                 if (mCurrMapLoc != null && mMarkerLoc != null ) {
                     startMoveAnim(500);
                 }
                 //emit current position
-                mOwnTaxiObject=new TaxiObject(MiscellaneousUtils.getNumericId(myId),endLocation.getLatitude(),endLocation.getLongitude(),endLocation.getTime(),
-                        mCompass.getRotation(),"taxi",destGeo.getLatitude(),destGeo.getLongitude(),isActive);
-                mWebSocketDriverLocs.attemptSend(mOwnTaxiObject.objectToCsv());
+//                mOwnTaxiObject=new TaxiObject(MiscellaneousUtils.getNumericId(myId),endLocation.getLatitude(),endLocation.getLongitude(),endLocation.getTime(),
+//                        mCompass.getRotation(),"taxi",destGeo.getLatitude(),destGeo.getLongitude(),isActive);
+                setOwnSocketObject(endLocation);
+                //mWebSocketDriverLocs.attemptSend(mOwnTaxiObject.objectToCsv());
+                mWsOutConnection.sendMsg(WsJsonMsg.createLocationMsg((mWsOutConnection.getConnectionStatus()==OutgoingWebSocket.ESTABLISHED),mQuadrantLayer.getSendingChannels(rvCommsAdapter,mOwnTaxiObject),
+                        mQuadrantLayer.getReceivingChannels(rvCommsAdapter,mOwnTaxiObject,HexagonUtils.quadProfileDriver,0),mOwnTaxiObject.objectToCsv()));
             }
 
             ;
@@ -584,7 +620,12 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     }
 
     public void setupOtherMarkerLayer() {
-        mOtherTaxisLayer=new OtherTaxiLayer(mContext, mBarriosLayer,mapView.map(),new ArrayList<TaxiMarker>(), mWebSocketDriverLocs,mConnectionLineLayer, rvCommsAdapter);
+        mOtherTaxisLayer=new OtherTaxiLayer(mContext, mBarriosLayer,mapView.map(),new ArrayList<TaxiMarker>(), mUdpInConnection,mConnectionLineLayer, rvCommsAdapter);
+    }
+
+    public void setOwnSocketObject(Location endLocation){
+        mOwnTaxiObject=new TaxiObject(MiscellaneousUtils.getNumericId(myId),endLocation.getLatitude(),endLocation.getLongitude(),endLocation.getTime(),
+                mCompass.getRotation(),"taxi",destGeo.getLatitude(),destGeo.getLongitude(),isActive);;
     }
 
     public void setOwnMarkerLayer() {
@@ -740,7 +781,10 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         public boolean onGesture(Gesture g, MotionEvent e) {
 
             if (g instanceof Gesture.Tap) {
-                Toast.makeText(mContext,mMap.viewport().fromScreenPoint(e.getX(), e.getY()).toString(),Toast.LENGTH_LONG).show();
+                GeoPoint p = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
+                String channelsReceiving=mQuadrantLayer.getReceivingChannels(rvCommsAdapter, new TaxiObject(MiscellaneousUtils.getNumericId(myId),p.getLatitude(),p.getLongitude(),endLocation.getTime(),
+                        mCompass.getRotation(),"taxi",destGeo.getLatitude(),destGeo.getLongitude(),isActive), HexagonUtils.quadProfileDriver,1).toString();
+                Toast.makeText(mContext,"receiving on: "+channelsReceiving,Toast.LENGTH_LONG).show();
                 Log.d("loquera","es "+mMap.viewport().fromScreenPoint(e.getX(), e.getY()).toString());
                 return true;
             }
@@ -1025,6 +1069,11 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     }
 
     public void  doOnDestroy(){
+        //send disconnection msg
+        setIsActive(0,mContext);
+        setOwnSocketObject(endLocation);
+        mWsOutConnection.sendMsg(WsJsonMsg.createLocationMsg(true,mQuadrantLayer.getSendingChannels(rvCommsAdapter,mOwnTaxiObject),
+                mQuadrantLayer.getReceivingChannels(rvCommsAdapter,mOwnTaxiObject,HexagonUtils.quadProfileDriver,0),mOwnTaxiObject.objectToCsv()));;
         //delete old stuff
         try {
             trimCache(mContext);
@@ -1050,8 +1099,10 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         fusedLocationProviderClient.removeLocationUpdates(locationCallback);
         //disconnect sockets
         rvCommsAdapter.disconnectSocket();
-        mWebSocketClientLocs.disconnectSocket();
-        mWebSocketDriverLocs.disconnectSocket();
+//        mWebSocketClientLocs.disconnectSocket();
+//        mWebSocketDriverLocs.disconnectSocket();
+        mWsOutConnection.close();
+        mUdpInConnection.doOnDisconnect();
         //if exists cancel idle countdownTimer
         if (idleCountdownTimer!=null){
             idleCountdownTimer.cancel();
