@@ -15,6 +15,9 @@ import java.util.Date;
 public class CustomUtils {
 
     public static final String apiExtension ="driver/";
+    public static final int WS_PORT=3000;
+    public static final int UDP_PORT=33333;
+
 
     public static void interpretJson(JSONObject data, CommsObject comm){
         try {

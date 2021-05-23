@@ -6,6 +6,8 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.example.android.taxitest.CommunicationsRecyclerView.CommunicationsAdapter;
+import com.example.android.taxitest.Constants;
+import com.example.android.taxitest.CustomUtils;
 import com.example.android.taxitest.UdpDataProcessor;
 import com.example.android.taxitest.data.SocketObject;
 import com.example.android.taxitest.data.SqlLittleDB;
@@ -34,8 +36,8 @@ import static com.example.android.taxitest.MainActivity.myId;
 public class IncomingUdpSocket {
 
     DatagramSocket udpSocket;
-    String ip="54.87.22.59";
-    int port=33333;
+    String ip= Constants.UDP_IP;
+    int port= CustomUtils.UDP_PORT;
     JSONObject beaconMsg;
     public UdpDataProcessor dataProcessor;
 
@@ -70,8 +72,8 @@ public class IncomingUdpSocket {
         @Override
         public void run() {
             try {
-                setIpAndPort("34.207.241.98",44444);
-                //setIpAndPort("34.207.241.98",33333);
+                //setIpAndPort("34.207.241.98",44444);
+                setIpAndPort(ip,port);
 
                 long timeLimit=new Date().getTime();
 

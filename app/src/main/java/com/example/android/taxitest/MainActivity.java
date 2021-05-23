@@ -277,8 +277,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 //        mWebSocketClientLocs =new WebSocketClientLocations("http://ec2-3-88-176-60.compute-1.amazonaws.com:3002/", mContext,rvCommsAdapter);
         URI uri;
         try{
-            //uri=new URI("ws://34.207.241.98:3000");
-            uri=new URI("ws://34.207.241.98:4000");
+            uri=new URI(Constants.WS_ADDRESS);
+            //uri=new URI("ws://34.207.241.98:4000");
         }catch (URISyntaxException e){
             uri=null;
         }
@@ -611,7 +611,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 //                        mCompass.getRotation(),"taxi",destGeo.getLatitude(),destGeo.getLongitude(),isActive);
                 setOwnSocketObject(endLocation);
                 //mWebSocketDriverLocs.attemptSend(mOwnTaxiObject.objectToCsv());
-                mWsOutConnection.sendMsg(WsJsonMsg.createLocationMsg((mWsOutConnection.getConnectionStatus()==OutgoingWebSocket.ESTABLISHED),mQuadrantLayer.getSendingChannels(rvCommsAdapter,mOwnTaxiObject),
+                mWsOutConnection.sendMsg(WsJsonMsg.createLocationMsg(mWsOutConnection.isConnected(),mQuadrantLayer.getSendingChannels(rvCommsAdapter,mOwnTaxiObject),
                         mQuadrantLayer.getReceivingChannels(rvCommsAdapter,mOwnTaxiObject,HexagonUtils.quadProfileDriver,0),mOwnTaxiObject.objectToCsv()));
             }
 
@@ -625,7 +625,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
     public void setOwnSocketObject(Location endLocation){
         mOwnTaxiObject=new TaxiObject(MiscellaneousUtils.getNumericId(myId),endLocation.getLatitude(),endLocation.getLongitude(),endLocation.getTime(),
-                mCompass.getRotation(),"taxi",destGeo.getLatitude(),destGeo.getLongitude(),isActive);;
+                mCompass.getRotation(),"taxi",destGeo.getLatitude(),destGeo.getLongitude(),isActive);
     }
 
     public void setOwnMarkerLayer() {
@@ -1101,7 +1101,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         rvCommsAdapter.disconnectSocket();
 //        mWebSocketClientLocs.disconnectSocket();
 //        mWebSocketDriverLocs.disconnectSocket();
-        mWsOutConnection.close();
+        mWsOutConnection.close(1000,""+MiscellaneousUtils.getNumericId(myId));
         mUdpInConnection.doOnDisconnect();
         //if exists cancel idle countdownTimer
         if (idleCountdownTimer!=null){

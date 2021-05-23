@@ -27,6 +27,7 @@ import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.android.taxitest.Constants;
 import com.example.android.taxitest.CustomUtils;
 import com.example.android.taxitest.MainActivity;
 import com.example.android.taxitest.R;
@@ -73,7 +74,7 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
             IO.Options opts=new IO.Options();
             opts.forceNew = true;
             opts.query = "id="+ MainActivity.myId;
-            mSocket = IO.socket("http://54.91.130.128:3000",opts);
+            mSocket = IO.socket(Constants.COMMS_URL,opts);
             Log.d("socketTest","success");
             initializeSocketListener();
             connectSocket();

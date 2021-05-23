@@ -17,6 +17,8 @@ import java.util.Date;
 public class CustomUtils {
 
     public static final String apiExtension="client/";
+    public static final int WS_PORT=4000;
+    public static final int UDP_PORT=44444;
 
     public static void interpretJson(JSONObject data, CommsObject comm){
         try {

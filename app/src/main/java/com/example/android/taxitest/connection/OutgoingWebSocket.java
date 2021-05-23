@@ -50,6 +50,10 @@ public class OutgoingWebSocket extends WebSocketClient {
         this.connectionStatus = connectionStatus;
     }
 
+    public boolean isConnected(){
+        return connectionStatus==ESTABLISHED;
+    }
+
     @Override
     public void onOpen(ServerHandshake handshakedata) {
         Log.d(TAG,"connection to WS server established");
@@ -108,6 +112,7 @@ public class OutgoingWebSocket extends WebSocketClient {
         if (connectionStatus==ESTABLISHED && isOpen()){
             send(msg);
         }else{
+            //TODO make this more elegant
             Toast.makeText(context,"connection failed. could not send location",Toast.LENGTH_LONG).show();
         }
     }

@@ -47,8 +47,8 @@ public class WsJsonMsg{
         String msg="";
         targetChannels=newTargetChannels;
         payload=newPayload;
-        type=2;//newReceivingChannels.equals(receptionChannels)&&isConnected?1:2;
-        receptionChannels=newReceivingChannels;
+        type=newReceivingChannels.equals(receptionChannels)&&isConnected?1:2;
+        if (isConnected) receptionChannels = newReceivingChannels;
         msg=jsonify().toString();
 
         return  msg;
