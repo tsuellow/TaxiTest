@@ -23,7 +23,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:tint="#fff"/>
 
-        <com.example.android.taxitest.utils.CustomTextView
+        <com.dale.viaje.nicaragua.utils.CustomTextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/ct_title"

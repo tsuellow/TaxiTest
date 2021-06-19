@@ -11,7 +11,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:padding="8dp"
-        android:text="Trip information"
+        android:text="@string/dialogtripdetails_title"
         android:textAlignment="center"
         android:textSize="18sp"
         android:textStyle="bold"
@@ -124,7 +124,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="14sp"
-                android:text="date: " />
+                android:text="@string/dialogtripdetails_date"
+                android:layout_marginEnd="4dp"/>
 
             <TextView
                 android:id="@+id/tv_date"
@@ -147,7 +148,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="14sp"
-                android:text="from: " />
+                android:text="@string/adapterpastcomms_from"
+                android:layout_marginEnd="4dp"/>
 
             <TextView
                 android:id="@+id/tv_origin"
@@ -185,7 +187,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="14sp"
-                android:text="to: " />
+                android:text="@string/adapterpastcomms_to"
+                android:layout_marginEnd="4dp"/>
 
             <TextView
                 android:id="@+id/tv_destination"
@@ -222,7 +225,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="14sp"
-                android:text="passengers: " />
+                android:text="@string/dialogtripdetails_passengers"
+                android:layout_marginEnd="4dp"/>
 
             <TextView
                 android:id="@+id/tv_seats"
@@ -244,7 +248,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="14sp"
-                android:text="status: " />
+                android:text="@string/dialogtripdetails_status"
+                android:layout_marginEnd="4dp"/>
 
             <TextView
                 android:id="@+id/tv_status"
@@ -288,7 +293,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="close" />
+            android:text="@string/close" />
 
     </LinearLayout>
 

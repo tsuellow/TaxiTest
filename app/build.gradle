@@ -1,11 +1,11 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 29
     defaultConfig {
-        applicationId "com.example.android.taxitest"
+        applicationId "com.dale.viaje.nicaragua"
         minSdkVersion 21
-        targetSdkVersion 28
+        targetSdkVersion 29
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -19,16 +19,17 @@ android {
     flavorDimensions 'default'
     productFlavors {
         driver {
-            applicationId "com.example.android.taxitest.driver"
+            applicationIdSuffix ".driver"
         }
         customer {
-            applicationId "com.example.android.taxitest.customer"
+            applicationIdSuffix ".customer"
         }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
 }
 
 dependencies {

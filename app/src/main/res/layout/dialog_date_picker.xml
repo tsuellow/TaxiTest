@@ -26,14 +26,14 @@
             android:layout_height="wrap_content"
             android:id="@+id/btn_cancel_dp"
             android:layout_marginEnd="8dp"
-            android:text="cancel" />
+            android:text="@string/cancel" />
 
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/btn_ok_dp"
             android:layout_marginStart="8dp"
-            android:text="ok"/>
+            android:text="@string/ok"/>
     </LinearLayout>
 
 </LinearLayout>

@@ -55,12 +55,11 @@
         android:id="@+id/tv_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="no messages to show"
+        android:text="@string/dialogregister_nomsgs"
         android:textAlignment="center"
         android:visibility="visible"
         android:padding="12dp"
         android:layout_marginTop="4dp"
-        app:layout_constraintBottom_toTopOf="@+id/rv_comms_dialog"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/iv_check" />
@@ -83,7 +82,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
-        android:text="Close"
+        android:text="@string/close"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/view" />

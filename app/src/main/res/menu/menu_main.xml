@@ -1,17 +1,17 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item android:id="@+id/opt_settings"
-        android:title="Settings"
+        android:title="@string/settings"
         app:showAsAction="never"
         app:actionViewClass="androidx.appcompat.widget.SearchView"/>
     <item android:id="@+id/opt_past_trips"
-        android:title="Past trips"
+        android:title="@string/past_trips"
         app:showAsAction="never" />
     <item android:id="@+id/opt_profile"
-        android:title="My profile"
+        android:title="@string/my_profile"
         app:showAsAction="never" />
     <item android:id="@+id/opt_help"
-        android:title="Help"
+        android:title="@string/help"
         app:showAsAction="never" />
 
 

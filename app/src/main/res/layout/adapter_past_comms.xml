@@ -48,7 +48,7 @@
                     android:scaleType="centerCrop"
                     android:src="@drawable/clooney" />
 
-                <com.example.android.taxitest.utils.CurvedTextView
+                <com.dale.viaje.nicaragua.utils.CurvedTextView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:id="@+id/ct_collar"/>
@@ -74,8 +74,7 @@
                 android:id="@+id/cl_one"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="0dp"
-                android:paddingTop="4dp">
+                android:layout_marginStart="0dp">
 
                 <TextView
                     android:id="@+id/tv_name"
@@ -143,7 +142,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textSize="10sp"
-                    android:text="from: " />
+                    android:text="@string/adapterpastcomms_from"
+                    android:layout_marginEnd="4dp"/>
                 <TextView
                     android:id="@+id/tv_origin"
                     android:layout_width="wrap_content"
@@ -169,7 +169,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textSize="10sp"
-                    android:text="to: " />
+                    android:text="@string/adapterpastcomms_to"
+                    android:layout_marginEnd="4dp"/>
                 <TextView
                     android:id="@+id/tv_destination"
                     android:layout_width="wrap_content"
@@ -196,11 +197,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="2dp"
-            android:layout_marginEnd="4dp"
-            android:layout_marginTop="13dp"
+            android:layout_marginEnd="6dp"
+            android:layout_centerVertical="true"
             android:layout_toStartOf="@id/bt_profile"
             android:id="@+id/bt_info"
-            android:tint="@color/colorDeselected"
+            android:tint="@color/colorSelected"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/info"/>
 
@@ -257,8 +258,8 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:textAlignment="center"
-                android:text="accepted"
-                android:textColor="@color/colorDeselected"
+                android:text="@string/adapterpastcomms_accepted"
+                android:textColor="@color/colorSelected"
                 android:textSize="10sp" />
 
         </LinearLayout>
@@ -280,7 +281,7 @@
                 android:layout_gravity="center"
                 android:textAlignment="center"
                 android:text="17 mar - 10:32 am"
-                android:textColor="@color/colorDeselected"
+                android:textColor="@color/colorSelected"
                 android:textSize="10sp" />
 
         </LinearLayout>

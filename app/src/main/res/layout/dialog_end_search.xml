@@ -11,7 +11,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:padding="8dp"
-        android:text="Did your taxi arrive?"
+        android:text="@string/dialogendsearch_title"
         android:textAlignment="center"
         android:textSize="18sp"
         android:textStyle="bold"
@@ -103,7 +103,7 @@
         android:id="@+id/tv_text_context"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="It seems that your selected taxi already passed by your position."
+        android:text="@string/dialogendsearch_text1"
         android:textAlignment="center"
         android:visibility="visible"
         android:layout_margin="10dp"
@@ -115,7 +115,7 @@
         android:id="@+id/tv_text_intro"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="End this search if you are already on your way."
+        android:text="@string/dialogendsearch_text2"
         android:textAlignment="center"
         android:visibility="visible"
         android:layout_margin="10dp"
@@ -139,7 +139,8 @@
             android:id="@+id/tv_auto_accept"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="auto-accept in:  "
+            android:text="@string/auto_accept_in"
+            android:layout_marginEnd="4dp"
             android:textAlignment="center"
             android:visibility="visible"
             app:layout_constraintBottom_toTopOf="@+id/rv_comms_dialog"
@@ -193,14 +194,14 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:textStyle="bold"
-            android:text="yes, end search" />
+            android:text="@string/dialogendsearch_yesend" />
 
         <Button
             android:id="@+id/bt_continue"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="continue searching" />
+            android:text="@string/dialogendsearch_continuesearch" />
 
     </LinearLayout>
 

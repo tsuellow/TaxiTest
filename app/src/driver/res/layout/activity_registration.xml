@@ -8,7 +8,7 @@
     android:layout_height="match_parent"
     android:windowActionBarOverlay="true"
     android:orientation="vertical"
-    tools:context="com.example.android.taxitest.RegistrationActivityDriver">
+    tools:context="com.dale.viaje.nicaragua.RegistrationActivityDriver">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -37,7 +37,7 @@
         android:padding="12dp">
 
 
-        <com.example.android.taxitest.utils.CustomTextView
+        <com.dale.viaje.nicaragua.utils.CustomTextView
             android:id="@+id/tv_salute"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -45,7 +45,7 @@
             android:gravity="center"
             android:focusable="true"
             android:focusableInTouchMode="true"
-            android:text="personal\ndata"
+            android:text="@string/registrationactivitybasic_personaldata"
             android:textSize="40sp"
             android:fontFamily="@font/dale_viaje_font"
             android:textColor="@color/colorSelected"
@@ -60,7 +60,7 @@
             android:id="@+id/tv_warning"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="some entries are wrong or missing"
+            android:text="@string/activityregister_someentrieswrong"
             android:textSize="12sp"
             android:textColor="@color/colorRed"
             android:paddingTop="10dp"
@@ -83,7 +83,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:layout_weight="1"
-                android:hint="name or alias">
+                android:hint="@string/activityregister_name">
 
                 <EditText
                     android:id="@+id/et_first_name"
@@ -133,7 +133,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:hint="last name"
+                android:hint="@string/activityregister_lastname"
                 >
 
                 <EditText
@@ -177,7 +177,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="date of birth"
+                android:hint="@string/dob"
                 app:layout_constraintTop_toTopOf="parent">
 
                 <EditText
@@ -201,7 +201,7 @@
                 android:layout_marginStart="12dp"
                 android:layout_marginEnd="37dp"
                 android:layout_weight="1"
-                android:hint="gender"
+                android:hint="@string/gender"
                 app:layout_constraintTop_toTopOf="parent">
 
                 <androidx.appcompat.widget.AppCompatAutoCompleteTextView
@@ -234,7 +234,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="phone"
+                android:hint="@string/phone"
                 app:layout_constraintTop_toTopOf="parent">
 
                 <androidx.appcompat.widget.AppCompatAutoCompleteTextView
@@ -260,7 +260,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:layout_weight="1"
-                android:hint="number plate"
+                android:hint="@string/activityregisterdriver_plate"
                 app:layout_constraintTop_toTopOf="parent">
 
                 <EditText
@@ -306,7 +306,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="city"
+                android:hint="@string/city"
                 app:layout_constraintTop_toTopOf="parent">
 
                 <androidx.appcompat.widget.AppCompatAutoCompleteTextView
@@ -330,7 +330,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginStart="12dp"
-                android:hint="vehicle"
+                android:hint="@string/activityregisterdriver_vehicle"
                 app:layout_constraintTop_toTopOf="parent">
 
                 <androidx.appcompat.widget.AppCompatAutoCompleteTextView
@@ -363,7 +363,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:hint="car description"
+                android:hint="@string/activityregisterdriver_cardesc"
                 >
 
                 <EditText
@@ -407,7 +407,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/cb_share_phone"
                 android:layout_weight="1"
-                android:text="share my phone number with my clients (optional)" />
+                android:text="@string/activityregisterdriver_sharephone" />
 
             <ImageView
                 android:layout_width="35dp"
@@ -436,7 +436,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/cb_terms"
                 android:layout_marginEnd="10dp"
-                android:text="agree to terms and conditions" />
+                android:text="@string/activityregister_agreetoterms" />
 
             <Button
                 android:layout_width="65dp"
@@ -445,7 +445,7 @@
                 android:padding="0dp"
                 android:paddingStart="0dp"
                 android:paddingEnd="0dp"
-                android:text="read"
+                android:text="@string/read"
                 android:textSize="12sp"
                 android:textColor="#FFF"
                 android:layout_gravity="bottom|end"
@@ -473,14 +473,14 @@
                 android:gravity="center_horizontal"
                 android:orientation="vertical">
 
-                <com.example.android.taxitest.utils.CustomTextView
+                <com.dale.viaje.nicaragua.utils.CustomTextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/tv_face"
                     android:gravity="center"
                     android:layout_marginBottom="20dp"
                     android:textColor="@color/colorSelected"
-                    android:text="photo\nface"
+                    android:text="@string/activityregister_photoface"
                     android:fontFamily="@font/dale_viaje_font"
                     android:textSize="40sp"
                     android:letterSpacing="0.08"
@@ -527,14 +527,14 @@
                 android:gravity="center_horizontal"
                 android:orientation="vertical">
 
-                <com.example.android.taxitest.utils.CustomTextView
+                <com.dale.viaje.nicaragua.utils.CustomTextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/tv_car"
                     android:gravity="center"
                     android:layout_marginBottom="20dp"
                     android:textColor="@color/colorSelected"
-                    android:text="photo\nvehicle"
+                    android:text="@string/activityregisterdriver_photocar"
                     android:fontFamily="@font/dale_viaje_font"
                     android:textSize="40sp"
                     android:letterSpacing="0.08"
@@ -581,7 +581,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="40dp"
             android:layout_gravity="center_horizontal"
-            android:text="Register"
+            android:text="@string/activityregister_register"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

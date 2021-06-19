@@ -48,7 +48,7 @@
                     android:scaleType="centerCrop"
                     android:src="@drawable/clooney" />
 
-                <com.example.android.taxitest.utils.CurvedTextView
+                <com.dale.viaje.nicaragua.utils.CurvedTextView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:id="@+id/ct_plate"/>
@@ -150,7 +150,7 @@
 
 
 
-        <com.example.android.taxitest.RecordButtonUtils.RecordButton
+        <com.dale.viaje.nicaragua.RecordButtonUtils.RecordButton
             android:id="@+id/record_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -258,7 +258,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:id="@+id/ack_failed_text"
-                    android:text=" failed  "
+                    android:text="@string/failed"
+                    android:layout_marginEnd="3dp"
+                    android:layout_marginStart="3dp"
                     android:textSize="10sp"
                     android:textColor="#f2ffffff"
                     android:gravity="center_vertical"

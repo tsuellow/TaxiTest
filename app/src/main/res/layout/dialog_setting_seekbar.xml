@@ -117,14 +117,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
-            android:text="cancel" />
+            android:text="@string/cancel" />
 
         <Button
             android:id="@+id/bt_dialog_accept"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
-            android:text="accept" />
+            android:text="@string/ok" />
 
     </LinearLayout>
 

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Dale Viaje</string>
+
+    <string name="own_type">cliente</string>
+    <string name="target_type">taxi</string>
+    <string name="own_type_plural">clientes</string>
+    <string name="target_type_plural">taxis</string>
+</resources>

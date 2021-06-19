@@ -64,14 +64,14 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="@color/colorSelected"
-                    android:text="Select ONE of the following options"/>
+                    android:text="@string/activitychoosedestination_selectone"/>
 
                 <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/lo_barrio"
-                        android:hint="choose barrio"
+                        android:hint="@string/activitychoosedestination_choosebarrio"
                         app:layout_constraintTop_toTopOf="parent"
                         android:layout_marginTop="6dp"
                         android:layout_width="match_parent"
@@ -107,7 +107,7 @@
                         android:layout_marginTop="6dp"
                         android:layout_gravity="center_horizontal"
                         android:layout_width="match_parent"
-                        android:hint="choose reference point"
+                        android:hint="@string/activitychoosedestination_referencepoint"
                         android:layout_height="wrap_content">
 
                         <androidx.appcompat.widget.AppCompatAutoCompleteTextView
@@ -141,14 +141,15 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/colorSelected"
-                    android:text="seats"
+                    android:textColor="?android:textColorHint"
+                    android:layout_marginTop="5dp"
+                    android:text="@string/activitychoosedestination_seats"
                     android:textAlignment="center"/>
 
                 <LinearLayout
                     android:layout_height="wrap_content"
                     android:layout_width="40dp"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="5dp"
                     android:padding="1dp"
                     android:orientation="vertical"
                     android:background="@drawable/rounded_background">
@@ -190,7 +191,7 @@
           android:layout_height="wrap_content"
           android:layout_marginTop="2dp"
           android:paddingStart="12dp"
-          android:text="define destination by tapping on the map"
+          android:text="@string/activitychoosedestination_taponmap"
           android:textColor="?android:textColorHint" />
 
     <androidx.cardview.widget.CardView
@@ -224,7 +225,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Destination chosen"
+                android:text="@string/activitychoosedestination_destchosen"
                 android:layout_gravity="center_horizontal" />
 
             <TextView
@@ -247,14 +248,14 @@
                 <Button
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Cancel"
+                    android:text="@string/cancel"
                     android:layout_margin="8dp"
                     android:id="@+id/bt_dest_cancel"/>
 
                 <Button
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="OK"
+                    android:text="@string/ok"
                     android:layout_margin="8dp"
                     android:id="@+id/bt_dest_confirm" />
 

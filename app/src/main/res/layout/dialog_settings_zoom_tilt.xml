@@ -13,7 +13,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:padding="8dp"
-        android:text="Define default view"
+        android:text="@string/dialogsettingszoomtilt_title"
         android:textAlignment="center"
         android:textSize="18sp"
         android:textStyle="bold"
@@ -75,7 +75,7 @@
             <TextView
                 android:layout_width="45dp"
                 android:layout_height="wrap_content"
-                android:text="pivot:"
+                android:text="@string/pivot"
                 android:textSize="14sp" />
 
             <SeekBar
@@ -100,7 +100,7 @@
             <TextView
                 android:layout_width="45dp"
                 android:layout_height="wrap_content"
-                android:text="zoom:"
+                android:text="@string/zoom"
                 android:textSize="14sp" />
 
             <SeekBar
@@ -125,7 +125,7 @@
             <TextView
                 android:layout_width="45dp"
                 android:layout_height="wrap_content"
-                android:text="angle:"
+                android:text="@string/angle"
                 android:textSize="14sp" />
 
             <SeekBar
@@ -175,14 +175,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
-            android:text="cancel" />
+            android:text="@string/cancel" />
 
         <Button
             android:id="@+id/bt_dialog_accept"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
-            android:text="accept" />
+            android:text="@string/ok" />
 
     </LinearLayout>
 

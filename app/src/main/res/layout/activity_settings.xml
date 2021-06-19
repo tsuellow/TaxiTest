@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:windowActionBarOverlay="true"
     android:orientation="vertical"
-    tools:context="com.example.android.taxitest.SettingsActivity">
+    tools:context="com.dale.viaje.nicaragua.SettingsActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"

@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="8dp"
-        android:text="Reset destination"
+        android:text="@string/dialogresetdest_title"
         android:textAlignment="center"
         android:textSize="18sp"
         android:textStyle="bold"
@@ -32,7 +32,7 @@
         android:id="@+id/tv_text_intro"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="change my destination to"
+        android:text="@string/dialogresetdest_text"
         android:textAlignment="center"
         android:visibility="visible"
         android:layout_marginTop="10dp"
@@ -54,7 +54,6 @@
         android:shadowRadius="1"
         android:shadowDx="1"
         android:shadowDy="1"
-        app:layout_constraintBottom_toTopOf="@+id/rv_comms_dialog"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tv_text_intro" />
@@ -74,7 +73,8 @@
             android:id="@+id/tv_auto_accept"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="auto-accept in:  "
+            android:text="@string/auto_accept_in"
+            android:layout_marginEnd="4dp"
             android:textAlignment="center"
             android:visibility="visible"
             app:layout_constraintBottom_toTopOf="@+id/rv_comms_dialog"
@@ -127,7 +127,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
             android:layout_marginTop="8dp"
-            android:text="cancel" />
+            android:text="@string/cancel" />
 
         <Button
             android:id="@+id/bt_accept"
@@ -135,7 +135,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
             android:layout_marginTop="8dp"
-            android:text="accept" />
+            android:text="@string/ok" />
 
     </LinearLayout>
 

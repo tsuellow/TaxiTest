@@ -1,5 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Dale Viaje Driver</string>
-    <string name="appbar_scrolling_view_behavior">android.support.design.widget.AppBarLayout$ScrollingViewBehavior</string>
-    <string name="file_provider" translatable="false">com.example.android.taxitest_fileprovider</string>
+    <string name="appbar_scrolling_view_behavior" translatable="false">android.support.design.widget.AppBarLayout$ScrollingViewBehavior</string>
+    <string name="file_provider" translatable="false">com.dale.viaje.nicaragua_fileprovider</string>
+
+
+    <string name="own_type">taxi</string>
+    <string name="target_type">client</string>
+    <string name="own_type_plural">taxis</string>
+    <string name="target_type_plural">clients</string>
+
 </resources>

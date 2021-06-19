@@ -19,7 +19,7 @@
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
             app:theme="@style/AppTheme.Toolbar"
-            app:title="help"
+            app:title="@string/activityhelp_title"
             app:titleTextColor="@android:color/white"
             app:titleTextAppearance="@style/ownStyle"/>
 
@@ -40,7 +40,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <com.example.android.taxitest.utils.CustomTextView
+            <com.dale.viaje.nicaragua.utils.CustomTextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
@@ -51,7 +51,7 @@
                 android:padding="8dp"
                 android:shadowColor="@color/colorPrimary"
                 android:shadowRadius="1"
-                android:text="Video Tutorials"
+                android:text="@string/activityhelp_videotutorials"
                 android:textAlignment="center"
                 android:textSize="40sp"
                 app:stroke="1" />
@@ -64,7 +64,7 @@
                 android:layout_marginBottom="8dp"
                 android:scrollbars="vertical" />
 
-            <com.example.android.taxitest.utils.CustomTextView
+            <com.dale.viaje.nicaragua.utils.CustomTextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
@@ -75,7 +75,7 @@
                 android:padding="8dp"
                 android:shadowColor="@color/colorPrimary"
                 android:shadowRadius="1"
-                android:text="Documents"
+                android:text="@string/activityhelp_documents"
                 android:textAlignment="center"
                 android:textSize="40sp"
                 app:stroke="1" />
@@ -101,13 +101,13 @@
 
                 <TextView
                     android:id="@+id/cb_terms"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:layout_margin="4dp"
                     android:layout_marginEnd="10dp"
                     android:layout_weight="1"
-                    android:text="Terms and conditions" />
+                    android:text="@string/termsandconditions" />
 
                 <Button
                     android:id="@+id/bt_terms"
@@ -120,7 +120,7 @@
                     android:padding="0dp"
                     android:paddingStart="0dp"
                     android:paddingEnd="0dp"
-                    android:text="read"
+                    android:text="@string/activityhelp_read"
                     android:textColor="#FFF"
                     android:textSize="12sp" />
 
@@ -153,7 +153,7 @@
                     android:layout_margin="4dp"
                     android:layout_marginEnd="10dp"
                     android:layout_weight="1"
-                    android:text="How we use your data" />
+                    android:text="@string/activityhelp_howweusedata" />
 
                 <Button
                     android:id="@+id/bt_data_use"
@@ -166,13 +166,13 @@
                     android:padding="0dp"
                     android:paddingStart="0dp"
                     android:paddingEnd="0dp"
-                    android:text="read"
+                    android:text="@string/activityhelp_read"
                     android:textColor="#FFF"
                     android:textSize="12sp" />
 
             </LinearLayout>
 
-            <com.example.android.taxitest.utils.CustomTextView
+            <com.dale.viaje.nicaragua.utils.CustomTextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
@@ -183,7 +183,7 @@
                 android:padding="8dp"
                 android:shadowColor="@color/colorPrimary"
                 android:shadowRadius="1"
-                android:text="Suggestions"
+                android:text="@string/activityhelp_suggestions"
                 android:textAlignment="center"
                 android:textSize="40sp"
                 app:stroke="1" />
@@ -196,7 +196,7 @@
                 android:paddingTop="4dp"
                 android:paddingEnd="16dp"
                 android:paddingBottom="8dp"
-                android:text="Contact us under the following links and leave your comments and ideas"
+                android:text="@string/activityhelp_suggestionstext1"
                 android:textAlignment="center" />
 
             <LinearLayout
@@ -235,10 +235,10 @@
                 android:paddingTop="4dp"
                 android:paddingEnd="16dp"
                 android:paddingBottom="16dp"
-                android:text="or write us at dale.viaje@gmail.com for your business propositions"
+                android:text="@string/activityhelp_suggestionstext2"
                 android:textAlignment="center" />
 
-            <com.example.android.taxitest.utils.CustomTextView
+            <com.dale.viaje.nicaragua.utils.CustomTextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
@@ -249,7 +249,7 @@
                 android:padding="8dp"
                 android:shadowColor="@color/colorPrimary"
                 android:shadowRadius="1"
-                android:text="About Us"
+                android:text="@string/activityhelp_aboutus"
                 android:textAlignment="center"
                 android:textSize="40sp"
                 app:stroke="1" />
@@ -261,7 +261,7 @@
                 android:paddingTop="4dp"
                 android:paddingEnd="16dp"
                 android:paddingBottom="8dp"
-                android:text="This app has been a personal project for some time and is a gift for my city, Estelí.\n As of now its is not a business although we are considering financing it through Advertisement in the future.\n Our aim is to make it available for free to both drivers and customers in order to improve the quality, efficiency and safety of the public transportation for all involved parties."
+                android:text="@string/activityhelp_aboutustext"
                 android:textAlignment="center" />
 
             <TextView
@@ -272,7 +272,7 @@
                 android:letterSpacing="0.01"
                 android:lineSpacingExtra="-18dp"
                 android:padding="16dp"
-                android:text=" by \n theo &amp; \n andres"
+                android:text="@string/activityhelp_bytheoetandres"
                 android:textColor="@color/colorPrimary"
                 android:textSize="40sp" />
 

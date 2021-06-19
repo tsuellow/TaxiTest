@@ -36,7 +36,6 @@
         android:textAlignment="center"
         android:visibility="visible"
         android:layout_marginTop="10dp"
-        app:layout_constraintBottom_toTopOf="@+id/rv_comms_dialog"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/view2" />
@@ -57,7 +56,8 @@
             android:id="@+id/tv_auto_accept"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="auto-accept in:  "
+            android:text="@string/auto_accept_in"
+            android:layout_marginEnd="4dp"
             android:textAlignment="center"
             android:visibility="visible"
             app:layout_constraintBottom_toTopOf="@+id/rv_comms_dialog"
@@ -110,7 +110,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
             android:layout_marginTop="8dp"
-            android:text="NO" />
+            android:text="@string/no" />
 
         <Button
             android:id="@+id/bt_accept"
@@ -118,7 +118,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
             android:layout_marginTop="8dp"
-            android:text="YES" />
+            android:text="@string/yes" />
 
     </LinearLayout>
 

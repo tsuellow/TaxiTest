@@ -2,54 +2,54 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <PreferenceCategory
-        android:title="Basic settings"
+        android:title="@string/appsettings_basicsettings"
         app:iconSpaceReserved="false">
 
 
         <Preference
-            android:title="Maximum num. of taxis shown"
+            android:title="@string/appsettings_maxpins"
             android:defaultValue="20"
             android:key="taxiamount"
-            android:summary="decrease if app performance is slow"
+            android:summary="@string/appsettings_maxpinsdesc"
             app:iconSpaceReserved="false"/>
 
         <Preference
-            android:title="Set default pivot, zoom and tilt"
+            android:title="@string/appsettings_setzoom"
             android:key="zoomtilt"
-            android:summary="double-tap the map to regain these values"
+            android:summary="@string/appsettings_setzoomdesc"
             app:iconSpaceReserved="false"/>
 
         <SwitchPreference
-            android:title="Set filter automatically"
+            android:title="@string/appsettings_autofilter"
             android:defaultValue="true"
             android:key="autofilter"
-            android:summary="turns on filter once destination changes"
+            android:summary="@string/appsettings_autofilterdesc"
             app:iconSpaceReserved="false"/>
 
         <Preference
-            android:title="Filter amplitude"
+            android:title="@string/appsettings_filteramplitude"
             android:defaultValue="35"
             android:key="filteramplitude"
-            android:summary="higher values will show a broader set of destination barrios"
+            android:summary="@string/appsettings_filteramplitudedesc"
             app:iconSpaceReserved="false"/>
 
 
     </PreferenceCategory>
 
     <PreferenceCategory
-        android:title="Profile settings"
+        android:title="@string/appsettings_profilesettings"
         app:iconSpaceReserved="false">
 
         <Preference
-            android:title="Profile data"
+            android:title="@string/appsettings_profiledata"
             android:key="profiledata"
             android:summary="Fulano de Tal"
             app:iconSpaceReserved="false"/>
 
         <Preference
-            android:title="Edit profile"
+            android:title="@string/appsettings_editprofile"
             android:key="profileedit"
-            android:summary="change personal data"
+            android:summary="@string/appsettings_editprofiledesc"
             app:iconSpaceReserved="false"/>
 
 
