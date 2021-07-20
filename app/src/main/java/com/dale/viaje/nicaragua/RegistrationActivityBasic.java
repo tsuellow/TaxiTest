@@ -53,6 +53,7 @@ import com.dale.viaje.nicaragua.connection.MultipartRequest;
 import com.dale.viaje.nicaragua.connection.MySingleton;
 import com.dale.viaje.nicaragua.utils.CustomTextView;
 import com.dale.viaje.nicaragua.utils.MiscellaneousUtils;
+import com.dale.viaje.nicaragua.utils.ProfileUtils;
 import com.dale.viaje.nicaragua.vtmExtension.CitySupport;
 import com.google.android.material.textfield.TextInputLayout;
 import com.skydoves.balloon.ArrowOrientation;
@@ -119,7 +120,6 @@ public class RegistrationActivityBasic extends AppCompatActivity {
         salute=(CustomTextView) findViewById(R.id.tv_salute);
         salute.setText(R.string.registrationactivitybasic_personaldata);
         initViews();
-
 
         setActivities();
 

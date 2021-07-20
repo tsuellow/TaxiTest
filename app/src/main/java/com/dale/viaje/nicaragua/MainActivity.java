@@ -56,6 +56,7 @@ import com.dale.viaje.nicaragua.data.SocketObject;
 import com.dale.viaje.nicaragua.data.SqlLittleDB;
 import com.dale.viaje.nicaragua.data.TaxiObject;
 import com.dale.viaje.nicaragua.utils.MiscellaneousUtils;
+import com.dale.viaje.nicaragua.utils.ProfileUtils;
 import com.dale.viaje.nicaragua.vectorLayer.BarriosLayer;
 import com.dale.viaje.nicaragua.vectorLayer.ConnectionLineLayer2;
 import com.dale.viaje.nicaragua.vectorLayer.HexagonQuadrantLayer;
@@ -145,6 +146,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     InitialConnection mConnectionInitiator;
     OutgoingWebSocket mWsOutConnection;
     IncomingUdpSocket mUdpInConnection;
+    UdpDataProcessor mUdpDataProcessor;
 
     //database
     SqlLittleDB mDb;
@@ -322,6 +324,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         });
         //mConnectionInitiator.requestInitialConnectionAddresses();
         initRecyclerView();
+        mUdpDataProcessor=new UdpDataProcessor(rvCommsAdapter,mContext);
         initiateServerConnection();
 
         // OwnMarkerLayer
@@ -451,7 +454,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         locationRequest = LocationRequest.create();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         locationRequest.setInterval(3000);
-        locationRequest.setFastestInterval(500);
+        locationRequest.setFastestInterval(2000);
         locationRequest.setMaxWaitTime(4000);
 
         //last known location
@@ -496,7 +499,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         }catch (URISyntaxException e){
             uri=null;
         }
-        mUdpInConnection=new IncomingUdpSocket(rvCommsAdapter,mContext);
+        mUdpInConnection=new IncomingUdpSocket(mUdpDataProcessor);
         mWsOutConnection= new OutgoingWebSocket(uri,mContext,mUdpInConnection);
         mWsOutConnection.connectToServer();
     }
@@ -640,6 +643,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     }
 
     public boolean isFirstLocationFix=true;
+    public long fixTs=System.currentTimeMillis();
     public void setupLocationCallback() {
         //callback every 3000ms
         //TODO send old locations if callback  fails to execute. prevent from unclicking on other users
@@ -670,10 +674,14 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 //                mOwnTaxiObject=new TaxiObject(MiscellaneousUtils.getNumericId(myId),endLocation.getLatitude(),endLocation.getLongitude(),endLocation.getTime(),
 //                        mCompass.getRotation(),"taxi",destGeo.getLatitude(),destGeo.getLongitude(),isActive);
                 setOwnSocketObject(endLocation);
+                //TODO delete the stuff below later
+                Toast.makeText(mContext,"fix: "+(System.currentTimeMillis()-fixTs),Toast.LENGTH_SHORT).show();
+                fixTs=System.currentTimeMillis();
                 //mWebSocketDriverLocs.attemptSend(mOwnTaxiObject.objectToCsv());
                 WsJsonMsg msgInstance=new WsJsonMsg(mOwnTaxiObject.objectToCsv());
                 mWsOutConnection.sendMsg(msgInstance.createLocationMsg(mWsOutConnection.isConnected(),mQuadrantLayer.getSendingChannels(rvCommsAdapter,mOwnTaxiObject),
                         mQuadrantLayer.getReceivingChannels(rvCommsAdapter,mOwnTaxiObject,HexagonUtils.quadProfileDriver,0)));
+
             }
 
             ;
@@ -755,7 +763,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                         break;
                     }
                     case R.id.opt_profile:{
-                        Toast.makeText(mContext,"open my profile",Toast.LENGTH_LONG).show();
+                        ProfileUtils.displayProfileDialog(mContext,"My Profile","https://www.id-ex.de/GymLog/#/login");
                         break;
                     }
                     case R.id.opt_help:{

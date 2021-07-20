@@ -29,6 +29,7 @@ import android.widget.Toast;
 import com.dale.viaje.nicaragua.utils.CustomTextView;
 import com.dale.viaje.nicaragua.utils.MapUtilsCustom;
 import com.dale.viaje.nicaragua.utils.MiscellaneousUtils;
+import com.dale.viaje.nicaragua.utils.ProfileUtils;
 import com.dale.viaje.nicaragua.vtmExtension.CitySupport;
 
 import java.io.File;
@@ -178,7 +179,7 @@ public class EntryActivity extends AppCompatActivity {
                         break;
                     }
                     case R.id.opt_profile:{
-                        Toast.makeText(mContext,"open my profile",Toast.LENGTH_LONG).show();
+                        ProfileUtils.displayProfileDialog(mContext,"My Profile","http://api.daleviaje.net:3001/driver/2?id=1&token=12345").show();
                         break;
                     }
                     case R.id.opt_help:{

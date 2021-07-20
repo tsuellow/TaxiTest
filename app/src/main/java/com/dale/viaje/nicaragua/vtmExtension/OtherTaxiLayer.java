@@ -230,28 +230,31 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
             public void onAnimationParametersReceived(List<? extends SocketObject> baseTaxis, List<? extends SocketObject> newTaxis) {
                 //give existing taxis a purpose
                 boolean allOk=true;
-                if (baseTaxis.size()>0 && baseTaxis.size()==mItemList.size()) {
-                    for (int i = 0; i < baseTaxis.size(); i++) {
-                        SocketObject taxiObject = baseTaxis.get(i);
-                        if (taxiObject.getIsActive() != 1) {
-                            mItemList.get(i).setPurpose(TaxiMarker.Purpose.DISAPPEAR);
-                        } else {
-                            //TODO figure out how to fix this bug  THIS BUG IS STILL THERE THINK WHAT HAPPENS WHEN YOU GO TO OTHER APPS OR ACTIVITIES
-                            mItemList.get(i).setPurpose(TaxiMarker.Purpose.MOVE);
-                        }
-                        mItemList.get(i).setPurposeTaxiObject(taxiObject);
-                        if(mItemList.get(i).taxiObject.getTaxiId()!=taxiObject.getTaxiId()){
-                            allOk=false;
-                            break;
-                        }
-                        //check if destination has changed and if so change destination color right away
-                        if (mItemList.get(i).taxiObject.getDestinationLatitude()!=taxiObject.getDestinationLatitude() || mItemList.get(i).taxiObject.getDestinationLongitude()!=taxiObject.getDestinationLongitude()){
-                            mItemList.get(i).destGeoPoint=new GeoPoint(taxiObject.getDestinationLatitude(),taxiObject.getDestinationLongitude());
-                            mItemList.get(i).setRotatedSymbol(fetchBitmap(mItemList.get(i)));
+                if (baseTaxis.size()==mItemList.size()) {
+                    if (baseTaxis.size()>0) {
+                        for (int i = 0; i < baseTaxis.size(); i++) {
+                            SocketObject taxiObject = baseTaxis.get(i);
+                            if (taxiObject.getIsActive() != 1) {
+                                mItemList.get(i).setPurpose(TaxiMarker.Purpose.DISAPPEAR);
+                            } else {
+                                //TODO figure out how to fix this bug  THIS BUG IS STILL THERE THINK WHAT HAPPENS WHEN YOU GO TO OTHER APPS OR ACTIVITIES
+                                mItemList.get(i).setPurpose(TaxiMarker.Purpose.MOVE);
+                            }
+                            mItemList.get(i).setPurposeTaxiObject(taxiObject);
+                            if (mItemList.get(i).taxiObject.getTaxiId() != taxiObject.getTaxiId()) {
+                                Log.d("missedCancellation","missmatch is at fault");
+                                allOk = false;
+                                break;
+                            }
+                            //check if destination has changed and if so change destination color right away
+                            if (mItemList.get(i).taxiObject.getDestinationLatitude() != taxiObject.getDestinationLatitude() || mItemList.get(i).taxiObject.getDestinationLongitude() != taxiObject.getDestinationLongitude()) {
+                                mItemList.get(i).destGeoPoint = new GeoPoint(taxiObject.getDestinationLatitude(), taxiObject.getDestinationLongitude());
+                                mItemList.get(i).setRotatedSymbol(fetchBitmap(mItemList.get(i)));
 //                            if (mItemList.get(i).getIsClicked()){
 //                                mConnectionLines.resetStyle(taxiObject.getTaxiId(),mItemList.get(i).color);
 //                            }
 
+                            }
                         }
                     }
                 }else{
@@ -261,6 +264,7 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                 if(!allOk){
                     //remove all taxis and add them anew
                     removeAllItems();
+                    Log.d("missedCancellation","this is the culprid");
                     for (SocketObject tO:baseTaxis){
                         addNewTaxi(tO);
                     }
@@ -448,7 +452,9 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                             marker.setRotatedSymbol(getAppearDisappearFrame(a,frames,true));
                         }else{
                             //play disappear animation
+                            Log.d("missedCancellation","pre disappearance happened"+a);
                             marker.setRotatedSymbol(getAppearDisappearFrame(a,frames,false));
+
                         }
                     }
                     mConnectionLines.updateLines();
@@ -466,19 +472,22 @@ public class OtherTaxiLayer extends ItemizedLayer<TaxiMarker> implements Map.Upd
                 while (i.hasNext()) {
                     TaxiMarker m = i.next();
                     if (m.getPurpose() == TaxiMarker.Purpose.DISAPPEAR) {
+                        Log.d("missedCancellation","just disappeared");
                         if(m.isClicked){
+                            Log.d("missedCancellation","was unclicked");
                             doUnClick(m,true);
                         }
                         i.remove();
                     }else if (m.getPurpose() == TaxiMarker.Purpose.APPEAR){
                         m.setRotatedSymbol(fetchBitmap(m));
+                    }else{
+                        if (m.doesAlphaChange()){
+                            //Log.d("missedCancellation","alpha change happened");
+                            m.setRotatedSymbol(fetchBitmap(m));
+                        }
+                        //assume all values from purpose at the end of anim
+                        m.setTaxiObject(m.getPurposeTaxiObject());
                     }
-
-                    if (m.doesAlphaChange()){
-                        m.setRotatedSymbol(fetchBitmap(m));
-                    }
-                    //assume all values from purpose at the end of anim
-                    m.setTaxiObject(m.getPurposeTaxiObject());
                 }
 
 //                for (TaxiMarker marker:mItemList){

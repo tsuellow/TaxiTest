@@ -10,17 +10,17 @@
 
 
     <color name="colorRed">#F44336</color>
-    <color name="colorBlue">#EC407A</color>
-    <color name="colorGreen">#AB47BC</color>
+    <color name="colorBlue">#AB47BC</color>
+    <color name="colorGreen">#EC407A</color>
 
-    <color name="colorBlueDark">#C2185B</color>
-    <color name="colorGreenDark">#7B1FA2</color>
+    <color name="colorBlueDark">#7B1FA2</color>
+    <color name="colorGreenDark">#C2185B</color>
 
-    <color name="colorBlueAcc">#FF4081</color>
-    <color name="colorGreenAcc">#E040FB</color>
+    <color name="colorBlueAcc">#ED8DFD</color>
+    <color name="colorGreenAcc">#FD8AB1</color>
 
-    <color name="colorBlueLight">#33C2185B</color>
-    <color name="colorGreenLight">#337B1FA2</color>
+    <color name="colorBlueLight">#337B1FA2</color>
+    <color name="colorGreenLight">#33C2185B</color>
 
 
     <!--

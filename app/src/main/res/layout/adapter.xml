@@ -175,7 +175,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/tv_description_text"
-                android:maxWidth="48dp"
+                android:maxWidth="52dp"
                 android:textAlignment="textEnd"
                 android:text="awaiting response"
                 android:textColor="@color/colorDeselected"
@@ -186,7 +186,8 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/tv_description_pointer"
                 android:layout_gravity="center"
-                android:layout_marginStart="4dp"
+                android:layout_marginStart="2dp"
+                android:layout_marginEnd="2dp"
                 android:textColor="@color/colorDeselected"
                 android:textSize="8sp"
                 android:text="\u276f" />
@@ -218,7 +219,7 @@
                     app:cpb_background_progressbar_color="@color/colorDeselected"
                     app:cpb_background_progressbar_width="0dp"
                     app:cpb_progress_direction="to_right"
-                    app:cpb_progressbar_color="#4CAF50"
+                    app:cpb_progressbar_color="@color/colorGreenAcc"
                     app:cpb_progressbar_width="3dp"
                     app:cpb_round_border="true"
                     android:visibility="invisible"/>

@@ -71,6 +71,7 @@ public class UdpDataProcessor {
 
     public synchronized void addOrReset(boolean reset, TaxiNew taxiObject){
         if (isFirstTime){
+            Log.d("missedCancellation","happened on first time");
             mDb.taxiDao().clearTaxiBase();
             mDb.taxiDao().clearTaxiOld();
             mDb.taxiDao().clearTaxiNew();

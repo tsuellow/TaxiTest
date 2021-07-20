@@ -133,7 +133,7 @@
     <string name="commsobject_unknown">DESCONOCIDO</string>
     <string name="commsobject_chatwith">Chat con</string>
     <string name="commsadapter_invite">invitar</string>
-    <string name="commsadapter_recording">grabando: \n</string>
+    <string name="commsadapter_recording">grabando:\n</string>
     <string name="commsadapter_recordingended">grabación finalizó</string>
     <string name="commsadapter_awaitingresponsetoast">esperando respuesta de la contraparte</string>
     <string name="commsadapter_taxialreadyaccepted">usuario ya fue aceptado</string>

@@ -378,7 +378,8 @@ public class CommunicationsAdapter extends RecyclerView.Adapter<CommunicationsAd
         final CountDownTimer recordingTimer=new CountDownTimer(20000, 1000) {
             public void onTick(long millisUntilFinished) {
                 int secsLeft=(int)millisUntilFinished/1000;
-                holder.descriptionText.setText(mContext.getString(R.string.commsadapter_recording)+secsLeft+"s      ");
+                String recording=mContext.getString(R.string.commsadapter_recording)+secsLeft+"s ";
+                holder.descriptionText.setText(recording);
 
             }
 

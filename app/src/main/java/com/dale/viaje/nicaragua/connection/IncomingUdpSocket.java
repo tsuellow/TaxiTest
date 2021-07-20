@@ -30,8 +30,8 @@ public class IncomingUdpSocket {
     boolean keepRunning=true;
     boolean triggerConnectionProcess =true;
 
-    public IncomingUdpSocket(CommunicationsAdapter communicationsAdapter, Context context) {
-        dataProcessor=new UdpDataProcessor(communicationsAdapter,context);
+    public IncomingUdpSocket(UdpDataProcessor processor) {
+        dataProcessor=processor;
         initializeJson(MiscellaneousUtils.getNumericId(myId));
     }
 
@@ -130,7 +130,9 @@ public class IncomingUdpSocket {
     public  void doOnDisconnect(){
         dataProcessor.doOnDisconnect();
         keepRunning=false;
-        udpSocket.close();
+        if (udpSocket!=null){
+            udpSocket.close();
+        }
     }
 //
 //    //part inherited from old socket.io websocket

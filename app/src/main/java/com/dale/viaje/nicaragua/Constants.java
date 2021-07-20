@@ -16,12 +16,12 @@ public class Constants {
     public static GeoPoint lowerLeftLabelLimit=new GeoPoint(13.041135,-86.406090 );
     public static GeoPoint upperRightLabelLimit=new GeoPoint(13.124386, -86.309543);
 
-    public static String SERVER_IP="54.227.25.80";
+    public static String SERVER_IP="54.234.128.19";
     public static String SERVER_URL="http://"+SERVER_IP+":3004/";//db access
     public static String COMMS_URL="http://"+SERVER_IP+":3000";//comms socket.io
     public static String S3_SERVER_URL="https://dale-viaje.s3.amazonaws.com/";//image access
 
-    public static String LOC_IP ="54.159.176.126";
+    public static String LOC_IP ="3.239.167.221";
     public static String WS_ADDRESS="ws://"+ LOC_IP +":"+CustomUtils.WS_PORT;
 
     public static final String INITIAL_CONN_URL="http://"+SERVER_IP+":3004/initial-conn";//to be changed for domain address

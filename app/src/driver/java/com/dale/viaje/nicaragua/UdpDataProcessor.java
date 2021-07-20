@@ -2,8 +2,9 @@ package com.dale.viaje.nicaragua;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.util.Log;
+
+import androidx.preference.PreferenceManager;
 
 import com.dale.viaje.nicaragua.CommunicationsRecyclerView.CommunicationsAdapter;
 import com.dale.viaje.nicaragua.data.ClientNew;
